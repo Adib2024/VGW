@@ -1,0 +1,114 @@
+<div id="selection-view">
+  <div class="selection-header-grid">
+    <div class="header-left">
+      <h2 data-lang="select_data">Pilih Data</h2>
+      <small id="user-display-role">Logged in as: User</small>
+    </div>
+    <div class="header-center"></div>
+    <div class="header-right">
+      <span id="lbl-role-selection" class="view-role-badge">Role View</span>
+      <div id="live-indicator"><i class="fas fa-circle"></i> Live Data</div>
+    </div>
+  </div>
+  
+  <div class="dashboard-grid">
+      <div class="dash-card" onclick="openRackList('b17')">
+          <div class="card-top">
+              <div class="card-icon bg-blue"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Volkswagen_logo_2019.svg" alt="VW"></div>
+              <div class="card-info"><h3>LOCATION B17</h3><span id="stat-txt-b17">Loading...</span></div>
+          </div>
+          <div class="progress-bg"><div id="prog-bar-b17" class="progress-fill"></div></div>
+          <div class="stat-row"><span id="stat-pct-b17">0%</span><span id="stat-badge-b17" class="status-badge">Pending...</span></div>
+          <img src="https://i.postimg.cc/4NMmDwqL/Golf-RL-Blue.webp" class="car-anim" alt="Car">
+      </div>
+      
+      <div class="dash-card" onclick="openRackList('b22')">
+          <div class="card-top">
+              <div class="card-icon bg-red"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Volkswagen_logo_2019.svg" alt="VW"></div>
+              <div class="card-info"><h3>LOCATION B22</h3><span id="stat-txt-b22">Loading...</span></div>
+          </div>
+          <div class="progress-bg"><div id="prog-bar-b22" class="progress-fill"></div></div>
+          <div class="stat-row"><span id="stat-pct-b22">0%</span><span id="stat-badge-b22" class="status-badge">Pending...</span></div>
+          <img src="https://i.postimg.cc/4NMmDwqL/Golf-RL-Blue.webp" class="car-anim" alt="Car">
+      </div>
+
+      <div class="dash-card" onclick="openRackList('loma')">
+          <div class="card-top">
+              <div class="card-icon bg-green"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Volkswagen_logo_2019.svg" alt="VW"></div>
+              <div class="card-info"><h3>LOMA</h3><span id="stat-txt-loma">No Data</span></div>
+          </div>
+          <div class="progress-bg"><div id="prog-bar-loma" class="progress-fill"></div></div>
+          <div class="stat-row"><span id="stat-pct-loma">0%</span><span id="stat-badge-loma" class="status-badge">Pending...</span></div>
+          <img src="https://i.postimg.cc/4NMmDwqL/Golf-RL-Blue.webp" class="car-anim" alt="Car">
+      </div>
+
+      <div class="dash-card" onclick="openRackList('b22seq')">
+          <div class="card-top">
+              <div class="card-icon bg-yellow"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Volkswagen_logo_2019.svg" alt="VW"></div>
+              <div class="card-info"><h3>B22 SEQ</h3><span id="stat-txt-b22seq">No Data</span></div>
+          </div>
+          <div class="progress-bg"><div id="prog-bar-b22seq" class="progress-fill"></div></div>
+          <div class="stat-row"><span id="stat-pct-b22seq">0%</span><span id="stat-badge-b22seq" class="status-badge">Pending...</span></div>
+          <img src="https://i.postimg.cc/4NMmDwqL/Golf-RL-Blue.webp" class="car-anim" alt="Car">
+      </div>
+  </div>
+  
+  <div class="user-progress-btn" onclick="openUserProgress()">
+     <i class="fas fa-user-clock"></i> User Progress
+  </div>
+
+  <div id="btn-check-part-main" class="check-part-btn" onclick="showCheckPart()" style="display:none;">
+    <i class="fas fa-exclamation-triangle"></i> <span data-lang="btn_checkpart">Lihat Check Part Data</span>
+  </div>
+
+  <div id="loading-msg" style="text-align:center; margin-top:20px; color:#666; display:none;">
+    <span data-lang="loading">Sedang memuatkan data...</span>
+  </div>
+  
+  <div id="custom-welcome-msg" class="bottom-welcome-msg"></div>
+</div>
+
+<div id="user-progress-view">
+    <div class="top-bar">
+       <button class="btn-back" onclick="goBackToSelection()">Back</button>
+       <h2 style="margin:0; font-size:18px;">Progress Report</h2>
+    </div>
+
+    <div id="printable-progress-area">
+       <div class="up-card">
+          <div class="up-header">
+              <div class="up-title">User Summary</div>
+              <i class="fas fa-id-badge" style="color:#1a73e8; font-size:24px;"></i>
+          </div>
+          <div class="up-row"><label>Name:</label> <span id="up-name">-</span></div>
+          <div class="up-row"><label>Role:</label> <span id="up-role">-</span></div>
+          <div class="up-row"><label>Last Login:</label> <span id="up-login">-</span></div>
+          <div class="up-row"><label>Last Logout:</label> <span id="up-logout">-</span></div>
+       </div>
+
+       <div class="up-card">
+          <div class="up-header">
+             <div class="up-title">Activity Statistics</div>
+             <button class="btn-up-details" onclick="toggleUserDetails()" id="btn-toggle-details">View Details <i class="fas fa-chevron-down"></i></button>
+          </div>
+          <div style="text-align:center; padding:15px 0;">
+              <span id="up-stat-count" class="up-stat-big">0</span>
+              <span id="up-stat-label" class="up-stat-label">Items Processed</span>
+          </div>
+       </div>
+       
+       <div id="user-detail-table-container" style="display:none;">
+           <h4 style="margin:10px 0; color:#555;">Detailed Activity List</h4>
+           <div class="location-section" style="box-shadow:none; border:1px solid #ddd; border-left:none;">
+              <table id="user-detail-table">
+                  <thead><tr><th>Material</th><th>Part Name</th><th>Location</th><th>Status</th></tr></thead>
+                  <tbody id="user-detail-tbody"></tbody>
+              </table>
+           </div>
+       </div>
+    </div>
+
+    <button class="btn-up-print" onclick="printUserProgress()">
+       <i class="fas fa-file-pdf"></i> Download PDF Report
+    </button>
+</div>

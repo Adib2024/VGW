@@ -1,0 +1,37 @@
+<div id="login-view">
+  <div class="login-logo-container">
+     <img src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Volkswagen_logo_2019.svg" class="login-logo-img logo-3d" alt="Logo">
+  </div>
+  <div style="text-align:center; margin-bottom: 25px;">
+      <h2 style="margin:0; color:#333; font-size: 20px;" data-lang="login_title">VGM Stock Take 2026</h2>
+      <p style="margin:5px 0 0 0; color:#666; font-size:13px; font-weight:500;">CKD Logistic Department</p>
+  </div>
+  <form onsubmit="handleLogin(event)">
+    <div class="form-group">
+      <label data-lang="label_userid">ID Pengguna</label>
+      <input type="text" id="username" required>
+    </div>
+    <div class="form-group">
+      <label data-lang="label_password">Kata Laluan</label>
+      <div class="password-wrapper">
+         <input type="password" id="password" required>
+         <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility(this)"></i>
+      </div>
+    </div>
+    <div class="form-group">
+      <label data-lang="label_role">Role</label>
+      <select id="login-role" required>
+        <option value="Counter B17">Counter B17</option>
+        <option value="Counter B22">Counter B22</option>
+        <option value="Verifier">Verifier</option>
+        <option value="Admin">Admin</option>
+      </select>
+    </div>
+    <div class="remember-wrapper">
+       <input type="checkbox" id="remember-me">
+       <label for="remember-me" data-lang="remember_me">Remember me</label>
+    </div>
+    <div class="creator-tag">Created by atifdanielaziz</div>
+    <button type="submit" class="btn-primary" id="login-btn" data-lang="btn_login">Log Masuk</button>
+  </form>
+</div>
