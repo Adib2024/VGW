@@ -151,7 +151,10 @@
       #login-view { background: white; padding: 30px 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-top: 60px; }
       .login-logo-container { text-align: center; margin-bottom: 20px; }
       .logo-3d {
-        width: 90px; height: auto; display: inline-block;
+        width: 90px; 
+        height: 90px; /* Forcing the height exactly to 90px stops the iPhone stretching */
+        object-fit: contain; 
+        display: inline-block;
         animation: rotate3d-intermittent 5s infinite ease-in-out;
         transform-style: preserve-3d;
       }
