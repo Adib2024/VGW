@@ -18,6 +18,45 @@
       let myChart = null; 
       let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
       let loginTimestamp = '';
+      // --- NEW: Live Role Detection Timer ---
+      let roleCheckTimer;
+      let lastCheckedUser = ""; // Remembers the last searched name to prevent spamming the server
+
+      function autoDetectRole(isInstant) {
+          clearTimeout(roleCheckTimer); 
+          
+          const user = document.getElementById('username').value.trim();
+          const roleDropdown = document.getElementById('login-role');
+
+          // If box is empty, reset
+          if (user.length === 0) {
+              roleDropdown.options[0].text = "Auto-Detecting from Database...";
+              lastCheckedUser = "";
+              return;
+          }
+
+          // If we already found this user, don't search again
+          if (user === lastCheckedUser && !isInstant) return; 
+
+          // Show scanning message
+          roleDropdown.options[0].text = "Mencari data... ⏳";
+
+          // If they click the password box (isInstant), delay is 0. Otherwise wait 400ms.
+          const delayTime = isInstant ? 0 : 400;
+
+          roleCheckTimer = setTimeout(() => {
+              lastCheckedUser = user; // Remember who we are searching for
+              
+              google.script.run.withSuccessHandler(res => {
+                  if (res.found) {
+                      // Force the text to display the role with a checkmark! (Ignores typos/spaces)
+                      roleDropdown.options[0].text = "✅ " + res.role;
+                  } else {
+                      roleDropdown.options[0].text = "❌ ID tidak dijumpai...";
+                  }
+              }).getUserRole(user);
+          }, delayTime); 
+      }
 
       const translations = {
         ms: {
@@ -181,7 +220,6 @@
 
         const user = document.getElementById('username').value;
         const pass = document.getElementById('password').value;
-        const role = document.getElementById('login-role').value;
         const remember = document.getElementById('remember-me').checked;
 
         google.script.run.withSuccessHandler(res => {
@@ -194,23 +232,27 @@
                 localStorage.removeItem('st_password');
             }
             
+            // 1. Visually auto-select the role in the dropdown so the user sees it!
+            document.getElementById('login-role').value = res.role; 
+
+            // 2. Save the role to the app's memory
             currentUserRole = res.role;
             currentUsername = user;
             loginTimestamp = new Date().toLocaleString(); 
             
-            // --- NEW: Save the active session to browser memory ---
             sessionStorage.setItem('active_session', 'true');
             sessionStorage.setItem('current_user', currentUsername);
             sessionStorage.setItem('current_role', currentUserRole);
             sessionStorage.setItem('login_time', loginTimestamp);
             
-            activateDashboard(); // Launch the dashboard
+            // 3. Wait half a second so the user can see the automation happen, then launch dashboard
+            setTimeout(activateDashboard, 500);
 
           } else {
             alert(res.message);
             btn.innerText = originalText;
           }
-        }).checkLogin(user, pass, role);
+        }).checkLogin(user, pass); // <-- Notice we removed 'role' from being sent to the server
       }
 
       function updateRoleBadges(role) {

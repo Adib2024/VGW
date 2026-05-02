@@ -67,27 +67,46 @@ function include(filename) {
 }
 
 /**
- * Login Function
+ * Live UX Helper: Fetches Role while user is typing
  */
-function checkLogin(username, password, role) {
-  // CHANGED: Using openById to guarantee connection
+function getUserRole(username) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAMES.users);
+  
+  if (!sheet) return { found: false };
+  
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]).toLowerCase() === String(username).toLowerCase()) {
+      return { found: true, role: String(data[i][2]) };
+    }
+  }
+  return { found: false };
+}
+
+/**
+ * Login Function (Auto-Assigns Role from Database)
+ */
+function checkLogin(username, password) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(SHEET_NAMES.users);
   
   if (!sheet) return { status: 'error', message: 'User sheet not found' };
   
   const data = sheet.getDataRange().getValues();
+  
+  // Loop through rows (skipping header row 0)
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
+    
+    // Check if Username (Col A) and Password (Col B) match perfectly
     if (String(row[0]).toLowerCase() === String(username).toLowerCase() && 
         String(row[1]) === String(password)) {
       
-      const userRole = String(row[2]).toLowerCase();
-      const reqRole = String(role).toLowerCase();
+      const userRole = String(row[2]); // Grab Role directly from Col C
       
-      if (userRole === 'admin' || userRole === reqRole || (userRole === 'verifier' && reqRole === 'verifier')) {
-         return { status: 'success', role: row[2] };
-      }
+      // Send the exact role back to the browser
+      return { status: 'success', role: userRole };
     }
   }
   return { status: 'error', message: 'Invalid Credentials' };

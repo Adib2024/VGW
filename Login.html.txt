@@ -9,7 +9,8 @@
   <form onsubmit="handleLogin(event)">
     <div class="form-group">
       <label data-lang="label_userid">ID Pengguna</label>
-      <input type="text" id="username" required>
+      <!-- ADDED onblur to instantly check when they click to type password -->
+      <input type="text" id="username" required oninput="autoDetectRole(false)" onblur="autoDetectRole(true)">
     </div>
     <div class="form-group">
       <label data-lang="label_password">Kata Laluan</label>
@@ -20,7 +21,8 @@
     </div>
     <div class="form-group">
       <label data-lang="label_role">Role</label>
-      <select id="login-role" required>
+      <!-- We make it disabled so the user cannot click it, and add a background color so it looks locked -->
+      <select id="login-role" disabled style="background-color: #f1f3f4; cursor: not-allowed; color: #555;">
         <option value="Counter B17">Counter B17</option>
         <option value="Counter B22">Counter B22</option>
         <option value="Verifier">Verifier</option>
