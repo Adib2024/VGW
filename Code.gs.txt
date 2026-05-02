@@ -94,23 +94,42 @@ function checkLogin(username, password, role) {
 }
 
 /**
- * Fetch All Data for Dashboard
+ * Fetch Data using Delta Logic (Extreme Performance)
  */
-function getDashboardData() {
-  // CHANGED: Using openById
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+function getDashboardData(clientTimestamp) {
+  const cache = CacheService.getScriptCache();
+  let lastUpdate = cache.get('vgm_last_update');
   
+  // 1. If no timestamp exists, create one
+  if (!lastUpdate) {
+    lastUpdate = Date.now().toString();
+    cache.put('vgm_last_update', lastUpdate, 21600);
+  }
+
+  // 2. If client is already up-to-date, send NOTHING back! (Saves massive bandwidth)
+  if (clientTimestamp && Number(clientTimestamp) >= Number(lastUpdate)) {
+    return { changed: false };
+  }
+
+  // 3. Otherwise, fetch the fresh data from the sheet
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const getData = (sheetName) => {
     const sheet = ss.getSheetByName(sheetName);
     return sheet ? sheet.getDataRange().getValues().slice(1) : []; 
   };
 
-  return {
+  const freshData = {
     b17: getData(SHEET_NAMES.b17),
     b22: getData(SHEET_NAMES.b22),
     loma: getData(SHEET_NAMES.loma),
     b22seq: getData(SHEET_NAMES.b22seq),
     checkPart: getData(SHEET_NAMES.checkPart)
+  };
+  
+  return { 
+    changed: true, 
+    data: freshData, 
+    timestamp: lastUpdate 
   };
 }
 
@@ -148,6 +167,8 @@ function saveData(datasetKey, partNo, values) {
       sheet.getRange(rowIndex, conf.status + 1).setValue("Counted");
     }
 
+    // Tell all other dashboards that data has changed
+    CacheService.getScriptCache().put('vgm_last_update', Date.now().toString(), 21600);
     return { status: 'success' };
 
   } catch (e) {
@@ -174,6 +195,8 @@ function verifyItem(datasetKey, partNo, verifierName) {
        if(String(data[i][conf.partNo]).trim() === String(partNo).trim()) {
          sheet.getRange(i+1, conf.status + 1).setValue("Verified");
          sheet.getRange(i+1, conf.verified + 1).setValue(verifierName);
+         // Tell all other dashboards that data has changed
+         CacheService.getScriptCache().put('vgm_last_update', Date.now().toString(), 21600);
          return { status: 'success' };
        }
     }
@@ -200,6 +223,8 @@ function saveRemark(datasetKey, partNo, remarkText) {
   for(let i=0; i<data.length; i++) {
      if(String(data[i][conf.partNo]).trim() === String(partNo).trim()) {
        sheet.getRange(i+1, conf.remark + 1).setValue(remarkText);
+       // Tell all other dashboards that data has changed
+       CacheService.getScriptCache().put('vgm_last_update', Date.now().toString(), 21600);
        return { status: 'success' };
      }
   }

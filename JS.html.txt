@@ -7,6 +7,7 @@
       };
 
       let globalData = { b17: [], b22: [], loma: [], b22seq: [], checkPart: [] };
+      let lastDataTimestamp = 0;
       let currentLang = 'ms'; 
       let currentDatasetKey = ''; 
       let currentItemPartNo = ''; 
@@ -110,12 +111,15 @@
       function handleRefresh() {
           const indicator = document.getElementById('refresh-indicator');
           indicator.classList.add('visible');
-          google.script.run.withSuccessHandler(data => {
-            globalData = data; 
+          google.script.run.withSuccessHandler(res => {
+            if (res.changed) {
+                globalData = res.data; 
+                lastDataTimestamp = res.timestamp;
+            }
             if(document.getElementById('selection-view').style.display === 'block') renderDashboard(globalData);
             if (document.getElementById('detail-view').style.display === 'block') renderCurrentRackList();
             setTimeout(() => { indicator.classList.remove('visible'); }, 800);
-          }).getDashboardData();
+          }).getDashboardData(0); // '0' forces a full manual sync
       }
 
       function togglePasswordVisibility(icon) {
@@ -158,12 +162,15 @@
 
         document.getElementById('loading-msg').style.display = 'block';
         
-        google.script.run.withSuccessHandler(data => {
-            globalData = data; 
+        google.script.run.withSuccessHandler(res => {
             document.getElementById('loading-msg').style.display = 'none';
+            if (res.changed) {
+                globalData = res.data; 
+                lastDataTimestamp = res.timestamp;
+            }
             renderDashboard(globalData);
-            startLiveUpdate(); // This triggers your 5-second loop
-        }).getDashboardData();
+            startLiveUpdate(); 
+        }).getDashboardData(0); // '0' forces a full download on first login
       }
 
       function handleLogin(e) {
@@ -269,20 +276,22 @@
         document.getElementById('live-indicator').style.display = 'flex';
         if (pollingInterval) clearInterval(pollingInterval);
         
-        // Use a random offset between 0 and 3 seconds so users are staggered
         const jitter = Math.floor(Math.random() * 3000);
-        
         pollingInterval = setInterval(() => {
           if (isFetching) return;
           if (document.getElementById('single-item-view').style.display === 'block') return; 
 
           isFetching = true;
-          google.script.run.withSuccessHandler(data => {
-            globalData = data; 
+          google.script.run.withSuccessHandler(res => {
             isFetching = false;
-            if(document.getElementById('selection-view').style.display === 'block') renderDashboard(globalData);
-            if (document.getElementById('detail-view').style.display === 'block') renderCurrentRackList();
-          }).withFailureHandler(() => { isFetching = false; }).getDashboardData();
+            // ONLY re-render if the server says the data actually changed
+            if (res.changed) {
+                globalData = res.data; 
+                lastDataTimestamp = res.timestamp;
+                if(document.getElementById('selection-view').style.display === 'block') renderDashboard(globalData);
+                if (document.getElementById('detail-view').style.display === 'block') renderCurrentRackList();
+            }
+          }).withFailureHandler(() => { isFetching = false; }).getDashboardData(lastDataTimestamp);
         }, 5000 + jitter); // 5 seconds + a random small delay
       }
 
