@@ -22,9 +22,12 @@
     <div class="form-group">
       <label data-lang="label_role">Role</label>
       <!-- We make it disabled so the user cannot click it, and add a background color so it looks locked -->
+      <!-- Replace the select block in Login.html with this -->
       <select id="login-role" disabled style="background-color: #f1f3f4; cursor: not-allowed; color: #555;">
         <option value="Counter B17">Counter B17</option>
         <option value="Counter B22">Counter B22</option>
+        <option value="Operator Batt">Operator Batt</option>
+        <option value="QA Inspector">QA Inspector</option>
         <option value="Verifier">Verifier</option>
         <option value="Admin">Admin</option>
       </select>

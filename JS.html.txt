@@ -175,41 +175,122 @@
       }
 
       function activateDashboard() {
-        document.getElementById('user-display-role').innerText = "Logged in as: " + currentUsername;
-        updateRoleBadges(currentUserRole);
-        
+        // 1. Hide Login Screen
         document.getElementById('login-view').style.display = 'none';
-        document.getElementById('selection-view').style.display = 'block';
         document.getElementById('global-logout-btn').style.display = 'block';
         document.getElementById('global-refresh-btn').style.display = 'block';
 
-        const msgEl = document.getElementById('custom-welcome-msg');
-        const userLower = currentUsername.toLowerCase();
-        let msg = "Happy hunting 😊";
-        if (userLower.includes('faisal') || userLower.includes('hayati')) {
-            msg = "Hye Boss " + currentUsername + " 😊";
-        } else if (userLower.includes('nisha')) {
-            msg = "Hye Nisha 😊";
-        }
-        msgEl.innerText = msg;
-
-        if (currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'verifier') {
-           document.getElementById('btn-check-part-main').style.display = 'block';
-        } else {
-           document.getElementById('btn-check-part-main').style.display = 'none';
-        }
-
-        document.getElementById('loading-msg').style.display = 'block';
+        const roleLower = currentUserRole.toLowerCase();
         
-        google.script.run.withSuccessHandler(res => {
-            document.getElementById('loading-msg').style.display = 'none';
-            if (res.changed) {
-                globalData = res.data; 
-                lastDataTimestamp = res.timestamp;
+        // 2. Hide ALL views initially
+        document.getElementById('hub-view').style.display = 'none';
+        document.getElementById('selection-view').style.display = 'none';
+        document.getElementById('battery-view').style.display = 'none';
+        document.getElementById('qa-view').style.display = 'none';
+
+        // 3. THE ROUTER LOGIC
+        if (roleLower.includes('admin') || roleLower.includes('verifier')) {
+            // ---> GO TO COMMAND CENTER
+            document.getElementById('hub-view').style.display = 'block';
+            document.getElementById('hub-user-display').innerText = "Logged in as: " + currentUsername + " (" + currentUserRole + ")";
+            document.getElementById('global-home-btn').style.display = 'none'; // Don't need home button on home page
+            
+            // Show Admin tools only to Admins
+            if(roleLower.includes('admin')) {
+                document.getElementById('admin-utilities-zone').style.display = 'block';
             }
-            renderDashboard(globalData);
-            startLiveUpdate(); 
-        }).getDashboardData(0); // '0' forces a full download on first login
+            
+            // Fetch data in background so it's ready if they click Stock Take
+            fetchDashboardDataBackground(); 
+
+        } else if (roleLower.includes('counter')) {
+            // ---> GO STRAIGHT TO STOCK TAKE (Bypass Hub)
+            document.getElementById('global-home-btn').style.display = 'none'; // Counters are locked in
+            openModule('stock-take'); 
+
+        } else if (roleLower.includes('batt')) {
+            // ---> GO STRAIGHT TO BATTERY
+            document.getElementById('global-home-btn').style.display = 'none';
+            openModule('battery');
+
+        } else if (roleLower.includes('qa')) {
+            // ---> GO STRAIGHT TO QA
+            document.getElementById('global-home-btn').style.display = 'none';
+            openModule('qa');
+        }
+      }
+
+      // NEW: Function to handle transitioning between modules
+      function openModule(moduleId) {
+          // Hide Hub
+          document.getElementById('hub-view').style.display = 'none';
+          
+          const roleLower = currentUserRole.toLowerCase();
+
+          if (moduleId === 'stock-take') {
+              document.getElementById('selection-view').style.display = 'block';
+              document.getElementById('user-display-role').innerText = "Logged in as: " + currentUsername;
+              updateRoleBadges(currentUserRole);
+              
+              // 1. Show 'Kembali' and 'Check Part' ONLY if they are Admin/Verifier
+              if (roleLower.includes('admin') || roleLower.includes('verifier')) {
+                  document.getElementById('btn-back-hub').style.display = 'inline-block';
+                  document.getElementById('btn-check-part-main').style.display = 'block';
+              } else {
+                  document.getElementById('btn-back-hub').style.display = 'none';
+                  document.getElementById('btn-check-part-main').style.display = 'none';
+              }
+
+              // 2. RESTORED: Custom Welcome Message Logic
+              const msgEl = document.getElementById('custom-welcome-msg');
+              const userLower = currentUsername.toLowerCase();
+              let msg = "Happy hunting 😊";
+              if (userLower.includes('faisal') || userLower.includes('hayati')) {
+                  msg = "Hye Boss " + currentUsername + " 😊";
+              } else if (userLower.includes('nisha')) {
+                  msg = "Hye Nisha 😊";
+              }
+              msgEl.innerText = msg;
+
+              fetchDashboardDataBackground(); // Get live data
+
+          } else if (moduleId === 'battery') {
+              document.getElementById('battery-view').style.display = 'block';
+              // Add back button logic for battery module here later
+          } else if (moduleId === 'qa') {
+              document.getElementById('qa-view').style.display = 'block';
+              // Add back button logic for qa module here later
+          }
+      }
+
+      // NEW: Global Home Button Logic
+      function goHome() {
+          // Hide all module views
+          document.getElementById('selection-view').style.display = 'none';
+          document.getElementById('detail-view').style.display = 'none';
+          document.getElementById('single-item-view').style.display = 'none';
+          document.getElementById('battery-view').style.display = 'none';
+          document.getElementById('qa-view').style.display = 'none';
+          document.getElementById('app-container').classList.remove('wide');
+          
+          // Show Hub
+          document.getElementById('hub-view').style.display = 'block';
+      }
+
+      // SEPARATED LOGIC: Fetches data safely in the background
+      function fetchDashboardDataBackground() {
+          document.getElementById('loading-msg').style.display = 'block';
+          google.script.run.withSuccessHandler(res => {
+              const loadingEl = document.getElementById('loading-msg');
+              if(loadingEl) loadingEl.style.display = 'none';
+              
+              if (res.changed) {
+                  globalData = res.data; 
+                  lastDataTimestamp = res.timestamp;
+              }
+              renderDashboard(globalData);
+              startLiveUpdate(); 
+          }).getDashboardData(0);
       }
 
       function handleLogin(e) {
@@ -401,24 +482,28 @@
           
           document.getElementById('up-stat-count').innerText = totalProcessed;
           
-          // Populate Table
-          const tbody = document.getElementById('user-detail-tbody');
-          tbody.innerHTML = "";
-          if (itemsList.length === 0) {
-              tbody.innerHTML = "<tr><td colspan='4' style='text-align:center'>No activity matches your role rules.</td></tr>";
-          } else {
-              itemsList.forEach(item => {
-                  let badge = "status-counted";
-                  if(item.status === 'Verified') badge = "status-verified";
-                  
-                  tbody.innerHTML += `<tr>
-                      <td>${item.material}</td>
-                      <td>${item.name}</td>
-                      <td>${item.rack}</td>
-                      <td><span class="status-badge ${badge}">${item.status}</span></td>
-                  </tr>`;
-              });
-          }
+          // Populate Table - OPTIMIZED FOR SPEED
+        const tbody = document.getElementById('user-detail-tbody');
+        
+        if (itemsList.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='4' style='text-align:center'>No activity matches your role rules.</td></tr>";
+        } else {
+            let htmlString = ""; // Build the HTML in memory first
+            
+            itemsList.forEach(item => {
+                let badge = "status-counted";
+                if(item.status === 'Verified') badge = "status-verified";
+                
+                htmlString += `<tr>
+                    <td>${item.material}</td>
+                    <td>${item.name}</td>
+                    <td>${item.rack}</td>
+                    <td><span class="status-badge ${badge}">${item.status}</span></td>
+                </tr>`;
+            });
+            
+            tbody.innerHTML = htmlString; // Draw to the screen exactly ONCE
+        }
       }
 
       function toggleUserDetails() {

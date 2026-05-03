@@ -1,0 +1,72 @@
+<div id="hub-view" style="display:none;">
+  <div class="selection-header-grid">
+    <div class="header-left">
+      <h2>Command Center</h2>
+      <small id="hub-user-display">Logged in as: Admin</small>
+    </div>
+  </div>
+
+  <!-- MODULE ROUTER CARDS -->
+  <div class="hub-grid">
+      
+      <!-- Stock Take Module -->
+      <div class="hub-card" onclick="openModule('stock-take')">
+          <div class="hub-card-content">
+              <div class="card-icon bg-blue" style="width:50px; height:50px; font-size:24px; color:#1a73e8;">
+                  <i class="fas fa-warehouse"></i>
+              </div>
+              <div class="hub-card-text">
+                  <h3>Stock Take</h3>
+                  <p>Manage inventory counts, verifications, and progress.</p>
+              </div>
+          </div>
+          <div class="live-pill bg-green-pill"><i class="fas fa-circle"></i> Live: Ready</div>
+      </div>
+
+      <!-- Battery Tracking Module -->
+      <div class="hub-card" onclick="openModule('battery')">
+          <div class="hub-card-content">
+              <div class="card-icon bg-yellow" style="width:50px; height:50px; font-size:24px; color:#f39c12;">
+                  <i class="fas fa-car-battery"></i>
+              </div>
+              <div class="hub-card-text">
+                  <h3>Battery Tracking</h3>
+                  <p>Monitor battery lifecycle and staging operations.</p>
+              </div>
+          </div>
+          <div class="live-pill bg-gray-pill"><i class="fas fa-circle"></i> Active</div>
+      </div>
+
+      <!-- QA Module -->
+      <div class="hub-card" onclick="openModule('qa')">
+          <div class="hub-card-content">
+              <div class="card-icon bg-green" style="width:50px; height:50px; font-size:24px; color:#2ecc71;">
+                  <i class="fas fa-clipboard-check"></i>
+              </div>
+              <div class="hub-card-text">
+                  <h3>Quality Assurance</h3>
+                  <p>Quality assurance logs and anomaly tracking.</p>
+              </div>
+          </div>
+          <div class="live-pill bg-gray-pill"><i class="fas fa-circle"></i> Active</div>
+      </div>
+  </div>
+
+  <!-- ADMIN UTILITIES (Bottom Zone) -->
+  <div id="admin-utilities-zone" class="admin-panel" style="margin-top: 30px; display:none;">
+     <h4 style="margin: 0 0 15px 0; color: #555; text-transform:uppercase; font-size:12px;">
+        <i class="fas fa-cogs"></i> Admin Database Utilities
+     </h4>
+     
+     <div class="upload-zone">
+        <div class="upload-icon"><i class="fas fa-file-excel"></i></div>
+        <div class="upload-text">
+            <b>Upload Raw Data (.xlsx)</b>
+            <span>Select a Kanban file to automatically filter and sync to the live database.</span>
+        </div>
+        <button class="btn-action" style="background:#1a73e8; color:white; margin:0;" onclick="alert('File upload pipeline coming in Phase 2!')">
+            Select File
+        </button>
+     </div>
+  </div>
+</div>

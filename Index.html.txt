@@ -6,54 +6,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- INJECT CSS -->
     <?!= include('CSS'); ?>
   </head>
   <body>
-
-    <!-- REFRESH INDICATOR & MODALS -->
     <div id="refresh-indicator"><i class="fas fa-spinner fa-spin"></i> Refreshing...</div>
 
-    <div id="logout-modal" class="modal-overlay">
-      <div class="modal-content">
-        <h3 style="margin-top:0; color:#1a73e8" data-lang="logout_title">Logout</h3>
-        <p data-lang="msg_logout_confirm" style="color:#555; margin:10px 0 25px 0;">Do you want to logout?</p>
-        <div style="display:flex; justify-content:flex-end; gap:10px;">
-           <button class="btn-action" style="background:#f1f3f4; color:#333; flex:1;" onclick="closeLogoutModal()" data-lang="btn_cancel">No</button>
-           <button id="btn-logout-yes" class="btn-action" style="background:#d93025; color:white; flex:1;" onclick="confirmLogoutAction()" data-lang="btn_yes">Yes</button>
-        </div>
-      </div>
-    </div>
+    <!-- Modals (Logout, Remark, CheckPart) remain identical... -->
+    <!-- (I omitted modal HTML here for brevity, keep your existing modals!) -->
 
-    <div id="remark-modal" class="modal-overlay">
-      <div class="modal-content">
-        <h3 style="margin-top:0; color:#1a73e8" data-lang="lbl_remark">Remark</h3>
-        <textarea id="remark-input" rows="4" placeholder="Type here..." style="margin-bottom:15px; width:100%; padding:10px; box-sizing:border-box; border:1px solid #ddd;"></textarea>
-        <div style="display:flex; justify-content:flex-end; gap:10px;">
-           <button class="btn-action" style="background:#ddd; color:#333; flex:1;" onclick="closeRemarkModal()" data-lang="btn_cancel">Cancel</button>
-           <button class="btn-action" style="background:#1a73e8; color:white; flex:1;" onclick="saveRemark()" data-lang="btn_save">Save</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="check-part-modal" class="modal-overlay">
-      <div class="modal-content wide-modal">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3 style="margin:0; color:#c0392b;" data-lang="check_part_title">Check Part Data</h3>
-            <button class="btn-action" style="background:#ddd; color:#333; width:auto; padding:5px 15px;" onclick="closeCheckPart()" data-lang="btn_close">Close</button>
-        </div>
-        <div id="check-part-list" style="overflow-y:auto; flex-grow:1; border:1px solid #eee;"></div>
-      </div>
-    </div>
-
-    <!-- MAIN APP CONTAINER -->
     <div class="app-container" id="app-container">
-
-        <!-- GLOBAL BUTTONS -->
         <button id="global-logout-btn" onclick="requestLogout()" data-lang="btn_logout">Keluar</button>
 
         <div class="top-buttons-container">
+          <!-- NEW: Global Home Button for Hub Navigation -->
+          <button id="global-home-btn" class="btn-header-refresh" onclick="goHome()" style="display:none;">
+             <i class="fas fa-home"></i>
+          </button>
+          
           <button id="global-refresh-btn" class="btn-header-refresh" onclick="handleRefresh()">
              <i class="fas fa-sync-alt"></i>
           </button>
@@ -68,14 +37,14 @@
 
       <!-- INJECT ALL VIEWS MODULARLY -->
       <?!= include('Login'); ?>
-      <?!= include('Dashboard'); ?>
+      <?!= include('Hub'); ?>
+      <?!= include('Dashboard'); ?> <!-- Your Stock Take Dashboard -->
+      <?!= include('Battery'); ?>
+      <?!= include('QA'); ?>
       <?!= include('Details'); ?>
       <?!= include('Form'); ?>
 
     </div>
-
-    <!-- INJECT JAVASCRIPT -->
     <?!= include('JS'); ?>
-
   </body>
 </html>

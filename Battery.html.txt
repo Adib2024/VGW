@@ -1,0 +1,4 @@
+<div id="battery-view" style="display:none; padding-top:60px;">
+    <h2>Battery Tracking Module</h2>
+    <p style="color:#666;">This module is under construction.</p>
+</div>
