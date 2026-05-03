@@ -401,24 +401,28 @@
           
           document.getElementById('up-stat-count').innerText = totalProcessed;
           
-          // Populate Table
-          const tbody = document.getElementById('user-detail-tbody');
-          tbody.innerHTML = "";
-          if (itemsList.length === 0) {
-              tbody.innerHTML = "<tr><td colspan='4' style='text-align:center'>No activity matches your role rules.</td></tr>";
-          } else {
-              itemsList.forEach(item => {
-                  let badge = "status-counted";
-                  if(item.status === 'Verified') badge = "status-verified";
-                  
-                  tbody.innerHTML += `<tr>
-                      <td>${item.material}</td>
-                      <td>${item.name}</td>
-                      <td>${item.rack}</td>
-                      <td><span class="status-badge ${badge}">${item.status}</span></td>
-                  </tr>`;
-              });
-          }
+          // Populate Table - OPTIMIZED FOR SPEED
+        const tbody = document.getElementById('user-detail-tbody');
+        
+        if (itemsList.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='4' style='text-align:center'>No activity matches your role rules.</td></tr>";
+        } else {
+            let htmlString = ""; // Build the HTML in memory first
+            
+            itemsList.forEach(item => {
+                let badge = "status-counted";
+                if(item.status === 'Verified') badge = "status-verified";
+                
+                htmlString += `<tr>
+                    <td>${item.material}</td>
+                    <td>${item.name}</td>
+                    <td>${item.rack}</td>
+                    <td><span class="status-badge ${badge}">${item.status}</span></td>
+                </tr>`;
+            });
+            
+            tbody.innerHTML = htmlString; // Draw to the screen exactly ONCE
+        }
       }
 
       function toggleUserDetails() {
