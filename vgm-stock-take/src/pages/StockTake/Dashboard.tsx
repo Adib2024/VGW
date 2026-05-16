@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Card } from '../../components/ui/Card';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { supabase } from '../../lib/supabase';
-import { RefreshCw, Users, AlertTriangle, ChevronLeft } from 'lucide-react';
+import { RefreshCw, Users, AlertTriangle, ChevronLeft, Settings } from 'lucide-react';
 
 interface ZoneStats {
   total: number;
@@ -151,6 +151,12 @@ export default function StockTakeDashboard() {
         <button onClick={() => navigate('/stock-take/list?table=check_part')} style={{ width: '100%', padding: '1rem', borderRadius: '12px', backgroundColor: '#fff', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', color: '#e74c3c', fontSize: '1rem', fontWeight: 700, cursor: 'pointer' }}>
           <AlertTriangle size={20} /> View Check Part Data (Remarks)
         </button>
+
+        {user?.role === 'Admin' && (
+          <button onClick={() => navigate('/admin/settings')} style={{ width: '100%', padding: '1rem', borderRadius: '12px', backgroundColor: '#fff', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', color: '#8e44ad', fontSize: '1rem', fontWeight: 700, cursor: 'pointer' }}>
+            <Settings size={20} /> Admin Settings (CSV Upload)
+          </button>
+        )}
       </div>
 
       {/* Logout Confirmation Modal */}
