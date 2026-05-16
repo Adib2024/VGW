@@ -176,7 +176,7 @@ export default function Login() {
             
             {/* User ID */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#333' }}>User ID</label>
+              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#333' }}>{t('userId')}</label>
               <div style={{ position: 'relative' }}>
                 <input 
                   type="text"
@@ -195,7 +195,7 @@ export default function Login() {
 
             {/* Password */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#333' }}>Password</label>
+              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#333' }}>{t('password')}</label>
               <div style={{ position: 'relative' }}>
                 <input 
                   type={showPassword ? "text" : "password"}
@@ -213,7 +213,7 @@ export default function Login() {
             {/* Remember Me */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
               <input type="checkbox" id="remember" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} style={{ cursor: 'pointer' }} />
-              <label htmlFor="remember" style={{ fontSize: '0.75rem', color: '#666', cursor: 'pointer' }}>Remember me</label>
+              <label htmlFor="remember" style={{ fontSize: '0.75rem', color: '#666', cursor: 'pointer' }}>{t('rememberMe')}</label>
             </div>
             <Button 
               type="submit" 

@@ -31,8 +31,8 @@ export default function Hub() {
       
       <main className="container flex-col gap-6" style={{ flex: 1, padding: '2rem 1rem' }}>
         <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-          <h1>Welcome, {user?.name}</h1>
-          <p>Select a module to continue</p>
+          <h1>{t('welcome')}, {user?.name}</h1>
+          <p>{t('selectModule')}</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -52,7 +52,7 @@ export default function Hub() {
               <Package size={40} />
             </div>
             <h2>{t('stockTake')}</h2>
-            <p>Manage parts inventory, counts, and verification across zones.</p>
+            <p>{t('manageParts')}</p>
           </Card>
 
           <Card 
@@ -71,7 +71,7 @@ export default function Hub() {
               <Battery size={40} />
             </div>
             <h2>{t('batteryTracking')}</h2>
-            <p>Track battery statuses, locations, and lifecycle.</p>
+            <p>{t('trackBattery')}</p>
           </Card>
 
           <Card 
@@ -90,7 +90,7 @@ export default function Hub() {
               <ShieldCheck size={40} />
             </div>
             <h2>{t('qualityAssurance')}</h2>
-            <p>Perform QA inspections and log discrepancies.</p>
+            <p>{t('performQA')}</p>
           </Card>
 
         </div>

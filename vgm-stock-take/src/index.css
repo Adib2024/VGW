@@ -172,30 +172,37 @@ p {
 
 @keyframes driveRightToLeft {
   0% {
-    right: -50px;
+    right: -90px;
     opacity: 1;
   }
   30% {
-    right: calc(100% - 45px); /* Stop 5px from left edge */
+    right: calc(100% - 85px); /* Stop 5px from left edge */
     opacity: 1;
   }
   80% {
-    right: calc(100% - 45px); /* Wait for 3 seconds */
+    right: calc(100% - 85px); /* Wait for 3 seconds */
     opacity: 1;
   }
-  99% {
-    right: calc(100% + 50px); /* Continue off screen */
+  95% {
+    right: calc(100% + 90px); /* Continue off screen left */
     opacity: 1;
+  }
+  95.1% {
+    right: calc(100% + 90px); /* Instantly turn invisible while still off screen left */
+    opacity: 0;
+  }
+  99.9% {
+    right: -90px; /* Reset position to the right while remaining invisible */
+    opacity: 0;
   }
   100% {
-    right: -50px;
-    opacity: 0;
+    right: -90px; /* Ready for next loop */
+    opacity: 1;
   }
 }
 
 .car-icon-anim {
   position: absolute;
-  top: -15px;
   animation: driveRightToLeft 6s linear infinite;
 }
 

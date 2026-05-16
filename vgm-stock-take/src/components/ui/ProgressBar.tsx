@@ -4,9 +4,11 @@ interface ProgressBarProps {
   percentage: number;
   label?: string;
   showCar?: boolean;
+  carDelay?: string;
+  carDuration?: string;
 }
 
-export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage, label, showCar = false }) => {
+export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage, label, showCar = false, carDelay = '0s', carDuration = '6s' }) => {
   const safePercentage = Math.min(Math.max(percentage, 0), 100);
 
   return (
@@ -17,8 +19,8 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage, label, sho
           <span style={{ color: 'var(--text-secondary)' }}>{safePercentage.toFixed(0)}%</span>
         </div>
       )}
-      <div style={{ position: 'relative', width: '100%', paddingTop: '20px', overflow: 'hidden' }}>
-        <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--surface-highlight)', borderRadius: '999px' }}>
+      <div style={{ position: 'relative', width: '100%', height: '50px', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', bottom: '5px', width: '100%', height: '8px', backgroundColor: 'var(--surface-highlight)', borderRadius: '999px' }}>
           <div
             style={{
               width: `${safePercentage}%`,
@@ -30,8 +32,8 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage, label, sho
           />
         </div>
         {showCar && (
-          <div className="car-icon-anim" style={{ top: '4px' }}>
-            <img src="https://i.postimg.cc/4NMmDwqL/Golf-RL-Blue.webp" alt="car" style={{ width: '40px', height: 'auto', objectFit: 'contain' }} />
+          <div className="car-icon-anim" style={{ bottom: '8px', animationDelay: carDelay, animationDuration: carDuration }}>
+            <img src="https://i.postimg.cc/4NMmDwqL/Golf-RL-Blue.webp" alt="car" style={{ width: '80px', height: 'auto', objectFit: 'contain' }} />
           </div>
         )}
       </div>

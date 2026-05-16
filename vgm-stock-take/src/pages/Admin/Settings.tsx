@@ -5,8 +5,10 @@ import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabase';
 import { Upload, AlertTriangle, CheckCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function AdminSettings() {
+  const { t } = useLanguage();
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [selectedZone, setSelectedZone] = useState('b17');
@@ -69,7 +71,7 @@ export default function AdminSettings() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Navigation title="Admin Settings" backTo="/stock-take" />
+      <Navigation title={t('adminSettings')} backTo="/stock-take" />
       
       <main className="container flex-col gap-6" style={{ flex: 1, padding: '2rem 1rem', maxWidth: '800px' }}>
         
@@ -79,22 +81,22 @@ export default function AdminSettings() {
               <Upload size={24} />
             </div>
             <div>
-              <h2 style={{ margin: 0 }}>Master Parts Database Upload</h2>
-              <p style={{ margin: 0, fontSize: '0.875rem' }}>Upload a .xlsx file to refresh the parts inventory.</p>
+              <h2 style={{ margin: 0 }}>{t('masterPartsDbUpload')}</h2>
+              <p style={{ margin: 0, fontSize: '0.875rem' }}>{t('uploadDesc')}</p>
             </div>
           </div>
 
           <div style={{ backgroundColor: 'var(--surface-highlight)', padding: '1.5rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem' }}>
-            <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>File Requirements:</h3>
+            <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>{t('fileRequirements')}</h3>
             <ul style={{ paddingLeft: '1.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <li>Format: <strong>.csv</strong>, <strong>.xlsx</strong>, or <strong>.xls</strong></li>
-              <li>Required Columns: <strong>Material</strong>, <strong>Part Name</strong> (or Part No), <strong>Storage Bin</strong> (or Location)</li>
-              <li>All extra columns will automatically be saved into the database's <code>metadata</code> field!</li>
+              <li>{t('formatLabel')}</li>
+              <li>{t('requiredColumns')}</li>
+              <li>{t('extraColumns')}</li>
             </ul>
           </div>
 
           <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Assign to Zone:</label>
+            <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-secondary)' }}>{t('assignZone')}</label>
             <select 
               value={selectedZone} 
               onChange={(e) => setSelectedZone(e.target.value)}
@@ -145,7 +147,7 @@ export default function AdminSettings() {
             />
             <label htmlFor="excel-upload">
               <Button as="span" style={{ pointerEvents: 'none' }} disabled={uploading}>
-                {uploading ? 'Uploading...' : 'Select & Upload CSV / Excel File'}
+                {uploading ? t('uploadingBtn') : t('selectUploadBtn')}
               </Button>
             </label>
           </div>
