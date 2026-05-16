@@ -1,0 +1,1109 @@
+    <script>
+      const SHEET_CONFIG = {
+        b17: { partNo: 1, material: 2, name: 3, rack: 6, boxes: [7,8,9,10,11], recounts: [12,13,14,15,16], status: 17, verified: 19, remark: 20 },
+        b22: { partNo: 1, material: 2, name: 3, tact: 6, boxes: [7,8,9,10,11], recounts: [12,13,14,15,16], status: 17, verified: 18, remark: 19 },
+        loma: { partNo: 1, material: 2, name: 3, tact: 5, boxes: [6,7,8,9,10], recounts: [11,12,13,14,15], status: 16, verified: 17, remark: 18 },
+        b22seq: { partNo: 1, material: 2, name: 3, tact: 6, boxes: [7,8,9,10,11], recounts: [12,13,14,15,16], status: 17, verified: 18, remark: 19 }
+      };
+
+      let globalData = { b17: [], b22: [], loma: [], b22seq: [], checkPart: [] };
+      let lastDataTimestamp = 0;
+      let currentLang = 'ms'; 
+      let currentDatasetKey = ''; 
+      let currentItemPartNo = ''; 
+      let currentUserRole = ''; 
+      let currentUsername = ''; 
+      let pollingInterval = null;
+      let isFetching = false;
+      let myChart = null; 
+      let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
+      let loginTimestamp = '';
+      // --- NEW: Live Role Detection Timer ---
+      let roleCheckTimer;
+      let lastCheckedUser = ""; // Remembers the last searched name to prevent spamming the server
+
+      function autoDetectRole(isInstant) {
+          clearTimeout(roleCheckTimer); 
+          
+          const user = document.getElementById('username').value.trim();
+          const roleDropdown = document.getElementById('login-role');
+
+          // If box is empty, reset
+          if (user.length === 0) {
+              roleDropdown.options[0].text = "Auto-Detecting from Database...";
+              lastCheckedUser = "";
+              return;
+          }
+
+          // If we already found this user, don't search again
+          if (user === lastCheckedUser && !isInstant) return; 
+
+          // Show scanning message
+          roleDropdown.options[0].text = "Mencari data... ⏳";
+
+          // If they click the password box (isInstant), delay is 0. Otherwise wait 400ms.
+          const delayTime = isInstant ? 0 : 400;
+
+          roleCheckTimer = setTimeout(() => {
+              lastCheckedUser = user; // Remember who we are searching for
+              
+              google.script.run.withSuccessHandler(res => {
+                  if (res.found) {
+                      // Force the text to display the role with a checkmark! (Ignores typos/spaces)
+                      roleDropdown.options[0].text = "✅ " + res.role;
+                  } else {
+                      roleDropdown.options[0].text = "❌ ID tidak dijumpai...";
+                  }
+              }).getUserRole(user);
+          }, delayTime); 
+      }
+
+      const translations = {
+        ms: {
+          login_title: "VGM Stock Take 2026", label_userid: "ID Pengguna", label_password: "Kata Laluan", label_role: "Peranan", 
+          btn_login: "Log Masuk", btn_processing: "Sedang Proses...", select_data: "Pilih Data", btn_logout: "Keluar", 
+          btn_checkpart: "Lihat Check Part Data (Remarks)", loading: "Sedang memuatkan data...", btn_back: "Kembali", 
+          item_details: "Butiran Item", no_data: "Tiada data dijumpai.", btn_edit: "Edit", btn_save: "Simpan",
+          btn_cancel: "Batal", btn_verify: "Sahkan", remember_me: "Ingat saya", btn_close: "Tutup", check_part_title: "Semak Data Part",
+          lbl_partno: "No Part", lbl_material: "Material", 
+          // Changed Rak to Lokasi
+          lbl_rack: "Lokasi", 
+          lbl_status: "Status",
+          lbl_count_data: "Data Kiraan", lbl_verified_by: "Disahkan Oleh", lbl_remark: "Catatan",
+          ph_remark: "Klik untuk tambah catatan...", box_label: "Kotak", rec_label: "Kiraan Semula",
+          alert_saved: "Data Disimpan!", alert_verified: "Disahkan!", msg_logout_confirm: "Adakah anda mahu log keluar?",
+          logout_title: "Log Keluar", btn_yes: "Ya"
+        },
+        en: {
+          login_title: "VGM Stock Take 2026", label_userid: "User ID", label_password: "Password", label_role: "Role", 
+          btn_login: "Login", btn_processing: "Processing...", select_data: "Select Data", btn_logout: "Logout", 
+          btn_checkpart: "View Check Part Data (Remarks)", loading: "Loading data...", btn_back: "Back", 
+          item_details: "Item Details", no_data: "No data found.", btn_edit: "Edit", btn_save: "Save",
+          btn_cancel: "Cancel", btn_verify: "Verify", remember_me: "Remember me", btn_close: "Close", check_part_title: "Check Part Data",
+          lbl_partno: "Part No", lbl_material: "Material", 
+          // Changed Rack to Location
+          lbl_rack: "Location", 
+          lbl_status: "Status",
+          lbl_count_data: "Count Data", lbl_verified_by: "Verified By", lbl_remark: "Remark",
+          ph_remark: "Click to add remark...", box_label: "Box", rec_label: "Recount",
+          alert_saved: "Data Saved!", alert_verified: "Verified!", msg_logout_confirm: "Do you want to logout?",
+          logout_title: "Logout", btn_yes: "Yes"
+        }
+      };
+
+      function t(key) { return translations[currentLang][key] || key; }
+      
+      function changeLanguage(lang) {
+        currentLang = lang;
+        localStorage.setItem('appLang', lang); 
+        document.querySelectorAll('[data-lang]').forEach(el => {
+          const key = el.getAttribute('data-lang');
+          if (translations[lang][key]) el.innerText = translations[lang][key];
+        });
+        const searchInput = document.getElementById('search-input');
+        if(searchInput) searchInput.placeholder = lang === 'ms' ? 'Cari Material...' : 'Search Material...';
+      }
+
+      window.onload = function() {
+        const savedLang = localStorage.getItem('appLang');
+        if (savedLang) {
+          currentLang = savedLang; document.getElementById('lang-select').value = savedLang; changeLanguage(savedLang);
+        }
+
+        // --- NEW: Check if user refreshed the page but is still logged in ---
+        if (sessionStorage.getItem('active_session') === 'true') {
+            currentUsername = sessionStorage.getItem('current_user');
+            currentUserRole = sessionStorage.getItem('current_role');
+            loginTimestamp = sessionStorage.getItem('login_time');
+            activateDashboard(); // Bypass login screen instantly
+        } else {
+            // Only auto-fill if there is NO active session
+            const remUser = localStorage.getItem('st_username');
+            const remPass = localStorage.getItem('st_password');
+            if(remUser && remPass) {
+               document.getElementById('username').value = remUser;
+               document.getElementById('password').value = remPass;
+               document.getElementById('remember-me').checked = true;
+            }
+        }
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, {passive: false});
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+            handleGesture();
+        }, {passive: false});
+      };
+
+      function handleGesture() {
+          const xDiff = touchEndX - touchStartX;
+          const yDiff = touchEndY - touchStartY;
+          if (yDiff > 120 && window.scrollY <= 0 && Math.abs(xDiff) < 60) {
+              handleRefresh();
+          }
+      }
+
+      function handleRefresh() {
+          const indicator = document.getElementById('refresh-indicator');
+          indicator.classList.add('visible');
+          google.script.run.withSuccessHandler(res => {
+            if (res.changed) {
+                globalData = res.data; 
+                lastDataTimestamp = res.timestamp;
+            }
+            if(document.getElementById('selection-view').style.display === 'block') renderDashboard(globalData);
+            if (document.getElementById('detail-view').style.display === 'block') renderCurrentRackList();
+            setTimeout(() => { indicator.classList.remove('visible'); }, 800);
+          }).getDashboardData(0); // '0' forces a full manual sync
+      }
+
+      function togglePasswordVisibility(icon) {
+        const input = document.getElementById('password');
+        if (input.type === "password") {
+          input.type = "text";
+          icon.classList.remove("fa-eye");
+          icon.classList.add("fa-eye-slash");
+        } else {
+          input.type = "password";
+          icon.classList.remove("fa-eye-slash");
+          icon.classList.add("fa-eye");
+        }
+      }
+
+      function activateDashboard() {
+        document.getElementById('user-display-role').innerText = "Logged in as: " + currentUsername;
+        updateRoleBadges(currentUserRole);
+        
+        document.getElementById('login-view').style.display = 'none';
+        document.getElementById('selection-view').style.display = 'block';
+        document.getElementById('global-logout-btn').style.display = 'block';
+        document.getElementById('global-refresh-btn').style.display = 'block';
+
+        const msgEl = document.getElementById('custom-welcome-msg');
+        const userLower = currentUsername.toLowerCase();
+        let msg = "Happy hunting 😊";
+        if (userLower.includes('faisal') || userLower.includes('hayati')) {
+            msg = "Hye Boss " + currentUsername + " 😊";
+        } else if (userLower.includes('nisha')) {
+            msg = "Hye Nisha 😊";
+        }
+        msgEl.innerText = msg;
+
+        if (currentUserRole.toLowerCase() === 'admin' || currentUserRole.toLowerCase() === 'verifier') {
+           document.getElementById('btn-check-part-main').style.display = 'block';
+        } else {
+           document.getElementById('btn-check-part-main').style.display = 'none';
+        }
+
+        document.getElementById('loading-msg').style.display = 'block';
+        
+        google.script.run.withSuccessHandler(res => {
+            document.getElementById('loading-msg').style.display = 'none';
+            if (res.changed) {
+                globalData = res.data; 
+                lastDataTimestamp = res.timestamp;
+            }
+            renderDashboard(globalData);
+            startLiveUpdate(); 
+        }).getDashboardData(0); // '0' forces a full download on first login
+      }
+
+      function handleLogin(e) {
+        e.preventDefault();
+        const btn = document.getElementById('login-btn');
+        const originalText = btn.innerText;
+        btn.innerText = t('btn_processing');
+
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+        const remember = document.getElementById('remember-me').checked;
+
+        google.script.run.withSuccessHandler(res => {
+          if (res.status === 'success') {
+            if(remember) {
+                localStorage.setItem('st_username', user);
+                localStorage.setItem('st_password', pass);
+            } else {
+                localStorage.removeItem('st_username');
+                localStorage.removeItem('st_password');
+            }
+            
+            // 1. Visually auto-select the role in the dropdown so the user sees it!
+            document.getElementById('login-role').value = res.role; 
+
+            // 2. Save the role to the app's memory
+            currentUserRole = res.role;
+            currentUsername = user;
+            loginTimestamp = new Date().toLocaleString(); 
+            
+            sessionStorage.setItem('active_session', 'true');
+            sessionStorage.setItem('current_user', currentUsername);
+            sessionStorage.setItem('current_role', currentUserRole);
+            sessionStorage.setItem('login_time', loginTimestamp);
+            
+            // 3. Wait half a second so the user can see the automation happen, then launch dashboard
+            setTimeout(activateDashboard, 500);
+
+          } else {
+            alert(res.message);
+            btn.innerText = originalText;
+          }
+        }).checkLogin(user, pass); // <-- Notice we removed 'role' from being sent to the server
+      }
+
+      function updateRoleBadges(role) {
+        let labelText = role + " View";
+        const ids = ['lbl-role-selection', 'lbl-role-detail', 'lbl-role-item'];
+        ids.forEach(id => { const el = document.getElementById(id); if(el) el.innerText = labelText; });
+      }
+
+      function renderDashboard(data) {
+        globalData.b17 = data.b17 || [];
+        globalData.b22 = data.b22 || [];
+        globalData.loma = data.loma || [];     
+        globalData.b22seq = data.b22seq || []; 
+        globalData.checkPart = data.checkPart || [];
+
+        updateCardStats('b17', globalData.b17);
+        updateCardStats('b22', globalData.b22);
+        updateCardStats('loma', globalData.loma);
+        updateCardStats('b22seq', globalData.b22seq);
+      }
+
+      function updateCardStats(key, dataset) {
+        const total = dataset.length;
+        const txtEl = document.getElementById(`stat-txt-${key}`);
+        const pctEl = document.getElementById(`stat-pct-${key}`);
+        const barEl = document.getElementById(`prog-bar-${key}`);
+        const badgeEl = document.getElementById(`stat-badge-${key}`); // <-- Grabs the new badge ID
+        
+        const conf = SHEET_CONFIG[key];
+
+        // IF NO DATA EXISTS YET (Or sheet is empty)
+        if (total === 0) {
+          if(txtEl) txtEl.innerText = "No Data";
+          if(pctEl) pctEl.innerText = "0%";
+          if(barEl) barEl.style.width = "0%";
+          if(badgeEl) {
+              badgeEl.innerText = "Pending";
+              badgeEl.className = "status-badge status-not-counted"; // Turns the badge red
+          }
+          return;
+        }
+
+        let progressCount = 0;
+        dataset.forEach(r => {
+          const status = String(r[conf.status] || "").trim().toLowerCase();
+          if (status === 'verified' || status === 'counted') {
+            progressCount++;
+          }
+        });
+
+        // IF DATA IS SUCCESSFULLY LOADED
+        const percentage = Math.round((progressCount / total) * 100);
+        if(txtEl) txtEl.innerText = `${progressCount} / ${total} Items`;
+        if(pctEl) pctEl.innerText = `${percentage}%`;
+        if(barEl) barEl.style.width = `${percentage}%`;
+        if(badgeEl) {
+            badgeEl.innerText = "Ready";
+            badgeEl.className = "status-badge status-counted"; // Turns the badge blue
+        }
+      }
+
+      function startLiveUpdate() {
+        document.getElementById('live-indicator').style.display = 'flex';
+        if (pollingInterval) clearInterval(pollingInterval);
+        
+        const jitter = Math.floor(Math.random() * 3000);
+        pollingInterval = setInterval(() => {
+          if (isFetching) return;
+          if (document.getElementById('single-item-view').style.display === 'block') return; 
+
+          isFetching = true;
+          google.script.run.withSuccessHandler(res => {
+            isFetching = false;
+            // ONLY re-render if the server says the data actually changed
+            if (res.changed) {
+                globalData = res.data; 
+                lastDataTimestamp = res.timestamp;
+                if(document.getElementById('selection-view').style.display === 'block') renderDashboard(globalData);
+                if (document.getElementById('detail-view').style.display === 'block') renderCurrentRackList();
+            }
+          }).withFailureHandler(() => { isFetching = false; }).getDashboardData(lastDataTimestamp);
+        }, 5000 + jitter); // 5 seconds + a random small delay
+      }
+
+      /* --- USER PROGRESS FEATURE (UPDATED STRICT LOGIC) --- */
+      function openUserProgress() {
+          document.getElementById('selection-view').style.display = 'none';
+          document.getElementById('user-progress-view').style.display = 'block';
+          document.getElementById('app-container').classList.add('wide');
+          
+          document.getElementById('up-name').innerText = currentUsername;
+          document.getElementById('up-role').innerText = currentUserRole;
+          document.getElementById('up-login').innerText = loginTimestamp || "Current Session";
+          document.getElementById('up-logout').innerText = localStorage.getItem('lastLogout') || "-";
+          
+          let totalProcessed = 0;
+          let itemsList = [];
+          
+          const keys = ['b17', 'b22', 'loma', 'b22seq'];
+          
+          const roleLower = currentUserRole.toLowerCase();
+          const isVerifier = roleLower.includes('verifier');
+          const targetUsername = currentUsername.toLowerCase().trim();
+          
+          document.getElementById('up-stat-label').innerText = isVerifier ? "Items Verified by You" : "Items Counted";
+
+          keys.forEach(key => {
+             const data = globalData[key] || [];
+             const conf = SHEET_CONFIG[key];
+             
+             data.forEach(r => {
+                 let match = false;
+                 
+                 const rowStatus = String(r[conf.status] || "").trim();
+                 const rowVerifiedBy = String(r[conf.verified] || "").trim().toLowerCase();
+
+                 if (isVerifier) {
+                     // STRICT VERIFIER RULE:
+                     // 1. Status must be "Verified".
+                     // 2. "Verified By" column must match current username.
+                     if (rowStatus === 'Verified' && rowVerifiedBy === targetUsername) {
+                         match = true;
+                     }
+                 } else {
+                     // STRICT COUNTER RULE:
+                     // 1. Status must be "Counted".
+                     // 2. Counters NEVER see "Verified" items.
+                     // Since there is no "Counted By" column in your sheet, counters see all currently "Counted" items.
+                     if (rowStatus === 'Counted') {
+                         match = true;
+                     }
+                 }
+
+                 if (match) {
+                     totalProcessed++;
+                     itemsList.push({
+                         material: r[conf.material],
+                         name: r[conf.name],
+                         rack: r[conf.rack] || r[conf.tact] || "-", 
+                         status: rowStatus,
+                         key: key
+                     });
+                 }
+             });
+          });
+          
+          document.getElementById('up-stat-count').innerText = totalProcessed;
+          
+          // Populate Table - OPTIMIZED FOR SPEED
+        const tbody = document.getElementById('user-detail-tbody');
+        
+        if (itemsList.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='4' style='text-align:center'>No activity matches your role rules.</td></tr>";
+        } else {
+            let htmlString = ""; // Build the HTML in memory first
+            
+            itemsList.forEach(item => {
+                let badge = "status-counted";
+                if(item.status === 'Verified') badge = "status-verified";
+                
+                htmlString += `<tr>
+                    <td>${item.material}</td>
+                    <td>${item.name}</td>
+                    <td>${item.rack}</td>
+                    <td><span class="status-badge ${badge}">${item.status}</span></td>
+                </tr>`;
+            });
+            
+            tbody.innerHTML = htmlString; // Draw to the screen exactly ONCE
+        }
+      }
+
+      function toggleUserDetails() {
+          const container = document.getElementById('user-detail-table-container');
+          const btn = document.getElementById('btn-toggle-details');
+          if (container.style.display === 'none') {
+              container.style.display = 'block';
+              btn.innerHTML = 'Hide Details <i class="fas fa-chevron-up"></i>';
+          } else {
+              container.style.display = 'none';
+              btn.innerHTML = 'View Details <i class="fas fa-chevron-down"></i>';
+          }
+      }
+
+      function printUserProgress() {
+          // Ensure details are visible before printing
+          document.getElementById('user-detail-table-container').style.display = 'block';
+          window.print();
+      }
+
+      function requestLogout() { document.getElementById('logout-modal').style.display = 'flex'; }
+      function closeLogoutModal() { document.getElementById('logout-modal').style.display = 'none'; }
+
+      function confirmLogoutAction() {
+          const yesBtn = document.getElementById('btn-logout-yes'); 
+          
+          if (document.getElementById('single-item-view').style.display === 'block' && currentItemPartNo) {
+             if(yesBtn) { yesBtn.innerText = "Saving..."; yesBtn.disabled = true; }
+             const newValues = getFormValues();
+             google.script.run.withSuccessHandler(() => {
+                 performLogout(); closeLogoutModal(); 
+                 if(yesBtn) { yesBtn.innerText = t('btn_yes'); yesBtn.disabled = false; }
+             }).withFailureHandler(() => {
+                 performLogout(); closeLogoutModal();
+                 if(yesBtn) { yesBtn.innerText = t('btn_yes'); yesBtn.disabled = false; }
+             }).saveData(currentDatasetKey, currentItemPartNo, newValues);
+          } else {
+             performLogout(); closeLogoutModal();
+          }
+      }
+
+      function performLogout() {
+        if (pollingInterval) clearInterval(pollingInterval);
+        
+        localStorage.setItem('lastLogout', new Date().toLocaleString());
+        
+        // --- NEW: Destroy the active session memory ---
+        sessionStorage.removeItem('active_session');
+        sessionStorage.removeItem('current_user');
+        sessionStorage.removeItem('current_role');
+        sessionStorage.removeItem('login_time');
+        
+        globalData = { b17:[], b22:[], loma:[], b22seq:[], checkPart:[] };
+        currentUserRole = ''; currentUsername = '';
+        
+        document.getElementById('selection-view').style.display = 'none';
+        document.getElementById('detail-view').style.display = 'none';
+        document.getElementById('progress-view').style.display = 'none';
+        document.getElementById('user-progress-view').style.display = 'none'; 
+        document.getElementById('single-item-view').style.display = 'none';
+        document.getElementById('app-container').classList.remove('wide');
+        document.getElementById('global-logout-btn').style.display = 'none';
+        document.getElementById('global-refresh-btn').style.display = 'none';
+        document.getElementById('global-logout-btn').innerText = t('btn_logout');
+
+        if(!localStorage.getItem('st_username')) {
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('remember-me').checked = false;
+        }
+        document.getElementById('login-btn').innerText = t('btn_login');
+        document.getElementById('login-view').style.display = 'block';
+      }
+
+      function openRackList(datasetKey) {
+        currentDatasetKey = datasetKey;
+        if (!globalData[datasetKey]) { alert("Data belum siap."); return; }
+        
+        document.getElementById('selection-view').style.display = 'none';
+        document.getElementById('detail-view').style.display = 'block';
+        document.getElementById('app-container').classList.add('wide');
+        document.getElementById('search-input').value = "";
+        
+        const data = globalData[datasetKey];
+        const conf = SHEET_CONFIG[datasetKey];
+        
+        const uniqueFilters = new Set();
+        data.forEach(r => { 
+            let groupIdx = (conf.rack !== null) ? conf.rack : conf.tact;
+            let val = (r[groupIdx] || "").toString().trim(); 
+            if(val) uniqueFilters.add(val);
+        });
+        const sortedFilters = Array.from(uniqueFilters).sort((a,b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+        const select = document.getElementById('filter-select');
+        select.innerHTML = `<option value="All">All Groups</option>`;
+        sortedFilters.forEach(f => { select.innerHTML += `<option value="${f}">${f}</option>`; });
+        
+        renderCurrentRackList();
+      }
+
+      function renderCurrentRackList() {
+        const data = globalData[currentDatasetKey];
+        const conf = SHEET_CONFIG[currentDatasetKey];
+        
+        const container = document.getElementById('rack-container');
+        const filterVal = document.getElementById('filter-select').value;
+        const searchVal = document.getElementById('search-input').value.toLowerCase();
+        
+        container.innerHTML = "";
+        
+        let groupIdx = (conf.rack !== null) ? conf.rack : conf.tact;
+        let groupLabel = (conf.rack !== null) ? t('lbl_rack') : "Tact";
+
+        let filteredData = data.filter(r => {
+            const group = (r[groupIdx] || "").toString().trim();
+            const material = (r[conf.material] || "").toString().toLowerCase();
+            const partNo = (r[conf.partNo] || "").toString().toLowerCase();
+            const matchesFilter = (filterVal === 'All') || (group === filterVal);
+            const matchesSearch = (searchVal === "") || material.includes(searchVal) || partNo.includes(searchVal);
+            return matchesFilter && matchesSearch;
+        });
+
+        let countProgress = 0;
+        let totalItems = filteredData.length;
+        filteredData.forEach(r => {
+             const s = String(r[conf.status] || "").trim().toLowerCase();
+             if(s==='verified' || s==='counted') countProgress++;
+        });
+        const pct = totalItems === 0 ? 0 : Math.round((countProgress/totalItems)*100);
+        document.getElementById('detail-prog-bar').style.width = pct + "%";
+        document.getElementById('detail-prog-pct').innerText = pct + "% (" + countProgress + "/" + totalItems + ")";
+
+        if(filteredData.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding:20px;">${t('no_data')}</div>`;
+            return;
+        }
+
+        // Changed class to location-section
+        let html = `<div class="location-section"><table class="table"><thead><tr>
+            <th data-lang="lbl_partno">${t('lbl_partno')}</th>
+            <th data-lang="lbl_material">${t('lbl_material')}</th>
+            <th>${groupLabel}</th>
+            <th data-lang="lbl_status">${t('lbl_status')}</th>
+        </tr></thead><tbody>`;
+
+        filteredData.forEach(r => {
+            const status = r[conf.status] || "Not Counted";
+            let badgeClass = "status-not-counted";
+            if(status === "Verified") badgeClass = "status-verified";
+            else if(status === "Counted") badgeClass = "status-counted";
+
+            const rowJson = encodeURIComponent(JSON.stringify(r));
+            html += `<tr class="clickable-row" onclick="openSingleItemView('${rowJson}')">
+                <td><b>${r[conf.partNo]}</b></td><td>${r[conf.material]}</td><td>${r[groupIdx]}</td>
+                <td><span class="status-badge ${badgeClass}">${status}</span></td>
+            </tr>`;
+        });
+        html += `</tbody></table></div>`;
+        container.innerHTML = html;
+      }
+
+      function openProgressView() {
+          document.getElementById('detail-view').style.display = 'none';
+          document.getElementById('progress-view').style.display = 'block';
+          
+          if(myChart) myChart.destroy();
+          
+          const ctx = document.getElementById('progressChart').getContext('2d');
+          const data = globalData[currentDatasetKey];
+          const conf = SHEET_CONFIG[currentDatasetKey];
+          
+          if (currentDatasetKey === 'b17') {
+              const racks = {}; 
+              data.forEach(r => {
+                  const rack = r[conf.rack] || "Unknown"; 
+                  const status = String(r[conf.status]).trim().toLowerCase();
+                  if(!racks[rack]) racks[rack] = { v:0, c:0, n:0 };
+                  if(status === 'verified') racks[rack].v++;
+                  else if(status === 'counted') racks[rack].c++;
+                  else racks[rack].n++;
+              });
+              
+              const labels = Object.keys(racks).sort(); 
+              const dataV = labels.map(l => racks[l].v);
+              const dataC = labels.map(l => racks[l].c);
+              const dataN = labels.map(l => racks[l].n);
+              
+              myChart = new Chart(ctx, {
+                  type: 'bar',
+                  data: {
+                      labels: labels,
+                      datasets: [
+                          { label: 'Not Counted', data: dataN, backgroundColor: '#e74c3c' },
+                          { label: 'Counted', data: dataC, backgroundColor: '#3498db' },
+                          { label: 'Verified', data: dataV, backgroundColor: '#2ecc71' }
+                      ]
+                  },
+                  options: {
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      scales: {
+                          x: { stacked: true },
+                          y: { stacked: true, beginAtZero: true }
+                      },
+                      plugins: {
+                          // Changed Rack to Location
+                          title: { display: true, text: 'Status by Location (B17)' },
+                          legend: { position: 'top' }
+                      }
+                  }
+              });
+
+          } else {
+              let v=0, c=0, n=0;
+              data.forEach(r => {
+                  const status = String(r[conf.status]).trim().toLowerCase();
+                  if(status === 'verified') v++;
+                  else if(status === 'counted') c++;
+                  else n++;
+              });
+              
+              myChart = new Chart(ctx, {
+                  type: 'bar',
+                  data: {
+                      labels: ['Verified', 'Counted', 'Not Counted'],
+                      datasets: [{
+                          label: 'Items',
+                          data: [v, c, n],
+                          backgroundColor: ['#2ecc71', '#3498db', '#e74c3c']
+                      }]
+                  },
+                  options: {
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      scales: { y: { beginAtZero: true } },
+                      plugins: { legend: { display: false } }
+                  }
+              });
+          }
+      }
+
+      function closeProgressView() {
+          document.getElementById('progress-view').style.display = 'none';
+          document.getElementById('detail-view').style.display = 'block';
+      }
+
+      function openSingleItemView(rowEncoded) {
+        const r = JSON.parse(decodeURIComponent(rowEncoded));
+        const conf = SHEET_CONFIG[currentDatasetKey];
+        
+        currentItemPartNo = String(r[conf.partNo]).trim();
+
+        document.getElementById('detail-view').style.display = 'none';
+        document.getElementById('single-item-view').style.display = 'block';
+        document.getElementById('app-container').classList.remove('wide');
+        const container = document.getElementById('item-detail-container');
+        
+        const valMaterial = r[conf.material] || "-";      
+        const valPartName = r[conf.name] || "-";
+        
+        let dynamicInfoHtml = '';
+        dynamicInfoHtml += `<div class="detail-row"><div class="detail-label">${t('lbl_material')}</div><div class="detail-value">${valMaterial}</div></div>`;
+        dynamicInfoHtml += `<div class="detail-row"><div class="detail-label">Part Name</div><div class="detail-value">${valPartName}</div></div>`;
+        
+        if (conf.storage !== null) dynamicInfoHtml += `<div class="detail-row"><div class="detail-label">Storage Bin</div><div class="detail-value">${r[conf.storage] || "-"}</div></div>`;
+        if (conf.tact !== null) dynamicInfoHtml += `<div class="detail-row"><div class="detail-label">Tact</div><div class="detail-value">${r[conf.tact] || "-"}</div></div>`;
+        // Changed Rack Number to Location
+        if (conf.rack !== null) dynamicInfoHtml += `<div class="detail-row"><div class="detail-label">Location</div><div class="detail-value">${r[conf.rack] || "-"}</div></div>`;
+
+        const boxes = conf.boxes.map(idx => r[idx]);
+        const recounts = conf.recounts.map(idx => r[idx]);
+        
+        const status = r[conf.status] || "Not Counted";
+        const remark = r[conf.remark] || "";
+        const verifiedBy = r[conf.verified] || "-";
+
+        const roleLower = currentUserRole.toLowerCase();
+        const isVerifier = roleLower === 'verifier';
+        const isAdmin = roleLower === 'admin';
+        const isCounter = !isVerifier && !isAdmin;
+
+        const boxDisabled = 'disabled';
+        const recDisabled = isCounter ? 'disabled' : (isVerifier ? '' : 'disabled'); 
+        const recStyle = isVerifier ? 'border-color:#8e44ad; background:#fff;' : '';
+
+        let inputRowsHtml = '';
+
+        for (let i = 0; i < 5; i++) {
+            let boxVal = boxes[i];
+            let recVal = recounts[i];
+            
+            // --- NEW: LOGIC FOR LOCKING SAVED DATA ---
+            const isBoxSaved = (boxVal !== "" && boxVal !== null && boxVal !== undefined);
+            const boxLockedAttr = isBoxSaved ? "disabled" : "";
+            
+            let boxDotHtml = `<span class="status-dot"></span>`; 
+            let recDotHtml = `<span class="status-dot"></span>`;
+            let boxDotClass = "";
+            let recDotClass = "";
+            let boxColor = "";
+            let recColor = "";
+
+            if (recVal !== "" && recVal != null) {
+                recColor = "color: #2ecc71; font-weight:bold;";
+                recDotClass = "dot-green";
+                if (boxVal !== "" && boxVal != null) {
+                    boxColor = "color: #e74c3c; font-weight:bold;";
+                    boxDotClass = "dot-red";
+                }
+            } else {
+                if (boxVal !== "" && boxVal != null) {
+                    boxColor = "color: #2ecc71; font-weight:bold;";
+                    boxDotClass = "dot-green";
+                }
+            }
+            
+            if(boxDotClass) boxDotHtml = `<span class="status-dot ${boxDotClass}" style="display:block"></span>`;
+            if(recDotClass) recDotHtml = `<span class="status-dot ${recDotClass}" style="display:block"></span>`;
+
+            const adminDisplay = (currentUserRole.toLowerCase() === 'admin') ? 'inline-block' : 'none';
+
+            inputRowsHtml += `
+            <div class="detail-row" id="row-box-${i+1}" style="display:${i===0?'flex':'none'};">
+                <div class="detail-label" data-lang="box_label">${t('box_label')} ${i+1}</div>
+                <div class="detail-value">
+                   <div class="input-wrapper">
+                      <input type="number" id="val-box${i+1}" class="edit-input" 
+                             value="${boxVal}" 
+                             ${boxDisabled === 'disabled' ? 'disabled' : boxLockedAttr} 
+                             onblur="validateAndLock(this)" 
+                             oninput="clearError(this)"
+                             style="${boxColor}">
+                      <button class="admin-edit-btn" style="display:${adminDisplay}" 
+                              onclick="adminUnlock('val-box${i+1}')" type="button">
+                              <i class="fas fa-pencil-alt"></i>
+                      </button>
+                      ${boxDotHtml}
+                   </div>
+                   <div class="error-msg"></div>
+                </div>
+            </div>`;
+
+            inputRowsHtml += `
+            <div class="detail-row" id="row-rec-${i+1}" style="display:none; background-color:${isVerifier?'#f3e5f5':'#fff5f5'};">
+                <div class="detail-label" data-lang="rec_label">${t('rec_label')} ${i+1}</div>
+                <div class="detail-value">
+                   <div class="input-wrapper">
+                      <input type="number" id="val-rec${i+1}" class="edit-input" 
+                             value="${recVal}" 
+                             ${recDisabled} 
+                             onblur="validateAndLock(this)" 
+                             oninput="clearError(this)"
+                             style="${recStyle} ${isVerifier?'':'border-color:#d93025;'} ${recColor}">
+                      ${recDotHtml}
+                   </div>
+                </div>
+            </div>`;
+        }
+
+        let buttonsHtml = '';
+        if (isCounter || isAdmin) {
+           buttonsHtml += `<button class="btn-header btn-header-edit" style="display:flex" onclick="enableEditMode()">
+              <i class="fas fa-pencil-alt"></i> <span data-lang="btn_edit">${t('btn_edit')}</span>
+           </button>`;
+        }
+        // FIXED: Verify button visible if Box 1 is NOT empty/null (allows 0)
+        if ( (isVerifier || isAdmin) && (boxes[0] !== "" && boxes[0] !== null && boxes[0] !== undefined) ) {
+            const func = isVerifier ? 'verifyAndSaveVerifier()' : 'verifyItem()';
+            buttonsHtml += `<button class="btn-header btn-header-verify" style="display:flex" onclick="${func}">
+              <i class="fas fa-check-circle"></i> <span data-lang="btn_verify">${t('btn_verify')}</span>
+           </button>`;
+        }
+
+        // --- UPDATED LAYOUT WITH RIM IMAGE & ANIMATION ---
+        let html = `
+          <div class="item-detail-card">
+             <div class="detail-header-container">
+                <div class="detail-header-top">
+                    <div class="detail-header-text">${r[conf.partNo]}</div>
+                    <div class="header-btn-group">
+                        ${buttonsHtml}
+                    </div>
+                </div>
+             </div>
+             <div style="margin-bottom:20px; background:#f8f9fa; padding:10px; border-radius:8px; border:1px solid #eee;">
+                <h4 style="margin:0 0 10px 0; color:#555; font-size:12px; text-transform:uppercase;">Item Information</h4>
+                ${dynamicInfoHtml}
+             </div>
+             
+             <div style="margin-bottom:20px;">
+                <div class="count-header-flex">
+                   <h4 style="margin:0; color:#1a73e8;" data-lang="lbl_count_data">${t('lbl_count_data')}</h4>
+                   <img src="https://i.postimg.cc/6QP6DQ8V/5H0601025ADAX1-800x797.jpg" class="rim-spinner" alt="Rim Spinner">
+                </div>
+                ${inputRowsHtml}
+             </div>
+             
+             <div class="detail-row"><div class="detail-label" data-lang="lbl_status">${t('lbl_status')}</div><div class="detail-value"><b>${status}</b></div></div>
+             <div class="detail-row"><div class="detail-label" data-lang="lbl_verified_by">${t('lbl_verified_by')}</div><div class="detail-value">${verifiedBy}</div></div>
+             <div class="detail-row"><div class="detail-label" data-lang="lbl_remark">${t('lbl_remark')}</div>
+                 <div class="detail-value" style="width:100%;">
+                    <div class="remark-trigger" onclick="openRemarkModal('${remark.replace(/'/g, "\\'")}')">
+                       ${remark ? remark : t('ph_remark')}
+                    </div>
+                 </div>
+             </div>
+             
+             <div style="margin-top:25px; display:flex; gap:10px; flex-wrap:wrap;">
+                 <button class="btn-action btn-save" onclick="saveItem()" data-lang="btn_save">${t('btn_save')}</button>
+                 <button class="btn-action btn-cancel" onclick="cancelEdit('${rowEncoded}')" data-lang="btn_cancel">${t('btn_cancel')}</button>
+             </div>
+          </div>
+        `;
+        container.innerHTML = html;
+        updateWaterfall();
+      }
+
+      function goBackToSelection() {
+        document.getElementById('user-progress-view').style.display = 'none';
+        document.getElementById('detail-view').style.display = 'none';
+        document.getElementById('single-item-view').style.display = 'none';
+        document.getElementById('selection-view').style.display = 'block';
+        document.getElementById('app-container').classList.remove('wide');
+      }
+
+      // ... (Rest of existing functions from previous code: validateAndLock, updateWaterfall, etc. are identical) ...
+      // I am including them below for completeness to ensure you have the full file.
+
+      function validateAndLock(input) {
+         const val = input.value;
+         const errDiv = input.closest('.detail-value').querySelector('.error-msg'); 
+         
+         if (val.trim() === "") return; 
+         
+         // STRICT RULE 1: Recount != Box
+         if(input.id.includes('val-rec')) {
+             const idx = input.id.replace('val-rec', '');
+             const boxInput = document.getElementById('val-box'+idx);
+             // Ensure box exists and has value (including "0") before comparing
+             if(boxInput && boxInput.value !== "" && Number(val) === Number(boxInput.value)) {
+                 input.classList.add('input-error');
+                 if(errDiv) {
+                     errDiv.innerText = "Recount cannot be same as Box value.";
+                     errDiv.style.display = 'block';
+                 }
+                 input.value = ""; // Clear
+                 return;
+             }
+         }
+
+         const num = Number(val);
+         if (!/^\d+$/.test(val) || num < 0) {
+             showInlineError(input, errDiv, "Only integers ≥ 0 allowed.");
+             input.value = ""; 
+             return;
+         }
+
+         input.disabled = true;
+         updateWaterfall();
+      }
+
+      function showInlineError(input, errDiv, msg) {
+         input.classList.add('input-error');
+         if(errDiv) {
+             errDiv.innerText = msg;
+             errDiv.style.display = 'block';
+         }
+         setTimeout(() => {
+             clearError(input);
+         }, 3000);
+      }
+
+      function clearError(input) {
+         const errDiv = input.closest('.detail-value').querySelector('.error-msg'); 
+         input.classList.remove('input-error');
+         if(errDiv) errDiv.style.display = 'none';
+      }
+
+      function adminUnlock(inputId) {
+         const input = document.getElementById(inputId);
+         if(input) {
+             input.disabled = false;
+             input.focus();
+             input.style.backgroundColor = "#fff";
+         }
+      }
+
+      function updateWaterfall() {
+         const b1 = document.getElementById('val-box1').value;
+         const b2 = document.getElementById('val-box2').value;
+         const b3 = document.getElementById('val-box3').value;
+         const b4 = document.getElementById('val-box4').value;
+         const b5 = document.getElementById('val-box5').value;
+         const r1 = document.getElementById('val-rec1').value;
+         const r2 = document.getElementById('val-rec2').value;
+         const r3 = document.getElementById('val-rec3').value;
+         const r4 = document.getElementById('val-rec4').value;
+         const r5 = document.getElementById('val-rec5').value;
+
+         const roleLower = currentUserRole.toLowerCase();
+         const isVerifier = roleLower === 'verifier';
+         const isAdmin = roleLower === 'admin';
+         const isCounter = !isVerifier && !isAdmin;
+
+         const toggle = (id, show) => { const el = document.getElementById(id); if(el) el.style.display = show ? 'flex' : 'none'; };
+
+         let showR1, showR2, showR3, showR4, showR5;
+         if (isCounter) {
+             showR1 = (r1 !== ""); showR2 = (r2 !== ""); showR3 = (r3 !== ""); showR4 = (r4 !== ""); showR5 = (r5 !== "");
+         } else {
+             showR1 = (b1 !== ""); showR2 = (b2 !== ""); showR3 = (b3 !== ""); showR4 = (b4 !== ""); showR5 = (b5 !== "");
+         }
+
+         toggle('row-rec-1', showR1); toggle('row-rec-2', showR2); toggle('row-rec-3', showR3); toggle('row-rec-4', showR4); toggle('row-rec-5', showR5);
+         toggle('row-box-2', b1 !== ""); toggle('row-box-3', b1 !== "" && b2 !== ""); toggle('row-box-4', b1 !== "" && b2 !== "" && b3 !== ""); toggle('row-box-5', b1 !== "" && b2 !== "" && b3 !== "" && b4 !== "");
+         
+         updateInputColors();
+      }
+
+      function updateInputColors() {
+        for(let i=1; i<=5; i++) {
+            const boxInput = document.getElementById(`val-box${i}`);
+            const recInput = document.getElementById(`val-rec${i}`);
+            const boxWrapper = boxInput.parentElement;
+            const recWrapper = recInput.parentElement;
+            const boxDot = boxWrapper.querySelector('.status-dot');
+            const recDot = recWrapper.querySelector('.status-dot');
+            const bVal = boxInput.value;
+            const rVal = recInput.value;
+
+            boxInput.style.color = "#333"; boxInput.style.fontWeight = "normal";
+            if(boxDot) { boxDot.className = "status-dot"; boxDot.style.display = "none"; }
+            recInput.style.color = "#333"; recInput.style.fontWeight = "normal";
+            if(recDot) { recDot.className = "status-dot"; recDot.style.display = "none"; }
+
+            if (rVal !== "" && rVal != null) {
+                recInput.style.color = "#2ecc71"; recInput.style.fontWeight = "bold";
+                if(recDot) { recDot.classList.add('dot-green'); recDot.style.display = 'block'; }
+                if(bVal !== "") {
+                    boxInput.style.color = "#e74c3c"; boxInput.style.fontWeight = "bold";
+                    if(boxDot) { boxDot.classList.add('dot-red'); boxDot.style.display = 'block'; }
+                }
+            } else {
+                if(bVal !== "") {
+                    boxInput.style.color = "#2ecc71"; boxInput.style.fontWeight = "bold";
+                    if(boxDot) { boxDot.classList.add('dot-green'); boxDot.style.display = 'block'; }
+                }
+            }
+        }
+      }
+
+      function goBackToRackList() {
+        document.getElementById('single-item-view').style.display = 'none';
+        document.getElementById('detail-view').style.display = 'block';
+        document.getElementById('app-container').classList.add('wide');
+      }
+
+      function enableEditMode() {
+        document.querySelector('.btn-header-edit').style.display = 'none';
+        document.querySelector('.btn-save').style.display = 'inline-block';
+        document.querySelector('.btn-cancel').style.display = 'inline-block';
+        const roleLower = currentUserRole.toLowerCase();
+        if(roleLower === 'admin') {
+            document.querySelectorAll('.edit-input').forEach(input => input.disabled = false);
+        } else {
+            for(let i=1; i<=5; i++) { 
+                const input = document.getElementById(`val-box${i}`);
+                if(input.value === "") input.disabled = false; 
+            }
+        }
+      }
+
+      function cancelEdit(rowEncoded) { openSingleItemView(rowEncoded); }
+
+      function getFormValues() {
+         return {
+            box1: document.getElementById('val-box1').value, box2: document.getElementById('val-box2').value,
+            box3: document.getElementById('val-box3').value, box4: document.getElementById('val-box4').value, box5: document.getElementById('val-box5').value,
+            recount1: document.getElementById('val-rec1').value, recount2: document.getElementById('val-rec2').value,
+            recount3: document.getElementById('val-rec3').value, recount4: document.getElementById('val-rec4').value, recount5: document.getElementById('val-rec5').value
+         };
+      }
+
+      function saveItem() {
+         const btn = document.querySelector('.btn-save');
+         btn.innerText = t('btn_processing'); btn.disabled = true;
+         const newValues = getFormValues();
+         const conf = SHEET_CONFIG[currentDatasetKey];
+
+         google.script.run.withSuccessHandler(res => {
+                if (res.status === 'success') {
+                    alert(t('alert_saved'));
+                    updateLocalData(currentItemPartNo, newValues);
+                    const row = globalData[currentDatasetKey].find(x => x[conf.partNo] == currentItemPartNo);
+                    if(row) openSingleItemView(encodeURIComponent(JSON.stringify(row)));
+                } else {
+                    alert("Error: " + res.message);
+                    btn.innerText = t('btn_save'); btn.disabled = false;
+                }
+            }).saveData(currentDatasetKey, currentItemPartNo, newValues);
+      }
+
+      function verifyAndSaveVerifier() {
+          if(!confirm("Verify and Save this item?")) return;
+          const newValues = getFormValues(); 
+          const conf = SHEET_CONFIG[currentDatasetKey];
+
+          google.script.run.withSuccessHandler(res => {
+              if(res.status === 'success') {
+                  updateLocalData(currentItemPartNo, newValues);
+                  google.script.run.withSuccessHandler(vRes => {
+                      if(vRes.status === 'success') {
+                          alert(t('alert_verified'));
+                          const row = globalData[currentDatasetKey].find(x => x[conf.partNo] == currentItemPartNo);
+                          if(row) {
+                              row[conf.status] = "Verified"; row[conf.verified] = currentUsername;
+                              openSingleItemView(encodeURIComponent(JSON.stringify(row)));
+                          }
+                      }
+                  }).verifyItem(currentDatasetKey, currentItemPartNo, currentUsername);
+              } else {
+                  alert("Error Saving Recounts: " + res.message);
+              }
+          }).saveData(currentDatasetKey, currentItemPartNo, newValues);
+      }
+
+      function verifyItem() {
+         if(!confirm("Are you sure you want to verify this item?")) return;
+         const conf = SHEET_CONFIG[currentDatasetKey];
+         
+         google.script.run.withSuccessHandler(res => {
+             if(res.status === 'success') {
+                 alert(t('alert_verified'));
+                 const row = globalData[currentDatasetKey].find(x => x[conf.partNo] == currentItemPartNo);
+                 if(row) {
+                    row[conf.status] = "Verified"; row[conf.verified] = currentUsername;
+                    openSingleItemView(encodeURIComponent(JSON.stringify(row)));
+                 }
+             } else { alert("Error: " + res.message); }
+         }).verifyItem(currentDatasetKey, currentItemPartNo, currentUsername);
+      }
+
+      function updateLocalData(partNo, values) {
+          const conf = SHEET_CONFIG[currentDatasetKey];
+          const row = globalData[currentDatasetKey].find(x => x[conf.partNo] == partNo);
+          if (row) {
+            conf.boxes.forEach((idx, i) => { row[idx] = values[`box${i+1}`]; });
+            conf.recounts.forEach((idx, i) => { row[idx] = values[`recount${i+1}`]; });
+            if (String(row[conf.status]) !== "Verified" && values.box1 !== "") { 
+                row[conf.status] = "Counted"; 
+            }
+          }
+      }
+
+      function openRemarkModal(text) {
+         document.getElementById('remark-input').value = text || "";
+         document.getElementById('remark-modal').style.display = 'flex';
+      }
+      function closeRemarkModal() { document.getElementById('remark-modal').style.display = 'none'; }
+      
+      function saveRemark() {
+         const txt = document.getElementById('remark-input').value;
+         const conf = SHEET_CONFIG[currentDatasetKey];
+         google.script.run.withSuccessHandler(() => {
+             const row = globalData[currentDatasetKey].find(x => x[conf.partNo] == currentItemPartNo);
+             if(row) { 
+                 row[conf.remark] = txt; 
+                 openSingleItemView(encodeURIComponent(JSON.stringify(row))); 
+             }
+             closeRemarkModal();
+         }).saveRemark(currentDatasetKey, currentItemPartNo, txt);
+      }
+
+      function showCheckPart() {
+         if(!globalData.checkPart) return;
+         const list = document.getElementById('check-part-list');
+         list.innerHTML = "";
+         globalData.checkPart.forEach(row => {
+             list.innerHTML += `<div style="padding:10px; border-bottom:1px solid #eee;"><b>${row[0]}</b><br><span style="color:#666; font-size:13px;">${row[1]}</span></div>`;
+         });
+         document.getElementById('check-part-modal').style.display = 'flex';
+      }
+      function closeCheckPart() { document.getElementById('check-part-modal').style.display = 'none'; }
+    </script>

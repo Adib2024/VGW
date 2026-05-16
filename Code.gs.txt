@@ -1,0 +1,252 @@
+/**
+ * VGM Stock Take 2026 - Server Side Script
+ * Updated Column Mapping based on User Request
+ */
+
+// --- CONFIGURATION ---
+// ONLY the ID string is placed here, not the full URL.
+const SPREADSHEET_ID = "1dSjGsa8bX6Ej5wuDGMz7YvJ6UBuqo45mUmikOL5qa8c"; 
+
+const SHEET_NAMES = {
+  b17: "B17",
+  b22: "B22",
+  loma: "LOMA",
+  b22seq: "B22 SEQ",
+  users: "User",
+  checkPart: "CheckPart"
+};
+
+// Column Indices (0-based) for SERVER SIDE writes
+// A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7...
+const SHEET_MAP = {
+  b17: { 
+    partNo: 1, // Col B
+    boxStart: 7, // Col H (Index 7)
+    recStart: 12, // Col M (Index 12)
+    status: 17, // Col R
+    verified: 19, // Col T
+    remark: 20 // Col U
+  },
+  b22: { 
+    partNo: 1, // Col B
+    boxStart: 7, // Col H
+    recStart: 12, // Col M
+    status: 17, // Col R
+    verified: 18, // Col S (Based on Letter S)
+    remark: 19 // Col T (Based on Letter T)
+  },
+  loma: { 
+    partNo: 1, // Col B
+    boxStart: 6, // Col G (Start of Boxes)
+    recStart: 11, // Col L (Start of Recounts)
+    status: 16, // Col Q
+    verified: 17, // Col R
+    remark: 18 // Col S
+  },
+  b22seq: { 
+    partNo: 1, // Col B
+    boxStart: 7, // Col H
+    recStart: 12, // Col M
+    status: 17, // Col R
+    verified: 18, // Col S
+    remark: 19 // Col T
+  }
+};
+
+function doGet() {
+  return HtmlService.createTemplateFromFile('Index')
+    .evaluate()
+    .setTitle('VGM Stock Take 2026')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+}
+
+// Helper function to pull in CSS and JS
+function include(filename) {
+  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+/**
+ * Live UX Helper: Fetches Role while user is typing
+ */
+function getUserRole(username) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAMES.users);
+  
+  if (!sheet) return { found: false };
+  
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]).toLowerCase() === String(username).toLowerCase()) {
+      return { found: true, role: String(data[i][2]) };
+    }
+  }
+  return { found: false };
+}
+
+/**
+ * Login Function (Auto-Assigns Role from Database)
+ */
+function checkLogin(username, password) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAMES.users);
+  
+  if (!sheet) return { status: 'error', message: 'User sheet not found' };
+  
+  const data = sheet.getDataRange().getValues();
+  
+  // Loop through rows (skipping header row 0)
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    
+    // Check if Username (Col A) and Password (Col B) match perfectly
+    if (String(row[0]).toLowerCase() === String(username).toLowerCase() && 
+        String(row[1]) === String(password)) {
+      
+      const userRole = String(row[2]); // Grab Role directly from Col C
+      
+      // Send the exact role back to the browser
+      return { status: 'success', role: userRole };
+    }
+  }
+  return { status: 'error', message: 'Invalid Credentials' };
+}
+
+/**
+ * Fetch Data using Delta Logic (Extreme Performance)
+ */
+function getDashboardData(clientTimestamp) {
+  const cache = CacheService.getScriptCache();
+  let lastUpdate = cache.get('vgm_last_update');
+  
+  // 1. If no timestamp exists, create one
+  if (!lastUpdate) {
+    lastUpdate = Date.now().toString();
+    cache.put('vgm_last_update', lastUpdate, 21600);
+  }
+
+  // 2. If client is already up-to-date, send NOTHING back! (Saves massive bandwidth)
+  if (clientTimestamp && Number(clientTimestamp) >= Number(lastUpdate)) {
+    return { changed: false };
+  }
+
+  // 3. Otherwise, fetch the fresh data from the sheet
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const getData = (sheetName) => {
+    const sheet = ss.getSheetByName(sheetName);
+    return sheet ? sheet.getDataRange().getValues().slice(1) : []; 
+  };
+
+  const freshData = {
+    b17: getData(SHEET_NAMES.b17),
+    b22: getData(SHEET_NAMES.b22),
+    loma: getData(SHEET_NAMES.loma),
+    b22seq: getData(SHEET_NAMES.b22seq),
+    checkPart: getData(SHEET_NAMES.checkPart)
+  };
+  
+  return { 
+    changed: true, 
+    data: freshData, 
+    timestamp: lastUpdate 
+  };
+}
+
+/**
+ * Save Counts (Counter/Admin) with LockService for high traffic
+ */
+function saveData(datasetKey, partNo, values) {
+  const lock = LockService.getScriptLock();
+  try {
+    // Wait up to 15 seconds for other users to finish saving
+    lock.waitLock(15000); 
+
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheetName = SHEET_NAMES[datasetKey];
+    const conf = SHEET_MAP[datasetKey];
+    const sheet = ss.getSheetByName(sheetName);
+
+    const data = sheet.getDataRange().getValues();
+    let rowIndex = -1;
+    for(let i = 0; i < data.length; i++) {
+      if(String(data[i][conf.partNo]).trim() === String(partNo).trim()) {
+        rowIndex = i + 1; 
+        break;
+      }
+    }
+    
+    if (rowIndex === -1) return { status: 'error', message: 'Part not found' };
+
+    // Write Boxes and Recounts
+    sheet.getRange(rowIndex, conf.boxStart + 1, 1, 5).setValues([[values.box1, values.box2, values.box3, values.box4, values.box5]]);
+    sheet.getRange(rowIndex, conf.recStart + 1, 1, 5).setValues([[values.recount1, values.recount2, values.recount3, values.recount4, values.recount5]]);
+
+    const currentStatus = sheet.getRange(rowIndex, conf.status + 1).getValue();
+    if (String(currentStatus).toLowerCase() !== 'verified' && (values.box1 !== "" || values.box2 !== "")) {
+      sheet.getRange(rowIndex, conf.status + 1).setValue("Counted");
+    }
+
+    // Tell all other dashboards that data has changed
+    CacheService.getScriptCache().put('vgm_last_update', Date.now().toString(), 21600);
+    return { status: 'success' };
+
+  } catch (e) {
+    return { status: 'error', message: 'Database busy (Timeout). Please try saving again.' };
+  } finally {
+    // Always release the lock so the next person can save
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Verify Item with LockService
+ */
+function verifyItem(datasetKey, partNo, verifierName) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(15000);
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const conf = SHEET_MAP[datasetKey];
+    const sheet = ss.getSheetByName(SHEET_NAMES[datasetKey]);
+    const data = sheet.getDataRange().getValues();
+    
+    for(let i=0; i<data.length; i++) {
+       if(String(data[i][conf.partNo]).trim() === String(partNo).trim()) {
+         sheet.getRange(i+1, conf.status + 1).setValue("Verified");
+         sheet.getRange(i+1, conf.verified + 1).setValue(verifierName);
+         // Tell all other dashboards that data has changed
+         CacheService.getScriptCache().put('vgm_last_update', Date.now().toString(), 21600);
+         return { status: 'success' };
+       }
+    }
+    return { status: 'error', message: 'Part not found' };
+  } catch (e) {
+    return { status: 'error', message: 'Server busy. Try again.' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Save Remark
+ */
+function saveRemark(datasetKey, partNo, remarkText) {
+  // CHANGED: Using openById
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheetName = SHEET_NAMES[datasetKey];
+  const conf = SHEET_MAP[datasetKey];
+  
+  const sheet = ss.getSheetByName(sheetName);
+  const data = sheet.getDataRange().getValues();
+  
+  for(let i=0; i<data.length; i++) {
+     if(String(data[i][conf.partNo]).trim() === String(partNo).trim()) {
+       sheet.getRange(i+1, conf.remark + 1).setValue(remarkText);
+       // Tell all other dashboards that data has changed
+       CacheService.getScriptCache().put('vgm_last_update', Date.now().toString(), 21600);
+       return { status: 'success' };
+     }
+  }
+  return { status: 'error', message: 'Part not found' };
+}
+

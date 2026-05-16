@@ -1,0 +1,10 @@
+<div id="single-item-view">
+  <div class="top-bar">
+    <button class="btn-back" onclick="goBackToRackList()" data-lang="btn_back">Kembali</button>
+    <div class="top-bar-right">
+       <span id="lbl-role-item" class="view-role-badge"></span>
+       <h2 style="margin:0; font-size:18px;" data-lang="item_details">Butiran Item</h2>
+    </div>
+  </div>
+  <div id="item-detail-container"></div>
+</div>

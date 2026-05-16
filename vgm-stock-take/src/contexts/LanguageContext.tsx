@@ -1,0 +1,280 @@
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+export type Language = 'EN' | 'BM' | 'DE';
+
+type Translations = {
+  [key in Language]: {
+    [key: string]: string;
+  };
+};
+
+const translations: Translations = {
+  EN: {
+    login: 'Login',
+    userId: 'User ID',
+    password: 'Password',
+    hub: 'Command Center',
+    stockTake: 'Stock Take',
+    batteryTracking: 'Battery Tracking',
+    qualityAssurance: 'Quality Assurance',
+    back: 'Back',
+    notCounted: 'Not Counted',
+    counted: 'Counted',
+    verified: 'Verified',
+    role: 'Role',
+    zoneProgress: 'Zone Progress',
+    search: 'Search Part No / Material...',
+    welcome: 'Welcome',
+    selectModule: 'Select a module to continue',
+    manageParts: 'Manage parts inventory, counts, and verification across zones.',
+    trackBattery: 'Track battery statuses, locations, and lifecycle.',
+    performQA: 'Perform QA inspections and log discrepancies.',
+    uploadRawCsv: 'Upload Raw CSV Data',
+    uploadRawCsvDesc: 'Auto-upload CSV files directly to Supabase. Any new columns are automatically added.',
+    selectData: 'Select Data',
+    loggedInAs: 'Logged in as',
+    logout: 'Logout',
+    view: 'VIEW',
+    liveData: 'Live Data',
+    items: 'Items',
+    ready: 'Ready',
+    pending: 'Pending',
+    userProgress: 'User Progress',
+    viewCheckPart: 'View Check Part Data (Remarks)',
+    adminSettingsCsv: 'Admin Settings (CSV Upload)',
+    confirmLogout: 'Are you sure you want to log out?',
+    cancel: 'Cancel',
+    rememberMe: 'Remember me',
+    adminSettings: 'Admin Settings',
+    masterPartsDbUpload: 'Master Parts Database Upload',
+    uploadDesc: 'Upload a .xlsx file to refresh the parts inventory.',
+    fileRequirements: 'File Requirements:',
+    formatLabel: 'Format: .csv, .xlsx, or .xls',
+    requiredColumns: 'Required Columns: Material, Part Name (or Part No), Storage Bin (or Location)',
+    extraColumns: 'All extra columns will automatically be saved into the database\'s metadata field!',
+    assignZone: 'Assign to Zone:',
+    uploadingBtn: 'Uploading...',
+    selectUploadBtn: 'Select & Upload CSV / Excel File',
+    listView: 'List View',
+    loadingParts: 'Loading parts...',
+    material: 'Material',
+    partNo: 'Part No',
+    zone: 'Zone',
+    location: 'Location',
+    status: 'Status',
+    action: 'Action',
+    viewEdit: 'View / Edit',
+    noParts: 'No parts found.',
+    countingInterface: 'Counting Interface',
+    partInformation: 'Part Information',
+    lock: 'Lock',
+    adminUnlockBtn: 'Admin Unlock',
+    counterInputs: 'Counter Inputs',
+    box: 'Box',
+    boxTotal: 'Box Total:',
+    verifierInput: 'Verifier Input',
+    recountValue: 'Recount Value',
+    enterRecount: 'Enter recount total...',
+    recountWarning: '* Recount value must NOT equal the Box Total.',
+    saveData: 'Save Data',
+    saving: 'Saving...',
+    userProgressReport: 'User Progress Report',
+    downloadPdf: 'Download PDF',
+    progressSummary: 'VGM Stock Take - Progress Summary',
+    recentActivity: 'Recent Activity',
+    loadingData: 'Loading data...',
+    lastUpdated: 'Last Updated',
+    showingLatestUpdates: 'Showing latest 20 updates. Generated on'
+  },
+  BM: {
+    login: 'Log Masuk',
+    userId: 'ID Pengguna',
+    password: 'Kata Laluan',
+    hub: 'Pusat Arahan',
+    stockTake: 'Kiraan Stok',
+    batteryTracking: 'Penjejakan Bateri',
+    qualityAssurance: 'Jaminan Kualiti',
+    back: 'Kembali',
+    notCounted: 'Belum Dikira',
+    counted: 'Telah Dikira',
+    verified: 'Disahkan',
+    role: 'Peranan',
+    zoneProgress: 'Kemajuan Zon',
+    search: 'Cari No Bahagian / Bahan...',
+    welcome: 'Selamat Datang',
+    selectModule: 'Pilih modul untuk meneruskan',
+    manageParts: 'Urus inventori bahagian, kiraan, dan pengesahan merentas zon.',
+    trackBattery: 'Jejak status bateri, lokasi, dan kitaran hayat.',
+    performQA: 'Jalankan pemeriksaan QA dan rekod percanggahan.',
+    uploadRawCsv: 'Muat Naik Data CSV',
+    uploadRawCsvDesc: 'Muat naik fail CSV terus ke Supabase. Lajur baharu ditambah secara automatik.',
+    selectData: 'Pilih Data',
+    loggedInAs: 'Log masuk sebagai',
+    logout: 'Log Keluar',
+    view: 'PANDANGAN',
+    liveData: 'Data Langsung',
+    items: 'Item',
+    ready: 'Sedia',
+    pending: 'Menunggu',
+    userProgress: 'Kemajuan Pengguna',
+    viewCheckPart: 'Lihat Data Semak Bahagian (Catatan)',
+    adminSettingsCsv: 'Tetapan Admin (Muat Naik CSV)',
+    confirmLogout: 'Adakah anda pasti mahu log keluar?',
+    cancel: 'Batal',
+    rememberMe: 'Ingat saya',
+    adminSettings: 'Tetapan Admin',
+    masterPartsDbUpload: 'Muat Naik Pangkalan Data Bahagian Utama',
+    uploadDesc: 'Muat naik fail .xlsx untuk menyegarkan inventori bahagian.',
+    fileRequirements: 'Keperluan Fail:',
+    formatLabel: 'Format: .csv, .xlsx, atau .xls',
+    requiredColumns: 'Lajur Diperlukan: Bahan, Nama Bahagian (atau No Bahagian), Tong Penyimpanan (atau Lokasi)',
+    extraColumns: 'Semua lajur tambahan akan disimpan secara automatik ke dalam medan metadata pangkalan data!',
+    assignZone: 'Tugaskan kepada Zon:',
+    uploadingBtn: 'Memuat naik...',
+    selectUploadBtn: 'Pilih & Muat Naik Fail CSV / Excel',
+    listView: 'Paparan Senarai',
+    loadingParts: 'Memuatkan bahagian...',
+    material: 'Bahan',
+    partNo: 'No Bahagian',
+    zone: 'Zon',
+    location: 'Lokasi',
+    status: 'Status',
+    action: 'Tindakan',
+    viewEdit: 'Lihat / Edit',
+    noParts: 'Tiada bahagian dijumpai.',
+    countingInterface: 'Antara Muka Kiraan',
+    partInformation: 'Maklumat Bahagian',
+    lock: 'Kunci',
+    adminUnlockBtn: 'Buka Kunci Admin',
+    counterInputs: 'Input Pengira',
+    box: 'Kotak',
+    boxTotal: 'Jumlah Kotak:',
+    verifierInput: 'Input Pengesah',
+    recountValue: 'Nilai Kiraan Semula',
+    enterRecount: 'Masukkan jumlah kiraan semula...',
+    recountWarning: '* Nilai kiraan semula TIDAK BOLEH sama dengan Jumlah Kotak.',
+    saveData: 'Simpan Data',
+    saving: 'Menyimpan...',
+    userProgressReport: 'Laporan Kemajuan Pengguna',
+    downloadPdf: 'Muat Turun PDF',
+    progressSummary: 'Kiraan Stok VGM - Ringkasan Kemajuan',
+    recentActivity: 'Aktiviti Terkini',
+    loadingData: 'Memuatkan data...',
+    lastUpdated: 'Kemas Kini Terakhir',
+    showingLatestUpdates: 'Menunjukkan 20 kemas kini terkini. Dijana pada'
+  },
+  DE: {
+    login: 'Anmelden',
+    userId: 'Benutzer-ID',
+    password: 'Passwort',
+    hub: 'Kommandozentrale',
+    stockTake: 'Inventur',
+    batteryTracking: 'Batterieverfolgung',
+    qualityAssurance: 'Qualitätssicherung',
+    back: 'Zurück',
+    notCounted: 'Nicht gezählt',
+    counted: 'Gezählt',
+    verified: 'Verifiziert',
+    role: 'Rolle',
+    zoneProgress: 'Zonenfortschritt',
+    search: 'Teilenr. / Material suchen...',
+    welcome: 'Willkommen',
+    selectModule: 'Wählen Sie ein Modul, um fortzufahren',
+    manageParts: 'Verwalten Sie den Teilebestand, die Zählungen und die zonenübergreifende Verifizierung.',
+    trackBattery: 'Verfolgen Sie Batteriestatus, Standorte und Lebenszyklus.',
+    performQA: 'Führen Sie QA-Inspektionen durch und protokollieren Sie Abweichungen.',
+    uploadRawCsv: 'Rohe CSV-Daten hochladen',
+    uploadRawCsvDesc: 'CSV-Dateien automatisch in Supabase hochladen. Neue Spalten werden automatisch hinzugefügt.',
+    selectData: 'Daten auswählen',
+    loggedInAs: 'Angemeldet als',
+    logout: 'Abmelden',
+    view: 'ANSICHT',
+    liveData: 'Live-Daten',
+    items: 'Artikel',
+    ready: 'Bereit',
+    pending: 'Ausstehend',
+    userProgress: 'Benutzerfortschritt',
+    viewCheckPart: 'Prüfteildaten anzeigen (Anmerkungen)',
+    adminSettingsCsv: 'Admin-Einstellungen (CSV-Upload)',
+    confirmLogout: 'Sind Sie sicher, dass Sie sich abmelden möchten?',
+    cancel: 'Abbrechen',
+    rememberMe: 'Angemeldet bleiben',
+    adminSettings: 'Admin-Einstellungen',
+    masterPartsDbUpload: 'Master-Teiledatenbank-Upload',
+    uploadDesc: 'Laden Sie eine .xlsx-Datei hoch, um den Teilebestand zu aktualisieren.',
+    fileRequirements: 'Dateianforderungen:',
+    formatLabel: 'Format: .csv, .xlsx oder .xls',
+    requiredColumns: 'Erforderliche Spalten: Material, Teilename (oder Teilenummer), Lagerplatz (oder Standort)',
+    extraColumns: 'Alle zusätzlichen Spalten werden automatisch im Metadatenfeld der Datenbank gespeichert!',
+    assignZone: 'Zone zuweisen:',
+    uploadingBtn: 'Wird hochgeladen...',
+    selectUploadBtn: 'CSV / Excel-Datei auswählen & hochladen',
+    listView: 'Listenansicht',
+    loadingParts: 'Lade Teile...',
+    material: 'Material',
+    partNo: 'Teile-Nr.',
+    zone: 'Zone',
+    location: 'Standort',
+    status: 'Status',
+    action: 'Aktion',
+    viewEdit: 'Anzeigen / Bearbeiten',
+    noParts: 'Keine Teile gefunden.',
+    countingInterface: 'Zähloberfläche',
+    partInformation: 'Teileinformationen',
+    lock: 'Sperren',
+    adminUnlockBtn: 'Admin-Entsperrung',
+    counterInputs: 'Zählereingaben',
+    box: 'Karton',
+    boxTotal: 'Kartongesamt:',
+    verifierInput: 'Prüfereingabe',
+    recountValue: 'Nachzählwert',
+    enterRecount: 'Nachzählsumme eingeben...',
+    recountWarning: '* Nachzählwert darf NICHT der Kartongesamtsumme entsprechen.',
+    saveData: 'Daten speichern',
+    saving: 'Speichern...',
+    userProgressReport: 'Benutzerfortschrittsbericht',
+    downloadPdf: 'PDF herunterladen',
+    progressSummary: 'VGM-Inventur - Fortschrittszusammenfassung',
+    recentActivity: 'Letzte Aktivität',
+    loadingData: 'Daten werden geladen...',
+    lastUpdated: 'Zuletzt aktualisiert',
+    showingLatestUpdates: 'Zeigt die letzten 20 Updates an. Generiert am'
+  }
+};
+
+interface LanguageContextType {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [language, setLanguageState] = useState<Language>(() => {
+    return (localStorage.getItem('vgm_language') as Language) || 'EN';
+  });
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem('vgm_language', lang);
+  };
+
+  const t = (key: string) => {
+    return translations[language][key] || key;
+  };
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+export const useLanguage = () => {
+  const context = useContext(LanguageContext);
+  if (context === undefined) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return context;
+};

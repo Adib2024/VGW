@@ -1,0 +1,44 @@
+<div id="detail-view">
+  <div class="top-bar">
+    <button class="btn-back" onclick="goBackToSelection()" data-lang="btn_back">Kembali</button>
+    <img src="https://i.postimg.cc/4NMmDwqL/Golf-RL-Blue.webp" class="header-car-anim" alt="Car">
+    <div class="top-bar-right">
+       <span id="lbl-role-detail" class="view-role-badge"></span>
+       <h2 id="view-title" style="margin:0; font-size:18px;">Data</h2>
+    </div>
+  </div>
+  
+  <div class="filter-bar">
+     <div class="search-container">
+       <i class="fas fa-search"></i>
+       <input type="text" id="search-input" class="search-input" placeholder="Search Material..." onkeyup="renderCurrentRackList()">
+     </div>
+     <select id="filter-select" class="filter-select" onchange="renderCurrentRackList()">
+       <option value="All">All Items</option>
+     </select>
+  </div>
+
+  <div class="detail-progress-wrapper" onclick="openProgressView()">
+       <div class="progress-bg">
+          <div id="detail-prog-bar" class="progress-fill"></div>
+       </div>
+       <div class="stat-row">
+          <span id="detail-prog-pct">0%</span>
+          <span class="status-badge" style="background:none; border:none; color:#1a73e8; font-size:11px;">
+             Click for Status <i class="fas fa-chart-bar"></i>
+          </span>
+       </div>
+  </div>
+
+  <div id="rack-container"></div>
+</div>
+
+<div id="progress-view">
+  <div class="top-bar">
+     <button class="btn-back" onclick="closeProgressView()">Back</button>
+     <h2 style="margin:0; font-size:18px; margin-left:10px;">Status Analysis</h2>
+  </div>
+  <div class="chart-wrapper">
+      <canvas id="progressChart"></canvas>
+  </div>
+</div>
