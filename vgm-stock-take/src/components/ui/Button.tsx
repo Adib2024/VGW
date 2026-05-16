@@ -29,9 +29,9 @@ export const Button: React.FC<ButtonProps> = ({
 
   const style: React.CSSProperties = {
     ...getVariantStyles(),
-    padding: '0.75rem 1.5rem',
-    borderRadius: 'var(--radius-md)',
-    fontWeight: 600,
+    padding: '0.875rem 1.5rem',
+    borderRadius: '12px',
+    fontWeight: 500,
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     width: fullWidth ? '100%' : 'auto',

@@ -1,48 +1,90 @@
 -- VGM Stock Take 2026 - Supabase Setup Script
 -- Run this in your Supabase SQL Editor
 
--- 1. Create Users Table
--- This is a custom users table for ID-based login as requested
-CREATE TABLE public.users (
-  id TEXT PRIMARY KEY,
-  password TEXT NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('Counter', 'Verifier', 'Operator Batt', 'QA Inspector', 'Admin')),
-  name TEXT NOT NULL
-);
+-- 1. Remove tables if they already exist
+DROP TABLE IF EXISTS public.b17;
+DROP TABLE IF EXISTS public.b22;
+DROP TABLE IF EXISTS public.loma;
+DROP TABLE IF EXISTS public.b22_seq;
+DROP TABLE IF EXISTS public.check_part;
+DROP TABLE IF EXISTS public.parts; -- Optional cleanup of the old table
 
--- 2. Create Parts Table
-CREATE TABLE public.parts (
+-- 2. Create the 5 individual zone tables
+CREATE TABLE public.b17 (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   material TEXT NOT NULL,
   part_no TEXT NOT NULL,
   location TEXT NOT NULL,
-  zone TEXT NOT NULL CHECK (zone IN ('B17', 'B22', 'LOMA', 'B22 SEQ')),
+  zone TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'Not Counted' CHECK (status IN ('Not Counted', 'Counted', 'Verified')),
-  box_1 INTEGER DEFAULT NULL,
-  box_2 INTEGER DEFAULT NULL,
-  box_3 INTEGER DEFAULT NULL,
-  box_4 INTEGER DEFAULT NULL,
-  box_5 INTEGER DEFAULT NULL,
+  box_1 INTEGER DEFAULT NULL, box_2 INTEGER DEFAULT NULL, box_3 INTEGER DEFAULT NULL, box_4 INTEGER DEFAULT NULL, box_5 INTEGER DEFAULT NULL,
   recount INTEGER DEFAULT NULL,
-  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  metadata JSONB DEFAULT '{}'::jsonb
 );
 
--- 3. Insert Mock Users
-INSERT INTO public.users (id, password, role, name) VALUES
-('ADMIN01', 'pass123', 'Admin', 'Super Admin'),
-('COUNT01', 'pass123', 'Counter', 'Ali (Counter)'),
-('VERIF01', 'pass123', 'Verifier', 'Muthu (Verifier)'),
-('BATT01', 'pass123', 'Operator Batt', 'Ah Kao (Battery)'),
-('QA01', 'pass123', 'QA Inspector', 'Siti (QA)');
+CREATE TABLE public.b22 (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  material TEXT NOT NULL,
+  part_no TEXT NOT NULL,
+  location TEXT NOT NULL,
+  zone TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Not Counted' CHECK (status IN ('Not Counted', 'Counted', 'Verified')),
+  box_1 INTEGER DEFAULT NULL, box_2 INTEGER DEFAULT NULL, box_3 INTEGER DEFAULT NULL, box_4 INTEGER DEFAULT NULL, box_5 INTEGER DEFAULT NULL,
+  recount INTEGER DEFAULT NULL,
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  metadata JSONB DEFAULT '{}'::jsonb
+);
 
--- 4. Insert Mock Parts
-INSERT INTO public.parts (material, part_no, location, zone) VALUES
-('Engine Block', 'ENG-001', 'A1-R1', 'B17'),
-('Brake Pads', 'BRK-099', 'A2-R1', 'B17'),
-('Transmission', 'TRN-200', 'B1-R2', 'B22'),
-('Steering Wheel', 'STR-050', 'C1-R3', 'LOMA'),
-('LED Headlights', 'LED-100', 'D1-R4', 'B22 SEQ');
+CREATE TABLE public.loma (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  material TEXT NOT NULL,
+  part_no TEXT NOT NULL,
+  location TEXT NOT NULL,
+  zone TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Not Counted' CHECK (status IN ('Not Counted', 'Counted', 'Verified')),
+  box_1 INTEGER DEFAULT NULL, box_2 INTEGER DEFAULT NULL, box_3 INTEGER DEFAULT NULL, box_4 INTEGER DEFAULT NULL, box_5 INTEGER DEFAULT NULL,
+  recount INTEGER DEFAULT NULL,
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  metadata JSONB DEFAULT '{}'::jsonb
+);
 
--- 5. Enable Realtime for parts
-alter publication supabase_realtime add table public.parts;
-alter publication supabase_realtime add table public.users;
+CREATE TABLE public.b22_seq (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  material TEXT NOT NULL,
+  part_no TEXT NOT NULL,
+  location TEXT NOT NULL,
+  zone TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Not Counted' CHECK (status IN ('Not Counted', 'Counted', 'Verified')),
+  box_1 INTEGER DEFAULT NULL, box_2 INTEGER DEFAULT NULL, box_3 INTEGER DEFAULT NULL, box_4 INTEGER DEFAULT NULL, box_5 INTEGER DEFAULT NULL,
+  recount INTEGER DEFAULT NULL,
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  metadata JSONB DEFAULT '{}'::jsonb
+);
+
+CREATE TABLE public.check_part (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  material TEXT NOT NULL,
+  part_no TEXT NOT NULL,
+  location TEXT NOT NULL,
+  zone TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Not Counted' CHECK (status IN ('Not Counted', 'Counted', 'Verified')),
+  box_1 INTEGER DEFAULT NULL, box_2 INTEGER DEFAULT NULL, box_3 INTEGER DEFAULT NULL, box_4 INTEGER DEFAULT NULL, box_5 INTEGER DEFAULT NULL,
+  recount INTEGER DEFAULT NULL,
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  metadata JSONB DEFAULT '{}'::jsonb
+);
+
+-- 3. Enable Realtime
+alter publication supabase_realtime add table public.b17;
+alter publication supabase_realtime add table public.b22;
+alter publication supabase_realtime add table public.loma;
+alter publication supabase_realtime add table public.b22_seq;
+alter publication supabase_realtime add table public.check_part;
+
+-- 4. Disable Row Level Security (RLS)
+ALTER TABLE public.b17 DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.b22 DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.loma DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.b22_seq DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.check_part DISABLE ROW LEVEL SECURITY;

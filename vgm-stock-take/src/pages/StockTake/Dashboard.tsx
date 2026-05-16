@@ -14,11 +14,12 @@ export default function StockTakeDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  const [progressData, setProgressData] = useState({
+  const [progressData, setProgressData] = useState<Record<string, number>>({
     B17: 0,
     B22: 0,
     LOMA: 0,
-    'B22 SEQ': 0
+    'B22 SEQ': 0,
+    'CHECK PART': 0
   });
 
   useEffect(() => {
@@ -26,49 +27,51 @@ export default function StockTakeDashboard() {
     fetchStats();
     
     // Subscribe to realtime updates
-    const channel = supabase
-      .channel('parts-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'parts' }, () => {
-        fetchStats();
-      })
-      .subscribe();
+    const tables = ['b17', 'b22', 'loma', 'b22_seq', 'check_part'];
+    const channels = tables.map(table => 
+      supabase
+        .channel(`${table}-changes`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: table }, () => {
+          fetchStats();
+        })
+        .subscribe()
+    );
 
     return () => {
-      supabase.removeChannel(channel);
+      channels.forEach(ch => supabase.removeChannel(ch));
     };
   }, []);
 
   const fetchStats = async () => {
     try {
-      const { data, error } = await supabase.from('parts').select('zone, status');
-      if (error) throw error;
+      const tables = ['b17', 'b22', 'loma', 'b22_seq', 'check_part'];
+      const promises = tables.map(table => supabase.from(table).select('status'));
+      const results = await Promise.all(promises);
       
-      const zones = ['B17', 'B22', 'LOMA', 'B22 SEQ'];
-      const stats: any = {};
+      const stats: Record<string, number> = {};
       
-      zones.forEach(z => {
-        const zoneParts = data.filter(p => p.zone === z);
-        if (zoneParts.length === 0) {
-          stats[z] = 0;
+      results.forEach((res, index) => {
+        const zoneName = tables[index].toUpperCase().replace('_', ' ');
+        if (res.error || !res.data || res.data.length === 0) {
+          stats[zoneName] = 0;
         } else {
-          // Status weight: Counted = 50%, Verified = 100%
-          const score = zoneParts.reduce((acc, curr) => {
+          const score = res.data.reduce((acc, curr) => {
             if (curr.status === 'Verified') return acc + 1;
             if (curr.status === 'Counted') return acc + 0.5;
             return acc;
           }, 0);
-          stats[z] = (score / zoneParts.length) * 100;
+          stats[zoneName] = (score / res.data.length) * 100;
         }
       });
       
-      setProgressData(stats as any);
+      setProgressData(stats);
     } catch (err) {
       console.error('Error fetching stats:', err);
     }
   };
 
   const getBackRoute = () => {
-    if (user?.role === 'Counter') return '/';
+    if (user?.role === 'Counter B17' || user?.role === 'Counter B22') return '/';
     return '/hub';
   };
 

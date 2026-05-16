@@ -8,7 +8,7 @@ interface ProgressBarProps {
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage, label, showCar = false }) => {
   const safePercentage = Math.min(Math.max(percentage, 0), 100);
-  
+
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       {label && (
@@ -18,21 +18,21 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage, label, sho
         </div>
       )}
       <div style={{ position: 'relative', width: '100%', height: '8px', backgroundColor: 'var(--surface-highlight)', borderRadius: '999px', overflow: 'visible' }}>
-        <div 
-          style={{ 
-            width: `${safePercentage}%`, 
-            height: '100%', 
-            backgroundColor: safePercentage === 100 ? 'var(--success-color)' : 'var(--primary-color)', 
+        <div
+          style={{
+            width: `${safePercentage}%`,
+            height: '100%',
+            backgroundColor: safePercentage === 100 ? 'var(--success-color)' : 'var(--primary-color)',
             borderRadius: '999px',
             transition: 'width 0.5s ease-in-out'
           }}
         />
         {showCar && (
-          <div 
+          <div
             className="car-icon-anim"
-            style={{ left: `calc(${safePercentage}% - 15px)` }}
+            style={{ position: 'absolute', top: '-16px', left: `calc(${safePercentage}% - 15px)`, transition: 'left 0.5s ease-in-out' }}
           >
-            🚗
+            <img src="https://i.postimg.cc/4NMmDwqL/Golf-RL-Blue.webp" alt="car" style={{ width: '40px', height: 'auto', objectFit: 'contain' }} />
           </div>
         )}
       </div>

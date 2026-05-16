@@ -9,6 +9,7 @@ import * as XLSX from 'xlsx';
 export default function AdminSettings() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [selectedZone, setSelectedZone] = useState('b17');
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -28,18 +29,28 @@ export default function AdminSettings() {
 
         if (data.length === 0) throw new Error('File is empty');
 
-        // Transform data to match parts table schema
-        // Expected columns in excel: Material, PartNo, Location, Zone
-        const transformedData = data.map((row: any) => ({
-          material: row.Material || row.material || 'Unknown',
-          part_no: row.PartNo || row.part_no || row['Part No'] || 'Unknown',
-          location: row.Location || row.location || 'Unknown',
-          zone: row.Zone || row.zone || 'B17',
-          status: 'Not Counted'
-        }));
+        // Transform data to match parts table schema and catch any extra columns in metadata JSONB
+        const transformedData = data.map((row: any) => {
+          const { 
+            Material, material, 
+            PartNo, part_no, 'Part Name': partName, 'Part No': partNoSpace,
+            Location, location, 'Storage Bin': storageBin,
+            Zone, zone, 
+            ...rest 
+          } = row;
+          
+          return {
+            material: String(Material || material || 'Unknown'),
+            part_no: String(PartNo || part_no || partName || partNoSpace || 'Unknown'),
+            location: String(Location || location || storageBin || 'Unknown'),
+            zone: selectedZone.toUpperCase(),
+            status: 'Not Counted',
+            metadata: rest
+          };
+        });
 
-        // Insert into Supabase
-        const { error } = await supabase.from('parts').insert(transformedData);
+        // Insert into dynamically selected table
+        const { error } = await supabase.from(selectedZone).insert(transformedData);
         
         if (error) throw error;
 
@@ -76,10 +87,34 @@ export default function AdminSettings() {
           <div style={{ backgroundColor: 'var(--surface-highlight)', padding: '1.5rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem' }}>
             <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>File Requirements:</h3>
             <ul style={{ paddingLeft: '1.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <li>Format: <strong>.xlsx</strong> or <strong>.xls</strong></li>
-              <li>Columns: <strong>Material</strong>, <strong>PartNo</strong>, <strong>Location</strong>, <strong>Zone</strong></li>
-              <li>Valid Zones: <strong>B17</strong>, <strong>B22</strong>, <strong>LOMA</strong>, <strong>B22 SEQ</strong></li>
+              <li>Format: <strong>.csv</strong>, <strong>.xlsx</strong>, or <strong>.xls</strong></li>
+              <li>Required Columns: <strong>Material</strong>, <strong>Part Name</strong> (or Part No), <strong>Storage Bin</strong> (or Location)</li>
+              <li>All extra columns will automatically be saved into the database's <code>metadata</code> field!</li>
             </ul>
+          </div>
+
+          <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Assign to Zone:</label>
+            <select 
+              value={selectedZone} 
+              onChange={(e) => setSelectedZone(e.target.value)}
+              style={{
+                padding: '0.75rem 1rem',
+                backgroundColor: 'var(--surface-color)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--text-primary)',
+                outline: 'none',
+                width: '100%',
+                maxWidth: '300px'
+              }}
+            >
+              <option value="b17">Zone B17</option>
+              <option value="b22">Zone B22</option>
+              <option value="loma">Zone LOMA</option>
+              <option value="b22_seq">Zone B22 SEQ</option>
+              <option value="check_part">Check Part</option>
+            </select>
           </div>
 
           {message.text && (
@@ -102,7 +137,7 @@ export default function AdminSettings() {
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <input 
               type="file" 
-              accept=".xlsx, .xls" 
+              accept=".csv, .xlsx, .xls" 
               onChange={handleFileUpload}
               style={{ display: 'none' }}
               id="excel-upload"
@@ -110,7 +145,7 @@ export default function AdminSettings() {
             />
             <label htmlFor="excel-upload">
               <Button as="span" style={{ pointerEvents: 'none' }} disabled={uploading}>
-                {uploading ? 'Uploading...' : 'Select & Upload Excel File'}
+                {uploading ? 'Uploading...' : 'Select & Upload CSV / Excel File'}
               </Button>
             </label>
           </div>

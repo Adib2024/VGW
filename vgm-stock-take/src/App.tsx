@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { ToastProvider } from './contexts/ToastContext';
+import { ToastContainer } from './components/ui/ToastContainer';
 import Login from './pages/Login';
 import Hub from './pages/Hub';
 import StockTakeDashboard from './pages/StockTake/Dashboard';
@@ -20,7 +22,7 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
   if (allowedRoles && !allowedRoles.includes(user.role as string)) {
     // If not allowed, redirect to their default home
     if (user.role === 'Admin' || user.role === 'Verifier') return <Navigate to="/hub" replace />;
-    if (user.role === 'Counter') return <Navigate to="/stock-take" replace />;
+    if (user.role === 'Counter B17' || user.role === 'Counter B22') return <Navigate to="/stock-take" replace />;
     return <Navigate to="/" replace />;
   }
   
@@ -42,7 +44,7 @@ function AppRoutes() {
       <Route 
         path="/stock-take" 
         element={
-          <ProtectedRoute allowedRoles={['Admin', 'Verifier', 'Counter']}>
+          <ProtectedRoute allowedRoles={['Admin', 'Verifier', 'Counter B17', 'Counter B22']}>
             <StockTakeDashboard />
           </ProtectedRoute>
         } 
@@ -50,15 +52,15 @@ function AppRoutes() {
       <Route 
         path="/stock-take/list" 
         element={
-          <ProtectedRoute allowedRoles={['Admin', 'Verifier', 'Counter']}>
+          <ProtectedRoute allowedRoles={['Admin', 'Verifier', 'Counter B17', 'Counter B22']}>
             <StockTakeListView />
           </ProtectedRoute>
         } 
       />
       <Route 
-        path="/stock-take/count/:id" 
+        path="/stock-take/count/:table/:id" 
         element={
-          <ProtectedRoute allowedRoles={['Admin', 'Verifier', 'Counter']}>
+          <ProtectedRoute allowedRoles={['Admin', 'Verifier', 'Counter B17', 'Counter B22']}>
             <StockTakeCounting />
           </ProtectedRoute>
         } 
@@ -74,7 +76,7 @@ function AppRoutes() {
       <Route 
         path="/reports/progress" 
         element={
-          <ProtectedRoute allowedRoles={['Admin', 'Verifier', 'Counter']}>
+          <ProtectedRoute allowedRoles={['Admin', 'Verifier', 'Counter B17', 'Counter B22']}>
             <UserProgress />
           </ProtectedRoute>
         } 
@@ -89,11 +91,14 @@ function AppRoutes() {
 export default function App() {
   return (
     <LanguageProvider>
-      <AuthProvider>
-        <Router>
-          <AppRoutes />
-        </Router>
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <Router>
+            <ToastContainer />
+            <AppRoutes />
+          </Router>
+        </AuthProvider>
+      </ToastProvider>
     </LanguageProvider>
   );
 }

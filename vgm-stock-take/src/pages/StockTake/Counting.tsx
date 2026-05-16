@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Navigation } from '../../components/Navigation';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
+import { Part } from '../../types/database';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -9,14 +11,14 @@ import { supabase } from '../../lib/supabase';
 import { Save, Lock, Edit3 } from 'lucide-react';
 
 export default function StockTakeCounting() {
-  const { id } = useParams<{ id: string }>();
+  const { table, id } = useParams<{ table: string; id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToast } = useToast();
   
-  const [part, setPart] = useState<any>(null);
+  const [part, setPart] = useState<Part | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
   
   // Form State
   const [boxes, setBoxes] = useState<string[]>(['', '', '', '', '']);
@@ -32,7 +34,8 @@ export default function StockTakeCounting() {
 
   const fetchPart = async () => {
     try {
-      const { data, error } = await supabase.from('parts').select('*').eq('id', id).single();
+      if (!table || !id) throw new Error('Missing parameters');
+      const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
       if (error) throw error;
       
       setPart(data);
@@ -59,7 +62,7 @@ export default function StockTakeCounting() {
       
     } catch (err) {
       console.error(err);
-      setError('Failed to load part details');
+      addToast('Failed to load part details', 'error');
     } finally {
       setLoading(false);
     }
@@ -82,7 +85,7 @@ export default function StockTakeCounting() {
 
   const canEditBox = () => {
     if (user?.role === 'Admin') return adminUnlock;
-    if (user?.role === 'Counter') {
+    if (user?.role === 'Counter B17' || user?.role === 'Counter B22') {
       // Counter can edit only if not already counted (unless admin unlocks, but admin is a different role)
       return part?.status === 'Not Counted';
     }
@@ -98,8 +101,8 @@ export default function StockTakeCounting() {
   };
 
   const handleSave = async () => {
+    if (!part) return;
     setSaving(true);
-    setError('');
     
     try {
       const updates: any = {
@@ -110,7 +113,7 @@ export default function StockTakeCounting() {
       const boxTotal = calculateTotal(boxes);
       
       // Counter Logic
-      if (user?.role === 'Counter' || (user?.role === 'Admin' && adminUnlock)) {
+      if (user?.role === 'Counter B17' || user?.role === 'Counter B22' || (user?.role === 'Admin' && adminUnlock)) {
         updates.box_1 = boxes[0] !== '' ? parseInt(boxes[0]) : null;
         updates.box_2 = boxes[1] !== '' ? parseInt(boxes[1]) : null;
         updates.box_3 = boxes[2] !== '' ? parseInt(boxes[2]) : null;
@@ -136,13 +139,14 @@ export default function StockTakeCounting() {
       
       updates.status = newStatus;
 
-      const { error } = await supabase.from('parts').update(updates).eq('id', id);
+      const { error } = await supabase.from(table!).update(updates).eq('id', id);
       if (error) throw error;
       
+      addToast('Data saved successfully', 'success');
       navigate('/stock-take/list');
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Failed to save data');
+      addToast(err.message || 'Failed to save data', 'error');
       setSaving(false);
     }
   };
@@ -181,12 +185,6 @@ export default function StockTakeCounting() {
             )}
           </div>
         </Card>
-
-        {error && (
-          <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger-color)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-            {error}
-          </div>
-        )}
 
         <Card>
           <div className="flex-col gap-6">

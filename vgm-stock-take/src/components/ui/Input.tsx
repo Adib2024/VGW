@@ -17,15 +17,21 @@ export const Input: React.FC<InputProps> = ({ label, error, icon, className = ''
           style={{
             width: '100%',
             padding: icon ? '0.75rem 1rem 0.75rem 2.5rem' : '0.75rem 1rem',
-            backgroundColor: 'var(--surface-color)',
-            border: `1px solid ${error ? 'var(--danger-color)' : 'var(--border-color)'}`,
+            backgroundColor: 'var(--surface-highlight)',
+            border: `1px solid ${error ? 'var(--danger-color)' : 'transparent'}`,
             borderRadius: 'var(--radius-md)',
             color: 'var(--text-primary)',
             outline: 'none',
-            transition: 'border-color 0.2s ease'
+            transition: 'border-color 0.2s ease, background-color 0.2s ease'
           }}
-          onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--primary-color)'; }}
-          onBlur={(e) => { e.currentTarget.style.borderColor = error ? 'var(--danger-color)' : 'var(--border-color)'; }}
+          onFocus={(e) => { 
+            e.currentTarget.style.borderColor = 'var(--primary-color)'; 
+            e.currentTarget.style.backgroundColor = 'var(--surface-color)'; 
+          }}
+          onBlur={(e) => { 
+            e.currentTarget.style.borderColor = error ? 'var(--danger-color)' : 'transparent'; 
+            e.currentTarget.style.backgroundColor = 'var(--surface-highlight)'; 
+          }}
           {...props}
         />
       </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navigation } from '../../components/Navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { Part } from '../../types/database';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { supabase } from '../../lib/supabase';
@@ -10,34 +11,43 @@ import { Search } from 'lucide-react';
 export default function StockTakeListView() {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [parts, setParts] = useState<any[]>([]);
+  const [parts, setParts] = useState<Part[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchParts();
     
-    const channel = supabase
-      .channel('parts-list')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'parts' }, () => {
-        fetchParts();
-      })
-      .subscribe();
+    const tables = ['b17', 'b22', 'loma', 'b22_seq', 'check_part'];
+    const channels = tables.map(table => 
+      supabase
+        .channel(`${table}-list`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: table }, () => {
+          fetchParts();
+        })
+        .subscribe()
+    );
 
     return () => {
-      supabase.removeChannel(channel);
+      channels.forEach(ch => supabase.removeChannel(ch));
     };
   }, []);
 
   const fetchParts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('parts')
-        .select('*')
-        .order('part_no', { ascending: true });
+      const tables = ['b17', 'b22', 'loma', 'b22_seq', 'check_part'];
+      const promises = tables.map(table => supabase.from(table).select('*').order('part_no', { ascending: true }));
+      const results = await Promise.all(promises);
+      
+      let combinedParts: any[] = [];
+      results.forEach((res, index) => {
+        if (!res.error && res.data) {
+          const tableData = res.data.map(p => ({ ...p, _table: tables[index] }));
+          combinedParts = [...combinedParts, ...tableData];
+        }
+      });
         
-      if (error) throw error;
-      setParts(data || []);
+      setParts(combinedParts);
     } catch (err) {
       console.error('Error fetching parts:', err);
     } finally {
@@ -108,7 +118,7 @@ export default function StockTakeListView() {
                       </td>
                       <td>
                         <button 
-                          onClick={() => navigate(`/stock-take/count/${part.id}`)}
+                          onClick={() => navigate(`/stock-take/count/${(part as any)._table}/${part.id}`)}
                           style={{
                             backgroundColor: 'var(--primary-color)',
                             color: 'white',
