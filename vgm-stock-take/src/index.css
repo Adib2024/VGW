@@ -170,38 +170,26 @@ p {
   transform-style: preserve-3d;
 }
 
-@keyframes driveCar {
+@keyframes driveRightToLeft {
   0% {
-    left: 0%;
-    transform: translateX(0);
+    right: -50px;
   }
-
+  30% {
+    right: 100%;
+  }
   100% {
-    left: 100%;
-    transform: translateX(-100%);
-  }
-}
-
-@keyframes carBob {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-4px);
+    right: 100%;
   }
 }
 
 .car-icon-anim {
   position: absolute;
   top: -15px;
-  transition: left 1s ease-in-out;
+  animation: driveRightToLeft 7s linear infinite;
 }
 
 .car-icon-anim img {
-  animation: carBob 1.5s ease-in-out infinite;
+  /* No vertical bob to keep it grounded */
 }
 
 /* Base Form Elements Reset */

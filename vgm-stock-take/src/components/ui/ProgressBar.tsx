@@ -28,10 +28,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage, label, sho
           }}
         />
         {showCar && (
-          <div
-            className="car-icon-anim"
-            style={{ position: 'absolute', top: '-16px', left: `calc(${safePercentage}% - 15px)`, transition: 'left 0.5s ease-in-out' }}
-          >
+          <div className="car-icon-anim">
             <img src="https://i.postimg.cc/4NMmDwqL/Golf-RL-Blue.webp" alt="car" style={{ width: '40px', height: 'auto', objectFit: 'contain' }} />
           </div>
         )}

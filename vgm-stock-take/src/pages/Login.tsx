@@ -5,15 +5,16 @@ import { useAuth, Role } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { CheckCircle, Globe, User, Lock } from 'lucide-react';
+import { CheckCircle, Globe, Lock } from 'lucide-react';
 
 export default function Login() {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<Role>(null);
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   const { login } = useAuth();
   const { addToast } = useToast();
@@ -64,9 +65,16 @@ export default function Login() {
         .single();
         
       if (error || !data) {
-        throw new Error('Invalid credentials');
+        window.alert('Invalid credentials. Please try again.');
+        return;
       }
       
+      if (rememberMe) {
+        localStorage.setItem('vgm_remembered_user', userId);
+      } else {
+        localStorage.removeItem('vgm_remembered_user');
+      }
+
       login({ id: data.id, name: data.name, role: data.role as Role });
       
       // Navigate based on role
@@ -80,100 +88,113 @@ export default function Login() {
         navigate('/qa');
       }
     } catch (err: any) {
-      addToast(err.message || 'Login failed', 'error');
+      window.alert(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleLanguage = () => {
-    const langs: ('EN'|'BM'|'DE')[] = ['EN', 'BM', 'DE'];
-    const nextIndex = (langs.indexOf(language) + 1) % langs.length;
-    setLanguage(langs[nextIndex]);
-  };
+
 
   return (
     <div className="flex justify-center items-center" style={{ minHeight: '100vh', padding: '1rem', position: 'relative' }}>
       
-      {/* Background Decor (optional rings to match reference) */}
+      {/* Background Decor */}
       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '800px', height: '800px', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '50%', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '1200px', height: '1200px', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%', pointerEvents: 'none' }} />
 
-      {/* Language Toggle */}
-      <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}>
-        <Button variant="secondary" onClick={toggleLanguage} style={{ padding: '0.5rem 1rem', backgroundColor: 'rgba(255,255,255,0.5)', border: 'none', backdropFilter: 'blur(10px)' }}>
-          <Globe size={18} color="var(--text-primary)" /> <span style={{color: 'var(--text-primary)'}}>{language}</span>
-        </Button>
+      {/* Language Toggle Centered Top */}
+      <div style={{ position: 'absolute', top: '1.5rem', left: '50%', transform: 'translateX(-50%)', zIndex: 20 }}>
+        <select 
+          value={language}
+          onChange={(e) => setLanguage(e.target.value as any)}
+          style={{ 
+            padding: '0.25rem 1rem', 
+            borderRadius: '999px', 
+            border: '1px solid var(--border-color)', 
+            backgroundColor: 'var(--surface-color)',
+            color: 'var(--text-primary)',
+            outline: 'none',
+            cursor: 'pointer',
+            fontSize: '0.875rem'
+          }}
+        >
+          <option value="EN">English</option>
+          <option value="BM">Bahasa Melayu</option>
+          <option value="DE">Deutsch</option>
+        </select>
       </div>
 
-      <div style={{ width: '100%', maxWidth: '420px', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 10, padding: '0 0.5rem' }}>
+      <div style={{ width: '100%', maxWidth: '400px', zIndex: 10, padding: '0 1rem' }}>
         
-        <Card className="w-full" style={{ padding: '2.5rem 1.5rem', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <Card className="w-full" style={{ padding: '2.5rem 2rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#ffffff', boxShadow: '0 8px 30px rgba(0,0,0,0.05)' }}>
           
           {/* Logo in rounded box */}
           <div style={{ 
-            width: '64px', 
-            height: '64px', 
-            backgroundColor: '#ffffff', 
-            borderRadius: '16px', 
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-            marginBottom: '1.5rem'
+            marginBottom: '1rem'
           }}>
             <img 
               src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Volkswagen_logo_2019.svg" 
               alt="VW Logo" 
-              className="animate-spin-3d"
-              style={{ width: '40px', height: '40px' }} 
+              style={{ width: '64px', height: '64px' }} 
             />
           </div>
           
-          <h2 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-primary)', fontSize: '1.5rem', fontWeight: 600 }}>VGM Stock Take 2026</h2>
-          <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem', maxWidth: '80%' }}>
-            Manage warehouse inventory seamlessly. Internal tool.
+          <h2 style={{ textAlign: 'center', margin: '0', color: '#001e50', fontSize: '1.25rem', fontWeight: 700 }}>VGM Stock Take 2026</h2>
+          <p style={{ textAlign: 'center', color: '#666', fontSize: '0.75rem', marginBottom: '2rem' }}>
+            CKD Logistic Department
           </p>
           
-          <form onSubmit={handleLogin} className="flex-col gap-4">
-            <div style={{ position: 'relative' }}>
-              <Input 
-                icon={<User size={18} />}
-                placeholder="User ID (e.g. ADMIN01)"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                required
-              />
-              {role && (
-                <div style={{ 
-                  position: 'absolute', 
-                  right: '1rem', 
-                  top: '0.8rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  color: 'var(--success-color)',
-                  fontSize: '0.875rem',
-                  fontWeight: 500
-                }}>
-                  <CheckCircle size={16} /> {role}
-                </div>
-              )}
+          <form onSubmit={handleLogin} className="flex-col gap-4" style={{ width: '100%' }}>
+            
+            {/* User ID */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#333' }}>User ID</label>
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type="text"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e0e0e0', outline: 'none', fontSize: '0.875rem' }}
+                  required
+                />
+                {role && (
+                  <div style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--success-color)', fontSize: '0.75rem', fontWeight: 500 }}>
+                    <CheckCircle size={14} /> {role}
+                  </div>
+                )}
+              </div>
             </div>
 
-            <Input 
-              icon={<Lock size={18} />}
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            {/* Password */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#333' }}>Password</label>
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e0e0e0', outline: 'none', fontSize: '0.875rem' }}
+                  required
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#888' }}>
+                  {showPassword ? <Globe size={16} /> : <Lock size={16} />}
+                </button>
+              </div>
+            </div>
 
+            {/* Remember Me */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <input type="checkbox" id="remember" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} style={{ cursor: 'pointer' }} />
+              <label htmlFor="remember" style={{ fontSize: '0.75rem', color: '#666', cursor: 'pointer' }}>Remember me</label>
+            </div>
             <Button 
               type="submit" 
               fullWidth 
-              style={{ marginTop: '0.5rem' }}
+              style={{ marginTop: '1rem', backgroundColor: '#1877f2', borderRadius: '8px', padding: '0.75rem' }}
               disabled={loading}
             >
               {loading ? '...' : t('login')}
