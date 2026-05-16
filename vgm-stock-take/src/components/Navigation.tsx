@@ -13,7 +13,7 @@ interface NavigationProps {
 
 export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, backTo = '/hub' }) => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const { user, logout } = useAuth();
 
   const handleBack = () => {
@@ -51,6 +51,25 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
           <User size={16} />
           <span className="hidden md:inline">{user?.name} ({user?.role})</span>
         </div>
+        <select 
+          value={language}
+          onChange={(e) => setLanguage(e.target.value as any)}
+          style={{ 
+            padding: '0.25rem 0.5rem', 
+            borderRadius: '999px', 
+            border: '1px solid var(--primary-color)', 
+            backgroundColor: 'transparent', 
+            color: 'var(--primary-color)', 
+            fontSize: '0.75rem', 
+            fontWeight: 600, 
+            outline: 'none', 
+            cursor: 'pointer' 
+          }}
+        >
+          <option value="EN">English</option>
+          <option value="BM">Bahasa Melayu</option>
+          <option value="DE">Deutsch</option>
+        </select>
         <Button variant="danger" onClick={handleLogout} style={{ padding: '0.5rem' }} title="Logout">
           <LogOut size={18} />
         </Button>

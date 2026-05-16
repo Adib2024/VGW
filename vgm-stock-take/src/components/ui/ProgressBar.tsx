@@ -17,18 +17,20 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage, label, sho
           <span style={{ color: 'var(--text-secondary)' }}>{safePercentage.toFixed(0)}%</span>
         </div>
       )}
-      <div style={{ position: 'relative', width: '100%', height: '8px', backgroundColor: 'var(--surface-highlight)', borderRadius: '999px', overflow: 'visible' }}>
-        <div
-          style={{
-            width: `${safePercentage}%`,
-            height: '100%',
-            backgroundColor: safePercentage === 100 ? 'var(--success-color)' : 'var(--primary-color)',
-            borderRadius: '999px',
-            transition: 'width 0.5s ease-in-out'
-          }}
-        />
+      <div style={{ position: 'relative', width: '100%', paddingTop: '20px', overflow: 'hidden' }}>
+        <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--surface-highlight)', borderRadius: '999px' }}>
+          <div
+            style={{
+              width: `${safePercentage}%`,
+              height: '100%',
+              backgroundColor: safePercentage === 100 ? 'var(--success-color)' : 'var(--primary-color)',
+              borderRadius: '999px',
+              transition: 'width 0.5s ease-in-out'
+            }}
+          />
+        </div>
         {showCar && (
-          <div className="car-icon-anim">
+          <div className="car-icon-anim" style={{ top: '4px' }}>
             <img src="https://i.postimg.cc/4NMmDwqL/Golf-RL-Blue.webp" alt="car" style={{ width: '40px', height: 'auto', objectFit: 'contain' }} />
           </div>
         )}

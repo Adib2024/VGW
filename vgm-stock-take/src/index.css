@@ -173,19 +173,30 @@ p {
 @keyframes driveRightToLeft {
   0% {
     right: -50px;
+    opacity: 1;
   }
   30% {
-    right: 100%;
+    right: calc(100% - 45px); /* Stop 5px from left edge */
+    opacity: 1;
+  }
+  80% {
+    right: calc(100% - 45px); /* Wait for 3 seconds */
+    opacity: 1;
+  }
+  99% {
+    right: calc(100% + 50px); /* Continue off screen */
+    opacity: 1;
   }
   100% {
-    right: 100%;
+    right: -50px;
+    opacity: 0;
   }
 }
 
 .car-icon-anim {
   position: absolute;
   top: -15px;
-  animation: driveRightToLeft 7s linear infinite;
+  animation: driveRightToLeft 6s linear infinite;
 }
 
 .car-icon-anim img {

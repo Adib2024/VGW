@@ -20,6 +20,29 @@ export default function Login() {
   const { addToast } = useToast();
   const { t, language, setLanguage } = useLanguage();
   const navigate = useNavigate();
+  const { user } = useAuth(); // We need to check if user is already logged in
+
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'Admin' || user.role === 'Verifier') {
+        navigate('/hub', { replace: true });
+      } else if (user.role === 'Counter B17' || user.role === 'Counter B22') {
+        navigate('/stock-take', { replace: true });
+      } else if (user.role === 'Operator Batt') {
+        navigate('/battery', { replace: true });
+      } else if (user.role === 'QA Inspector') {
+        navigate('/qa', { replace: true });
+      }
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('vgm_remembered_user');
+    if (savedUser) {
+      setUserId(savedUser);
+      setRememberMe(true);
+    }
+  }, []);
 
   useEffect(() => {
     const lookupRole = async () => {
@@ -139,6 +162,7 @@ export default function Login() {
             <img 
               src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Volkswagen_logo_2019.svg" 
               alt="VW Logo" 
+              className="animate-spin-3d"
               style={{ width: '64px', height: '64px' }} 
             />
           </div>

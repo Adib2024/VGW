@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Card } from '../../components/ui/Card';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { supabase } from '../../lib/supabase';
-import { RefreshCw, Users, AlertTriangle } from 'lucide-react';
+import { RefreshCw, Users, AlertTriangle, ChevronLeft } from 'lucide-react';
 
 interface ZoneStats {
   total: number;
@@ -71,16 +71,23 @@ export default function StockTakeDashboard() {
     <div style={{ minHeight: '100vh', backgroundColor: '#f0f2f5', padding: '1rem', fontFamily: 'Inter, sans-serif', paddingBottom: '3rem' }}>
       
       {/* HEADER SECTION */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', gap: '1rem' }}>
         
         {/* Left Side: Title & User */}
-        <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#001e50', margin: '0 0 0.25rem 0' }}>Select Data</h1>
-          <div style={{ color: '#666', fontSize: '0.875rem' }}>Logged in as: {user?.name || user?.id}</div>
+        <div style={{ flex: '1 1 auto', minWidth: '150px', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {(user?.role === 'Admin' || user?.role === 'Verifier') && (
+            <button onClick={() => navigate('/hub')} style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid #ccc', backgroundColor: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#333' }}>
+              <ChevronLeft size={20} />
+            </button>
+          )}
+          <div>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#001e50', margin: '0 0 0.25rem 0' }}>Select Data</h1>
+            <div style={{ color: '#666', fontSize: '0.875rem' }}>Logged in as: {user?.name || user?.id}</div>
+          </div>
         </div>
 
         {/* Center: Top Buttons */}
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flex: '1 1 auto', justifyContent: 'center', minWidth: '200px' }}>
           <button onClick={() => setShowLogoutConfirm(true)} style={{ padding: '0.25rem 1rem', borderRadius: '999px', border: '1px solid red', backgroundColor: 'transparent', color: 'red', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>
             Logout
           </button>
@@ -95,7 +102,7 @@ export default function StockTakeDashboard() {
         </div>
 
         {/* Right Side: Role & Live Data */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem', flex: '1 1 auto', minWidth: '100px' }}>
           <div style={{ color: '#1877f2', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>
             {user?.role?.toUpperCase()} VIEW
           </div>

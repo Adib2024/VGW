@@ -1,15 +1,29 @@
-
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigation } from '../components/Navigation';
 import { Card } from '../components/ui/Card';
-import { Package, Battery, ShieldCheck } from 'lucide-react';
+import { Package, Battery, ShieldCheck, Settings } from 'lucide-react';
 
 export default function Hub() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Push an initial state so the first back click gets intercepted
+    window.history.pushState(null, '', window.location.href);
+
+    const handlePopState = () => {
+      // Force history to stay here and refresh the page instead of going back
+      window.history.pushState(null, '', window.location.href);
+      window.location.reload();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -78,6 +92,27 @@ export default function Hub() {
             <h2>{t('qualityAssurance')}</h2>
             <p>Perform QA inspections and log discrepancies.</p>
           </Card>
+
+          {user?.role === 'Admin' && (
+            <Card 
+              interactive 
+              onClick={() => navigate('/admin/settings')}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '3rem 2rem' }}
+            >
+              <div style={{ 
+                width: '80px', height: '80px', 
+                borderRadius: '50%', 
+                backgroundColor: 'rgba(142, 68, 173, 0.2)', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: '1.5rem',
+                color: '#8e44ad'
+              }}>
+                <Settings size={40} />
+              </div>
+              <h2>Admin Settings</h2>
+              <p>Upload CSV data, manage system configurations, and system logs.</p>
+            </Card>
+          )}
         </div>
       </main>
     </div>
