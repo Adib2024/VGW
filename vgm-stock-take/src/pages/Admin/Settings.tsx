@@ -24,8 +24,11 @@ export default function AdminSettings() {
   const checkZoneLock = async (zone: string) => {
     setCheckingLock(true);
     try {
-      const { data, error } = await supabase.from(zone).select('id').limit(1);
-      if (!error && data && data.length > 0) {
+      const { error } = await supabase.from(zone).select('id').limit(1);
+      // If there is no error querying the table, the table EXISTS.
+      // We lock it so the Admin must explicitly 'Unlock & Clear' (which Drops the table) 
+      // ensuring we never upload into a corrupted or outdated schema.
+      if (!error) {
         setIsLocked(true);
       } else {
         setIsLocked(false);
@@ -125,40 +128,13 @@ export default function AdminSettings() {
         addLog(`Generating DDL for table '${targetTable}'...`);
         const columnDefinitions = sanitizedHeaders.map(col => `"${col}" TEXT`).join(', ');
         
-        // Determine Unique Identifier for Smart Upsert
-        let uniqueCol = '';
-        if (targetTable === 'check_part') {
-          uniqueCol = sanitizedHeaders.find(h => h.includes('partnumber') || h.includes('part_number')) || '';
-        } else {
-          uniqueCol = sanitizedHeaders.find(h => h.includes('material')) || '';
-        }
-        
-        if (uniqueCol) {
-           addLog(`Identified Unique Column for Smart Upsert: '${uniqueCol}'`);
-        } else {
-           addLog(`Warning: Could not identify a unique column. Duplicates may occur.`);
-        }
-        
         const ddlString = `
           CREATE TABLE IF NOT EXISTS "${targetTable}" (
             id BIGSERIAL PRIMARY KEY,
             batch_id TEXT,
             status TEXT DEFAULT 'Not Counted',
             ${columnDefinitions}
-            ${uniqueCol ? `, CONSTRAINT ${targetTable}_unique_${uniqueCol} UNIQUE("${uniqueCol}")` : ''}
           );
-          
-          -- Try to add the constraint if table already existed (will fail safely if it exists)
-          DO $$
-          BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = '${targetTable}_unique_${uniqueCol}') THEN
-              ALTER TABLE "${targetTable}" ADD CONSTRAINT ${targetTable}_unique_${uniqueCol} UNIQUE("${uniqueCol}");
-            END IF;
-          EXCEPTION
-            WHEN duplicate_table THEN NULL;
-            WHEN unique_violation THEN NULL; -- Ignores if duplicates already exist
-            WHEN others THEN NULL;
-          END $$;
           
           ALTER TABLE "${targetTable}" ENABLE ROW LEVEL SECURITY;
           DROP POLICY IF EXISTS "Enable read access for all users" ON "${targetTable}";
@@ -203,8 +179,7 @@ export default function AdminSettings() {
         
         for (let attempt = 1; attempt <= 3; attempt++) {
           try {
-            const upsertOptions = uniqueCol ? { onConflict: uniqueCol } : undefined;
-            const { error: insertError } = await supabase.from(targetTable).upsert(transformedData, upsertOptions);
+            const { error: insertError } = await supabase.from(targetTable).upsert(transformedData);
             
             if (insertError) throw insertError;
             
@@ -215,9 +190,6 @@ export default function AdminSettings() {
             if (err.message?.includes('schema cache')) {
               addLog(`Schema cache not ready (attempt ${attempt}/3). Retrying in 2 seconds...`);
               await new Promise(resolve => setTimeout(resolve, 2000));
-            } else if (err.message?.includes('duplicate key value')) {
-               // Fast fail if they already have duplicates from before the constraint was added
-               throw new Error('Database contains duplicate records from previous uploads. Please go to Supabase Dashboard, empty the table, and upload again.');
             } else {
               throw err; // Not a cache error, throw immediately
             }
@@ -326,11 +298,11 @@ export default function AdminSettings() {
           {isLocked ? (
             <div style={{ backgroundColor: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', marginBottom: '2rem' }}>
               <AlertTriangle size={32} color="#e11d48" style={{ margin: '0 auto 1rem auto' }} />
-              <h3 style={{ color: '#be123c', margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>Zone Locked</h3>
-              <p style={{ color: '#9f1239', margin: '0 0 1.5rem 0' }}>Data has already been uploaded for this zone. To prevent duplicate data, uploads are currently disabled.</p>
+              <h3 style={{ color: '#be123c', margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>Zone Locked / Table Exists</h3>
+              <p style={{ color: '#9f1239', margin: '0 0 1.5rem 0' }}>This zone already has a database table created. To prevent schema errors and duplicate data, you must unlock and clear it before uploading a new master file.</p>
               
               <Button onClick={handleUnlockZone} disabled={checkingLock} style={{ backgroundColor: '#e11d48', color: 'white', fontWeight: 600, padding: '0.75rem 1.5rem', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-                {checkingLock ? 'Unlocking...' : 'Unlock & Clear Zone Data'}
+                {checkingLock ? 'Unlocking...' : 'Unlock & Clear Zone Schema'}
               </Button>
             </div>
           ) : (
