@@ -13,6 +13,46 @@ export default function AdminSettings() {
   const [logs, setLogs] = useState<string[]>([]);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [selectedZone, setSelectedZone] = useState('b17');
+  const [isLocked, setIsLocked] = useState(false);
+  const [checkingLock, setCheckingLock] = useState(false);
+
+  // Check if zone is locked when selectedZone changes
+  React.useEffect(() => {
+    checkZoneLock(selectedZone);
+  }, [selectedZone]);
+
+  const checkZoneLock = async (zone: string) => {
+    setCheckingLock(true);
+    try {
+      const { data, error } = await supabase.from(zone).select('id').limit(1);
+      if (!error && data && data.length > 0) {
+        setIsLocked(true);
+      } else {
+        setIsLocked(false);
+      }
+    } catch (err) {
+      setIsLocked(false);
+    } finally {
+      setCheckingLock(false);
+    }
+  };
+
+  const handleUnlockZone = async () => {
+    if (!window.confirm(`Are you sure you want to unlock and CLEAR ALL DATA for Zone ${selectedZone.toUpperCase()}? This action cannot be undone.`)) return;
+    
+    setCheckingLock(true);
+    try {
+      const { error } = await supabase.rpc('create_dynamic_table', { query: `DROP TABLE IF EXISTS "${selectedZone}";` });
+      if (error) throw error;
+      
+      setIsLocked(false);
+      setMessage({ type: 'success', text: `Zone ${selectedZone.toUpperCase()} has been unlocked and cleared. You can now upload.` });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: `Failed to unlock zone: ${err.message}` });
+    } finally {
+      setCheckingLock(false);
+    }
+  };
 
   const addLog = (log: string) => {
     setLogs(prev => [...prev, log]);
@@ -85,13 +125,40 @@ export default function AdminSettings() {
         addLog(`Generating DDL for table '${targetTable}'...`);
         const columnDefinitions = sanitizedHeaders.map(col => `"${col}" TEXT`).join(', ');
         
+        // Determine Unique Identifier for Smart Upsert
+        let uniqueCol = '';
+        if (targetTable === 'check_part') {
+          uniqueCol = sanitizedHeaders.find(h => h.includes('partnumber') || h.includes('part_number')) || '';
+        } else {
+          uniqueCol = sanitizedHeaders.find(h => h.includes('material')) || '';
+        }
+        
+        if (uniqueCol) {
+           addLog(`Identified Unique Column for Smart Upsert: '${uniqueCol}'`);
+        } else {
+           addLog(`Warning: Could not identify a unique column. Duplicates may occur.`);
+        }
+        
         const ddlString = `
           CREATE TABLE IF NOT EXISTS "${targetTable}" (
             id BIGSERIAL PRIMARY KEY,
             batch_id TEXT,
             status TEXT DEFAULT 'Not Counted',
             ${columnDefinitions}
+            ${uniqueCol ? `, CONSTRAINT ${targetTable}_unique_${uniqueCol} UNIQUE("${uniqueCol}")` : ''}
           );
+          
+          -- Try to add the constraint if table already existed (will fail safely if it exists)
+          DO $$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = '${targetTable}_unique_${uniqueCol}') THEN
+              ALTER TABLE "${targetTable}" ADD CONSTRAINT ${targetTable}_unique_${uniqueCol} UNIQUE("${uniqueCol}");
+            END IF;
+          EXCEPTION
+            WHEN duplicate_table THEN NULL;
+            WHEN unique_violation THEN NULL; -- Ignores if duplicates already exist
+            WHEN others THEN NULL;
+          END $$;
           
           ALTER TABLE "${targetTable}" ENABLE ROW LEVEL SECURITY;
           DROP POLICY IF EXISTS "Enable read access for all users" ON "${targetTable}";
@@ -136,7 +203,9 @@ export default function AdminSettings() {
         
         for (let attempt = 1; attempt <= 3; attempt++) {
           try {
-            const { error: insertError } = await supabase.from(targetTable).upsert(transformedData);
+            const upsertOptions = uniqueCol ? { onConflict: uniqueCol } : undefined;
+            const { error: insertError } = await supabase.from(targetTable).upsert(transformedData, upsertOptions);
+            
             if (insertError) throw insertError;
             
             insertSuccess = true;
@@ -146,6 +215,9 @@ export default function AdminSettings() {
             if (err.message?.includes('schema cache')) {
               addLog(`Schema cache not ready (attempt ${attempt}/3). Retrying in 2 seconds...`);
               await new Promise(resolve => setTimeout(resolve, 2000));
+            } else if (err.message?.includes('duplicate key value')) {
+               // Fast fail if they already have duplicates from before the constraint was added
+               throw new Error('Database contains duplicate records from previous uploads. Please go to Supabase Dashboard, empty the table, and upload again.');
             } else {
               throw err; // Not a cache error, throw immediately
             }
@@ -158,6 +230,7 @@ export default function AdminSettings() {
 
         addLog(`Successfully ingested ${transformedData.length} records!`);
         setMessage({ type: 'success', text: `Upload complete! ${transformedData.length} parts added.` });
+        setIsLocked(true); // Lock it immediately after successful upload
       } catch (err: any) {
         console.error(err);
         if (err.message?.includes('schema cache')) {
@@ -250,28 +323,42 @@ export default function AdminSettings() {
             </div>
           )}
 
-          <div style={{ display: 'flex' }}>
-            <input 
-              type="file" 
-              accept=".csv, .xlsx, .xls" 
-              onChange={handleFileUpload}
-              style={{ display: 'none' }}
-              id="excel-upload"
-              disabled={uploading}
-            />
-            <label htmlFor="excel-upload" style={{ width: '100%', cursor: 'pointer' }}>
-              <Button as="span" style={{ pointerEvents: 'none', width: '100%', display: 'flex', justifyContent: 'center', padding: '1rem', fontSize: '1.05rem', fontWeight: 600, backgroundColor: '#001e50', color: '#ffffff', borderRadius: '8px', transition: 'background-color 0.2s', opacity: uploading ? 0.7 : 1 }} disabled={uploading}>
-                {uploading ? (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{ width: '1rem', height: '1rem', border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                    {t('uploadingBtn')}
-                  </span>
-                ) : (
-                  t('selectUploadBtn')
-                )}
+          {isLocked ? (
+            <div style={{ backgroundColor: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', marginBottom: '2rem' }}>
+              <AlertTriangle size={32} color="#e11d48" style={{ margin: '0 auto 1rem auto' }} />
+              <h3 style={{ color: '#be123c', margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>Zone Locked</h3>
+              <p style={{ color: '#9f1239', margin: '0 0 1.5rem 0' }}>Data has already been uploaded for this zone. To prevent duplicate data, uploads are currently disabled.</p>
+              
+              <Button onClick={handleUnlockZone} disabled={checkingLock} style={{ backgroundColor: '#e11d48', color: 'white', fontWeight: 600, padding: '0.75rem 1.5rem', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                {checkingLock ? 'Unlocking...' : 'Unlock & Clear Zone Data'}
               </Button>
-            </label>
-          </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex' }}>
+              <input 
+                type="file" 
+                accept=".csv, .xlsx, .xls" 
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+                id="excel-upload"
+                disabled={uploading || checkingLock}
+              />
+              <label htmlFor="excel-upload" style={{ width: '100%', cursor: 'pointer' }}>
+                <Button as="span" style={{ pointerEvents: 'none', width: '100%', display: 'flex', justifyContent: 'center', padding: '1rem', fontSize: '1.05rem', fontWeight: 600, backgroundColor: '#001e50', color: '#ffffff', borderRadius: '8px', transition: 'background-color 0.2s', opacity: (uploading || checkingLock) ? 0.7 : 1 }} disabled={uploading || checkingLock}>
+                  {uploading ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ width: '1rem', height: '1rem', border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                      {t('uploadingBtn')}
+                    </span>
+                  ) : checkingLock ? (
+                    'Checking Zone Status...'
+                  ) : (
+                    t('selectUploadBtn')
+                  )}
+                </Button>
+              </label>
+            </div>
+          )}
 
           {/* Parsing Integrity Log Container */}
           {logs.length > 0 && (
