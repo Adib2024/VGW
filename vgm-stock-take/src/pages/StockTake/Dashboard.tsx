@@ -63,8 +63,8 @@ export default function StockTakeDashboard() {
     navigate('/');
   };
 
-  const handleCardClick = () => {
-    navigate(`/stock-take/list`);
+  const handleCardClick = (tableKey: string) => {
+    navigate(`/stock-take/list?table=${tableKey}`);
   };
 
   return (
@@ -125,7 +125,7 @@ export default function StockTakeDashboard() {
         ].map((zone) => {
           const s = stats[zone.key];
           return (
-            <Card key={zone.key} onClick={() => handleCardClick()} className="dashboard-card" style={{ cursor: 'pointer', padding: '1.5rem', borderRadius: '16px', backgroundColor: '#fff', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', transition: 'transform 0.2s' }}>
+            <Card key={zone.key} onClick={() => handleCardClick(zone.key)} className="dashboard-card" style={{ cursor: 'pointer', padding: '1.5rem', borderRadius: '16px', backgroundColor: '#fff', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', transition: 'transform 0.2s' }}>
               <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
                 <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: zone.bg || '#e3f2fd', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <img src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Volkswagen_logo_2019.svg" alt="VW" style={{ width: '38px', height: '38px' }} />

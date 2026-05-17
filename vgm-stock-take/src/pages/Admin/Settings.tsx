@@ -35,16 +35,16 @@ export default function AdminSettings() {
         const transformedData = data.map((row: any) => {
           const { 
             Material, material, 
-            PartNo, part_no, 'Part Name': partName, 'Part No': partNoSpace,
-            Location, location, 'Storage Bin': storageBin,
+            'PART NAME': partNameUpper, 'Part Name': partName, 'Part No': partNoSpace, PartNo, part_no,
+            'Storage Bin': storageBin, Location, location,
             Zone, zone, 
             ...rest 
           } = row;
           
           return {
             material: String(Material || material || 'Unknown'),
-            part_no: String(PartNo || part_no || partName || partNoSpace || 'Unknown'),
-            location: String(Location || location || storageBin || 'Unknown'),
+            part_no: String(partNameUpper || partName || partNoSpace || PartNo || part_no || 'Unknown'),
+            location: String(storageBin || Location || location || 'Unknown'),
             zone: selectedZone.toUpperCase(),
             status: 'Not Counted',
             metadata: rest
