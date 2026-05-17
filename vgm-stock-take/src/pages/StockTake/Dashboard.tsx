@@ -40,15 +40,25 @@ export default function StockTakeDashboard() {
   const fetchStats = async () => {
     try {
       const tables = ['b17', 'b22', 'loma', 'b22_seq'];
-      const promises = tables.map(table => supabase.from(table).select('status', { count: 'exact' }));
+      const promises = tables.map(table => supabase.from(table).select('*'));
       const results = await Promise.all(promises);
 
       const newStats: Record<string, ZoneStats> = {};
       results.forEach((res, index) => {
         const table = tables[index];
         const data = res.data || [];
-        const total = data.length;
-        const completed = data.filter(r => r.status === 'Counted' || r.status === 'Verified').length;
+        
+        // Find latest batch_id
+        const batches = [...new Set(data.map((r: any) => r.batch_id || r.metadata?.batch_id).filter(Boolean))].sort().reverse();
+        const latestBatch = batches[0];
+        
+        // Filter by latest batch if it exists, otherwise use all (for legacy data)
+        const currentData = latestBatch 
+          ? data.filter((r: any) => (r.batch_id === latestBatch || r.metadata?.batch_id === latestBatch))
+          : data;
+
+        const total = currentData.length;
+        const completed = currentData.filter((r: any) => r.status === 'Counted' || r.status === 'Verified').length;
         const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
         newStats[table] = { total, completed, percentage };
       });

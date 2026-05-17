@@ -16,13 +16,12 @@ export default function StockTakeCounting() {
   const { user } = useAuth();
   const { addToast } = useToast();
   
-  const [part, setPart] = useState<Part | null>(null);
+  const [part, setPart] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
-  // Form State
-  const [boxes, setBoxes] = useState<string[]>(['', '', '', '', '']);
-  const [recount, setRecount] = useState('');
+  // Dynamic Form State
+  const [formData, setFormData] = useState<Record<string, string>>({});
   
   // UI State
   const [visibleBoxes, setVisibleBoxes] = useState(1);
@@ -40,25 +39,14 @@ export default function StockTakeCounting() {
       
       setPart(data);
       
-      const newBoxes = [
-        data.box_1 !== null ? String(data.box_1) : '',
-        data.box_2 !== null ? String(data.box_2) : '',
-        data.box_3 !== null ? String(data.box_3) : '',
-        data.box_4 !== null ? String(data.box_4) : '',
-        data.box_5 !== null ? String(data.box_5) : '',
-      ];
-      setBoxes(newBoxes);
-      setRecount(data.recount !== null ? String(data.recount) : '');
-      
-      // Determine visible boxes based on existing data
-      let maxFilled = 0;
-      for(let i=4; i>=0; i--) {
-        if (newBoxes[i] !== '') {
-          maxFilled = i;
-          break;
+      // Initialize form data with existing values
+      const initialForm: Record<string, string> = {};
+      Object.keys(data).forEach(key => {
+        if (data[key] !== null && data[key] !== undefined) {
+          initialForm[key] = String(data[key]);
         }
-      }
-      setVisibleBoxes(Math.min(5, maxFilled + 2)); // Show one extra box than the last filled
+      });
+      setFormData(initialForm);
       
     } catch (err) {
       console.error(err);
@@ -68,19 +56,12 @@ export default function StockTakeCounting() {
     }
   };
 
-  const handleBoxChange = (index: number, value: string) => {
-    const newBoxes = [...boxes];
-    newBoxes[index] = value;
-    setBoxes(newBoxes);
-    
-    // Waterfall logic: if current box is filled and next box is hidden, reveal it
-    if (value.trim() !== '' && index + 1 === visibleBoxes && visibleBoxes < 5) {
-      setVisibleBoxes(visibleBoxes + 1);
-    }
+  const handleInputChange = (key: string, value: string) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
   };
 
-  const calculateTotal = (b: string[]) => {
-    return b.reduce((acc, curr) => acc + (parseInt(curr) || 0), 0);
+  const calculateTotal = (keys: string[]) => {
+    return keys.reduce((acc, key) => acc + (parseInt(formData[key]) || 0), 0);
   };
 
   const canEditBox = () => {
@@ -105,20 +86,23 @@ export default function StockTakeCounting() {
     setSaving(true);
     
     try {
-      const updates: any = {
-        last_updated: new Date().toISOString()
-      };
-      
+      const updates: any = {};
       let newStatus = part.status;
-      const boxTotal = calculateTotal(boxes);
+      
+      const counterKeys = Object.keys(part).filter(k => /box|seq/i.test(k));
+      const verifierKeys = Object.keys(part).filter(k => /recount/i.test(k));
+      const remarkKeys = Object.keys(part).filter(k => /remark|luqman/i.test(k));
+      
+      const boxTotal = calculateTotal(counterKeys);
       
       // Counter Logic
       if (user?.role === 'Counter B17' || user?.role === 'Counter B22' || (user?.role === 'Admin' && adminUnlock)) {
-        updates.box_1 = boxes[0] !== '' ? parseInt(boxes[0]) : null;
-        updates.box_2 = boxes[1] !== '' ? parseInt(boxes[1]) : null;
-        updates.box_3 = boxes[2] !== '' ? parseInt(boxes[2]) : null;
-        updates.box_4 = boxes[3] !== '' ? parseInt(boxes[3]) : null;
-        updates.box_5 = boxes[4] !== '' ? parseInt(boxes[4]) : null;
+        counterKeys.forEach(k => {
+          updates[k] = formData[k] !== '' ? parseInt(formData[k]) : null;
+        });
+        remarkKeys.forEach(k => {
+          if (formData[k] !== undefined) updates[k] = formData[k];
+        });
         
         if (boxTotal > 0 && part.status === 'Not Counted') {
           newStatus = 'Counted';
@@ -127,13 +111,18 @@ export default function StockTakeCounting() {
       
       // Verifier Logic
       if (user?.role === 'Verifier' || (user?.role === 'Admin' && adminUnlock)) {
-        if (recount !== '') {
-          const recountVal = parseInt(recount);
-          if (recountVal === boxTotal) {
-             throw new Error('Recount value cannot equal Box Total.');
+        let hasRecounts = false;
+        verifierKeys.forEach(k => {
+          if (formData[k] !== '') {
+            hasRecounts = true;
+            updates[k] = parseInt(formData[k]);
+          } else {
+            updates[k] = null;
           }
-          updates.recount = recountVal;
-          newStatus = 'Verified';
+        });
+        
+        if (hasRecounts) {
+           newStatus = 'Verified';
         }
       }
       
@@ -154,7 +143,17 @@ export default function StockTakeCounting() {
   if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>;
   if (!part) return <div style={{ padding: '2rem', textAlign: 'center' }}>Part not found</div>;
 
-  const boxTotal = calculateTotal(boxes);
+  const counterKeys = part ? Object.keys(part).filter(k => /box|seq/i.test(k)).sort() : [];
+  const verifierKeys = part ? Object.keys(part).filter(k => /recount/i.test(k)).sort() : [];
+  const remarkKeys = part ? Object.keys(part).filter(k => /remark|luqman/i.test(k)).sort() : [];
+  
+  const boxTotal = calculateTotal(counterKeys);
+
+  const getDisplayColumns = () => {
+    const exclude = ['id', 'batch_id', 'status', '_table'];
+    return Object.keys(part).filter(k => !exclude.includes(k) && !/box|seq|recount|remark|luqman/i.test(k)).slice(0, 3);
+  };
+  const displayCols = getDisplayColumns();
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -165,8 +164,12 @@ export default function StockTakeCounting() {
         <Card style={{ marginBottom: '1.5rem', backgroundColor: 'var(--surface-highlight)', display: 'flex', justifyContent: 'space-between' }}>
           <div>
             <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Part Information</p>
-            <h2 style={{ margin: '0.5rem 0' }}>{part.part_no}</h2>
-            <p style={{ margin: 0 }}>{part.material} | {part.location}</p>
+            {displayCols.map((col, idx) => (
+              <div key={col} style={{ marginTop: idx === 0 ? '0.5rem' : '0.25rem' }}>
+                <span style={{ color: '#666', fontSize: '0.75rem', textTransform: 'uppercase', marginRight: '0.5rem' }}>{col.replace(/_/g, ' ')}</span>
+                <span style={{ fontWeight: idx === 0 ? 800 : 500, fontSize: idx === 0 ? '1.25rem' : '1rem' }}>{part[col] || '-'}</span>
+              </div>
+            ))}
           </div>
           <div style={{ textAlign: 'right' }}>
             <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Status</p>
@@ -189,70 +192,95 @@ export default function StockTakeCounting() {
         <Card>
           <div className="flex-col gap-6">
             
-            {/* Box Counting Section (Waterfall) */}
-            <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem' }}>
-              <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                Counter Inputs
-                {!canEditBox() && <Lock size={16} color="var(--text-secondary)" />}
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[0, 1, 2, 3, 4].map((index) => (
-                  <div key={index} style={{ 
-                    display: index < visibleBoxes ? 'block' : 'none',
-                    animation: 'fade-in 0.3s ease-out'
-                  }}>
+            {/* Box Counting Section (Dynamic) */}
+            {counterKeys.length > 0 && (
+              <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem' }}>
+                <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  Counter Inputs
+                  {!canEditBox() && <Lock size={16} color="var(--text-secondary)" />}
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {counterKeys.map((key) => (
+                    <div key={key}>
+                      <Input 
+                        type="number"
+                        label={key.replace(/_/g, ' ').toUpperCase()}
+                        placeholder="0"
+                        value={formData[key] || ''}
+                        onChange={(e) => handleInputChange(key, e.target.value)}
+                        disabled={!canEditBox()}
+                        style={{ 
+                          opacity: canEditBox() ? 1 : 0.6,
+                          backgroundColor: canEditBox() ? 'var(--surface-color)' : 'rgba(0,0,0,0.2)'
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                
+                <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+                  <div style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--surface-highlight)', borderRadius: 'var(--radius-md)', display: 'inline-block' }}>
+                    <span style={{ color: 'var(--text-secondary)', marginRight: '1rem' }}>Total:</span>
+                    <span style={{ fontSize: '1.25rem', fontWeight: 600 }}>{boxTotal}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Verifier Section */}
+            {verifierKeys.length > 0 && (
+              <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem', paddingTop: '1.5rem' }}>
+                <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: canEditRecount() ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                  Verifier Input
+                  {!canEditRecount() && <Lock size={16} color="var(--text-secondary)" />}
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {verifierKeys.map(key => (
                     <Input 
+                      key={key}
                       type="number"
-                      label={`Box ${index + 1}`}
+                      label={key.replace(/_/g, ' ').toUpperCase()}
                       placeholder="0"
-                      value={boxes[index]}
-                      onChange={(e) => handleBoxChange(index, e.target.value)}
+                      value={formData[key] || ''}
+                      onChange={(e) => handleInputChange(key, e.target.value)}
+                      disabled={!canEditRecount()}
+                      style={{ 
+                        opacity: canEditRecount() ? 1 : 0.6,
+                        backgroundColor: canEditRecount() ? 'var(--surface-color)' : 'rgba(0,0,0,0.2)'
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Remarks Section */}
+            {remarkKeys.length > 0 && (
+              <div style={{ paddingTop: '1.5rem' }}>
+                <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  Remarks
+                  {!canEditBox() && <Lock size={16} color="var(--text-secondary)" />}
+                </h3>
+                <div className="grid grid-cols-1 gap-4">
+                  {remarkKeys.map(key => (
+                    <Input 
+                      key={key}
+                      type="text"
+                      label={key.replace(/_/g, ' ').toUpperCase()}
+                      value={formData[key] || ''}
+                      onChange={(e) => handleInputChange(key, e.target.value)}
                       disabled={!canEditBox()}
                       style={{ 
                         opacity: canEditBox() ? 1 : 0.6,
                         backgroundColor: canEditBox() ? 'var(--surface-color)' : 'rgba(0,0,0,0.2)'
                       }}
                     />
-                  </div>
-                ))}
-              </div>
-              
-              <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
-                <div style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--surface-highlight)', borderRadius: 'var(--radius-md)', display: 'inline-block' }}>
-                  <span style={{ color: 'var(--text-secondary)', marginRight: '1rem' }}>Box Total:</span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 600 }}>{boxTotal}</span>
+                  ))}
                 </div>
               </div>
-            </div>
-
-            {/* Verifier Section */}
-            <div>
-              <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: canEditRecount() ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-                Verifier Input
-                {!canEditRecount() && <Lock size={16} color="var(--text-secondary)" />}
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2">
-                <Input 
-                  type="number"
-                  label="Recount Value"
-                  placeholder="Enter recount total..."
-                  value={recount}
-                  onChange={(e) => setRecount(e.target.value)}
-                  disabled={!canEditRecount()}
-                  style={{ 
-                    opacity: canEditRecount() ? 1 : 0.6,
-                    backgroundColor: canEditRecount() ? 'var(--surface-color)' : 'rgba(0,0,0,0.2)'
-                  }}
-                />
-              </div>
-              {canEditRecount() && (
-                <p style={{ fontSize: '0.875rem', color: 'var(--warning-color)', marginTop: '0.5rem' }}>
-                  * Recount value must NOT equal the Box Total.
-                </p>
-              )}
-            </div>
+            )}
 
             {/* Actions */}
             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
