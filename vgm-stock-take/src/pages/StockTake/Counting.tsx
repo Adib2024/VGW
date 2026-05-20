@@ -35,7 +35,11 @@ export default function StockTakeCounting() {
       const initialForm: Record<string, string> = {};
       Object.keys(data).forEach(key => {
         if (data[key] !== null && data[key] !== undefined) {
-          initialForm[key] = String(data[key]);
+          if (/remark|luqman/i.test(key)) {
+            initialForm[key] = ''; // Start empty for typing new remark
+          } else {
+            initialForm[key] = String(data[key]);
+          }
         }
       });
       setFormData(initialForm);
@@ -58,7 +62,7 @@ export default function StockTakeCounting() {
   const canEditBox = () => {
     if (user?.role === 'Admin') return adminUnlock;
     if (user?.role === 'Counter B17' || user?.role === 'Counter B22') {
-      return part?.status === 'Not Counted';
+      return true; // Operators can edit, but previously filled boxes are locked individually
     }
     return false;
   };
@@ -86,7 +90,7 @@ export default function StockTakeCounting() {
     if (!part) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from(table!).update({ status: 'Verified' }).eq('id', id);
+      const { error } = await supabase.from(table!).update({ status: 'Verified', verify_by: user?.name }).eq('id', id);
       if (error) throw error;
       addToast('Part Verified successfully', 'success');
       navigate(`/stock-take/list?table=${table}`);
@@ -113,28 +117,30 @@ export default function StockTakeCounting() {
         counterKeys.forEach(k => {
           updates[k] = formData[k] !== '' ? parseInt(formData[k]) : null;
         });
-        remarkKeys.forEach(k => {
-          if (formData[k] !== undefined) updates[k] = formData[k];
-        });
         if (boxTotal > 0 && part.status === 'Not Counted') {
           newStatus = 'Counted';
         }
       }
 
       if (user?.role === 'Verifier' || (user?.role === 'Admin' && adminUnlock)) {
-        let hasRecounts = false;
         verifierKeys.forEach(k => {
           if (formData[k] !== '') {
-            hasRecounts = true;
             updates[k] = parseInt(formData[k]);
           } else {
             updates[k] = null;
           }
         });
-        if (hasRecounts) {
-          newStatus = 'Verified';
-        }
+        // Saving a recount does NOT automatically verify
       }
+
+      // Remarks logic (Append) for anyone who can edit
+      remarkKeys.forEach(k => {
+        if (formData[k] && formData[k].trim() !== '') {
+          const timestamp = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+          const newRemark = `[${timestamp} ${user?.name}]: ${formData[k].trim()}`;
+          updates[k] = part[k] ? `${part[k]} | ${newRemark}` : newRemark;
+        }
+      });
 
       updates.status = newStatus;
       const { error } = await supabase.from(table!).update(updates).eq('id', id);
@@ -284,14 +290,14 @@ export default function StockTakeCounting() {
                         type="number"
                         value={formData[key] || ''}
                         onChange={(e) => handleInputChange(key, e.target.value)}
-                        disabled={!isEditing || !canEditBox()}
+                        disabled={!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined)}
                         style={{
                           width: '100%', padding: '0.75rem 1rem', borderRadius: '8px',
                           border: formData[key] ? '1px solid #22c55e' : '1px solid #cbd5e1',
-                          backgroundColor: (!isEditing || !canEditBox()) ? '#f8fafc' : 'white',
+                          backgroundColor: (!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined)) ? '#f8fafc' : 'white',
                           color: formData[key] ? '#22c55e' : '#0f172a',
                           fontWeight: formData[key] ? 800 : 500, outline: 'none',
-                          cursor: (!isEditing || !canEditBox()) ? 'not-allowed' : 'text'
+                          cursor: (!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined)) ? 'not-allowed' : 'text'
                         }}
                         placeholder=""
                       />
@@ -304,7 +310,7 @@ export default function StockTakeCounting() {
                   </div>
                 ))}
 
-                {verifierKeys.length > 0 && visibleVerifierKeys.map(key => (
+                {verifierKeys.length > 0 && user?.role !== 'Counter B17' && user?.role !== 'Counter B22' && visibleVerifierKeys.map(key => (
                   <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '1rem', animation: 'fade-in 0.3s ease-out', marginTop: '1rem' }}>
                     <div style={{ width: '100px', color: '#64748b', fontWeight: 600, fontSize: '0.875rem' }}>
                       {formatKeyName(key)}
@@ -352,13 +358,18 @@ export default function StockTakeCounting() {
             
             <div style={{ display: 'flex', padding: '1rem 0', borderBottom: '1px solid #f1f5f9' }}>
               <div style={{ width: '120px', color: '#64748b', fontWeight: 600, fontSize: '0.875rem' }}>Verified By</div>
-              <div style={{ flex: 1, color: '#0f172a', fontWeight: 500, fontSize: '0.875rem' }}>-</div>
+              <div style={{ flex: 1, color: '#0f172a', fontWeight: 500, fontSize: '0.875rem' }}>{part.verify_by || '-'}</div>
             </div>
 
             {remarkKeys.length > 0 && remarkKeys.map(key => (
               <div key={key} style={{ display: 'flex', padding: '1.5rem 0 0 0', alignItems: 'flex-start' }}>
                 <div style={{ width: '120px', color: '#64748b', fontWeight: 600, fontSize: '0.875rem', marginTop: '0.75rem' }}>{formatKeyName(key)}</div>
                 <div style={{ flex: 1 }}>
+                   {part[key] && (
+                     <div style={{ marginBottom: '0.75rem', fontSize: '0.75rem', color: '#475569' }}>
+                       {part[key].split(' | ').map((r: string, i: number) => <div key={i} style={{ marginBottom: '0.25rem' }}>{r}</div>)}
+                     </div>
+                   )}
                    <textarea
                      value={formData[key] || ''}
                      onChange={(e) => handleInputChange(key, e.target.value)}

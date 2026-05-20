@@ -46,12 +46,12 @@ export default function Login() {
 
   useEffect(() => {
     const lookupRole = async () => {
-      if (userId.length >= 4) {
+      if (userId.trim().length >= 2) {
         try {
           const { data } = await supabase
             .from('users')
             .select('role, name')
-            .eq('id', userId)
+            .ilike('id', userId.trim())
             .single();
             
           if (data) {
