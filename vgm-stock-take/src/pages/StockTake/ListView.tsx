@@ -26,9 +26,9 @@ export default function StockTakeListView() {
 
   useEffect(() => {
     fetchParts();
-    
+
     const tablesToWatch = tableParam ? [tableParam] : ['b17', 'b22', 'loma', 'b22_seq', 'check_part'];
-    const channels = tablesToWatch.map(table => 
+    const channels = tablesToWatch.map(table =>
       supabase
         .channel(`${table}-list`)
         .on('postgres_changes', { event: '*', schema: 'public', table: table }, () => {
@@ -47,7 +47,7 @@ export default function StockTakeListView() {
       const tablesToFetch = tableParam ? [tableParam] : ['b17', 'b22', 'loma', 'b22_seq', 'check_part'];
       const promises = tablesToFetch.map(table => supabase.from(table).select('*').order('part_no', { ascending: true }));
       const results = await Promise.all(promises);
-      
+
       let combinedParts: any[] = [];
       results.forEach((res, index) => {
         if (!res.error && res.data) {
@@ -55,12 +55,12 @@ export default function StockTakeListView() {
           combinedParts = [...combinedParts, ...tableData];
         }
       });
-        
+
       // Extract unique batches and sort them newest first
       const allBatches = [...new Set(combinedParts.map(p => p.batch_id || p.metadata?.batch_id).filter(Boolean))] as string[];
       allBatches.sort().reverse();
       setBatches(allBatches);
-      
+
       // Select the latest batch by default if none is selected
       const currentBatch = selectedBatch || allBatches[0];
       if (!selectedBatch && allBatches.length > 0) {
@@ -68,7 +68,7 @@ export default function StockTakeListView() {
       }
 
       // Filter by the selected batch (or latest if none selected)
-      const currentParts = currentBatch 
+      const currentParts = currentBatch
         ? combinedParts.filter(p => (p.batch_id === currentBatch || p.metadata?.batch_id === currentBatch))
         : combinedParts; // Fallback for old data without batch_id
 
@@ -90,7 +90,7 @@ export default function StockTakeListView() {
   const filteredParts = parts.filter(p => {
     const searchLower = search.toLowerCase();
     // Search across all string values in the part object
-    return Object.values(p).some(val => 
+    return Object.values(p).some(val =>
       val && typeof val === 'string' && val.toLowerCase().includes(searchLower)
     );
   });
@@ -102,7 +102,7 @@ export default function StockTakeListView() {
     const exclude = ['id', 'batch_id', 'status', '_table', 'metadata'];
     return Object.keys(sample).filter(k => !exclude.includes(k)).slice(0, 3);
   };
-  
+
   const displayColumns = getDisplayColumns();
 
   const getStatusDot = (status: string) => {
@@ -120,9 +120,9 @@ export default function StockTakeListView() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navigation title="List View" backTo="/stock-take" />
-      
+
       <main className="container flex-col gap-6" style={{ flex: 1, padding: '2rem 1rem' }}>
-        
+
         {/* Progress Bar with Car Animation */}
         {!loading && (
           <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
@@ -137,7 +137,7 @@ export default function StockTakeListView() {
 
             <div style={{ position: 'relative', width: '100%', height: '80px', overflow: 'hidden' }}>
               {/* The driving car */}
-              <div 
+              <div
                 className="driving-car"
                 style={{
                   position: 'absolute',
@@ -152,10 +152,10 @@ export default function StockTakeListView() {
                   animationDuration: '6s'
                 }}
               />
-              
+
               {/* The progress line */}
               <div style={{ position: 'absolute', bottom: '10px', width: '100%', height: '8px', backgroundColor: '#e0e0e0', borderRadius: '999px', overflow: 'hidden' }}>
-                <div 
+                <div
                   style={{
                     height: '100%',
                     backgroundColor: '#2ecc71',
@@ -171,22 +171,22 @@ export default function StockTakeListView() {
         <Card style={{ padding: '0' }}>
           <div style={{ padding: '1.5rem', borderBottom: '1px solid #f0f0f0', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 300px' }}>
-              <Input 
+              <Input
                 icon={<Search size={18} />}
                 placeholder={t('search')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            
+
             {/* Show History Dropdown for Admins */}
             {user?.role === 'Admin' && batches.length > 0 && (
-              <select 
+              <select
                 value={selectedBatch}
                 onChange={(e) => {
                   setSelectedBatch(e.target.value);
                   // Refetch to apply the new selected batch
-                  setTimeout(fetchParts, 0); 
+                  setTimeout(fetchParts, 0);
                 }}
                 style={{
                   padding: '0.75rem 1rem',
@@ -208,7 +208,7 @@ export default function StockTakeListView() {
               </select>
             )}
 
-            <select 
+            <select
               style={{
                 padding: '0.75rem 1rem',
                 backgroundColor: 'var(--surface-color)',
@@ -222,7 +222,7 @@ export default function StockTakeListView() {
               <option value="all">All Groups</option>
             </select>
           </div>
-          
+
           <div style={{ overflowX: 'auto', padding: '1.5rem' }}>
             {loading ? (
               <p style={{ textAlign: 'center', padding: '2rem' }}>{t('loadingParts')}</p>
@@ -239,8 +239,8 @@ export default function StockTakeListView() {
                 </thead>
                 <tbody>
                   {filteredParts.map((part: any, index) => (
-                    <tr 
-                      key={part.id} 
+                    <tr
+                      key={part.id}
                       onClick={() => navigate(`/stock-take/count/${part._table}/${part.id}`)}
                       style={{ backgroundColor: '#fff', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}
                       onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
@@ -249,7 +249,7 @@ export default function StockTakeListView() {
                       <td style={{ padding: '1rem', borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px', borderLeft: '4px solid #2ecc71', fontWeight: 800, color: '#333' }}>
                         {index + 1}
                       </td>
-                      
+
                       {displayColumns.map(col => (
                         <td key={col} style={{ padding: '1rem', fontWeight: 500, color: '#333' }}>
                           {part[col] || (part.metadata && part.metadata[col]) || '-'}
@@ -257,10 +257,10 @@ export default function StockTakeListView() {
                       ))}
 
                       <td style={{ padding: '1rem', borderTopRightRadius: '8px', borderBottomRightRadius: '8px' }}>
-                        <div 
-                          style={{ 
+                        <div
+                          style={{
                             display: 'inline-block',
-                            padding: '0.25rem 0.75rem', 
+                            padding: '0.25rem 0.75rem',
                             borderRadius: '4px',
                             border: `1px solid ${part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c'}`,
                             color: part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c',

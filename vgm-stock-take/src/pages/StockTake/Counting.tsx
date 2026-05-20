@@ -15,14 +15,14 @@ export default function StockTakeCounting() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addToast } = useToast();
-  
+
   const [part, setPart] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+
   // Dynamic Form State
   const [formData, setFormData] = useState<Record<string, string>>({});
-  
+
   // UI State
   const [visibleBoxes, setVisibleBoxes] = useState(1);
   const [adminUnlock, setAdminUnlock] = useState(false);
@@ -36,9 +36,9 @@ export default function StockTakeCounting() {
       if (!table || !id) throw new Error('Missing parameters');
       const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
       if (error) throw error;
-      
+
       setPart(data);
-      
+
       // Initialize form data with existing values
       const initialForm: Record<string, string> = {};
       Object.keys(data).forEach(key => {
@@ -47,7 +47,7 @@ export default function StockTakeCounting() {
         }
       });
       setFormData(initialForm);
-      
+
     } catch (err) {
       console.error(err);
       addToast('Failed to load part details', 'error');
@@ -84,17 +84,17 @@ export default function StockTakeCounting() {
   const handleSave = async () => {
     if (!part) return;
     setSaving(true);
-    
+
     try {
       const updates: any = {};
       let newStatus = part.status;
-      
+
       const counterKeys = Object.keys(part).filter(k => /box|seq/i.test(k));
       const verifierKeys = Object.keys(part).filter(k => /recount/i.test(k));
       const remarkKeys = Object.keys(part).filter(k => /remark|luqman/i.test(k));
-      
+
       const boxTotal = calculateTotal(counterKeys);
-      
+
       // Counter Logic
       if (user?.role === 'Counter B17' || user?.role === 'Counter B22' || (user?.role === 'Admin' && adminUnlock)) {
         counterKeys.forEach(k => {
@@ -103,12 +103,12 @@ export default function StockTakeCounting() {
         remarkKeys.forEach(k => {
           if (formData[k] !== undefined) updates[k] = formData[k];
         });
-        
+
         if (boxTotal > 0 && part.status === 'Not Counted') {
           newStatus = 'Counted';
         }
       }
-      
+
       // Verifier Logic
       if (user?.role === 'Verifier' || (user?.role === 'Admin' && adminUnlock)) {
         let hasRecounts = false;
@@ -120,17 +120,17 @@ export default function StockTakeCounting() {
             updates[k] = null;
           }
         });
-        
+
         if (hasRecounts) {
-           newStatus = 'Verified';
+          newStatus = 'Verified';
         }
       }
-      
+
       updates.status = newStatus;
 
       const { error } = await supabase.from(table!).update(updates).eq('id', id);
       if (error) throw error;
-      
+
       addToast('Data saved successfully', 'success');
       navigate('/stock-take/list');
     } catch (err: any) {
@@ -146,7 +146,7 @@ export default function StockTakeCounting() {
   const counterKeys = part ? Object.keys(part).filter(k => /box|seq/i.test(k)).sort() : [];
   const verifierKeys = part ? Object.keys(part).filter(k => /recount/i.test(k)).sort() : [];
   const remarkKeys = part ? Object.keys(part).filter(k => /remark|luqman/i.test(k)).sort() : [];
-  
+
   const boxTotal = calculateTotal(counterKeys);
 
   const getDisplayColumns = () => {
@@ -158,7 +158,7 @@ export default function StockTakeCounting() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navigation title="Counting Interface" backTo="/stock-take/list" />
-      
+
       <main className="container" style={{ flex: 1, padding: '2rem 1rem', maxWidth: '800px' }}>
         {/* Header info */}
         <Card style={{ marginBottom: '1.5rem', backgroundColor: 'var(--surface-highlight)', display: 'flex', justifyContent: 'space-between' }}>
@@ -177,12 +177,12 @@ export default function StockTakeCounting() {
               {part.status}
             </h3>
             {user?.role === 'Admin' && (
-              <Button 
-                variant={adminUnlock ? 'primary' : 'secondary'} 
+              <Button
+                variant={adminUnlock ? 'primary' : 'secondary'}
                 onClick={() => setAdminUnlock(!adminUnlock)}
                 style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', marginTop: '0.5rem' }}
               >
-                {adminUnlock ? <Lock size={14} /> : <Edit3 size={14} />} 
+                {adminUnlock ? <Lock size={14} /> : <Edit3 size={14} />}
                 {adminUnlock ? ' Lock' : ' Admin Unlock'}
               </Button>
             )}
@@ -191,7 +191,7 @@ export default function StockTakeCounting() {
 
         <Card>
           <div className="flex-col gap-6">
-            
+
             {/* Box Counting Section (Dynamic) */}
             {counterKeys.length > 0 && (
               <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem' }}>
@@ -199,18 +199,18 @@ export default function StockTakeCounting() {
                   Counter Inputs
                   {!canEditBox() && <Lock size={16} color="var(--text-secondary)" />}
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {counterKeys.map((key) => (
                     <div key={key}>
-                      <Input 
+                      <Input
                         type="number"
                         label={key.replace(/_/g, ' ').toUpperCase()}
                         placeholder="0"
                         value={formData[key] || ''}
                         onChange={(e) => handleInputChange(key, e.target.value)}
                         disabled={!canEditBox()}
-                        style={{ 
+                        style={{
                           opacity: canEditBox() ? 1 : 0.6,
                           backgroundColor: canEditBox() ? 'var(--surface-color)' : 'rgba(0,0,0,0.2)'
                         }}
@@ -218,7 +218,7 @@ export default function StockTakeCounting() {
                     </div>
                   ))}
                 </div>
-                
+
                 <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
                   <div style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--surface-highlight)', borderRadius: 'var(--radius-md)', display: 'inline-block' }}>
                     <span style={{ color: 'var(--text-secondary)', marginRight: '1rem' }}>Total:</span>
@@ -235,10 +235,10 @@ export default function StockTakeCounting() {
                   Verifier Input
                   {!canEditRecount() && <Lock size={16} color="var(--text-secondary)" />}
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {verifierKeys.map(key => (
-                    <Input 
+                    <Input
                       key={key}
                       type="number"
                       label={key.replace(/_/g, ' ').toUpperCase()}
@@ -246,7 +246,7 @@ export default function StockTakeCounting() {
                       value={formData[key] || ''}
                       onChange={(e) => handleInputChange(key, e.target.value)}
                       disabled={!canEditRecount()}
-                      style={{ 
+                      style={{
                         opacity: canEditRecount() ? 1 : 0.6,
                         backgroundColor: canEditRecount() ? 'var(--surface-color)' : 'rgba(0,0,0,0.2)'
                       }}
@@ -265,14 +265,14 @@ export default function StockTakeCounting() {
                 </h3>
                 <div className="grid grid-cols-1 gap-4">
                   {remarkKeys.map(key => (
-                    <Input 
+                    <Input
                       key={key}
                       type="text"
                       label={key.replace(/_/g, ' ').toUpperCase()}
                       value={formData[key] || ''}
                       onChange={(e) => handleInputChange(key, e.target.value)}
                       disabled={!canEditBox()}
-                      style={{ 
+                      style={{
                         opacity: canEditBox() ? 1 : 0.6,
                         backgroundColor: canEditBox() ? 'var(--surface-color)' : 'rgba(0,0,0,0.2)'
                       }}
