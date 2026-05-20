@@ -4,7 +4,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Card } from '../../components/ui/Card';
 import { ProgressBar } from '../../components/ui/ProgressBar';
-import { supabase } from '../../lib/supabase';
+import { supabase, fetchAllRows } from '../../lib/supabase';
 import { RefreshCw, Users, AlertTriangle, ChevronLeft, Settings } from 'lucide-react';
 
 interface ZoneStats {
@@ -40,13 +40,13 @@ export default function StockTakeDashboard() {
   const fetchStats = async () => {
     try {
       const tables = ['b17', 'b22', 'loma', 'b22_seq'];
-      const promises = tables.map(table => supabase.from(table).select('*'));
+      const promises = tables.map(table => fetchAllRows(table));
       const results = await Promise.all(promises);
 
       const newStats: Record<string, ZoneStats> = {};
       results.forEach((res, index) => {
         const table = tables[index];
-        const data = res.data || [];
+        const data = res || [];
         
         // Find latest batch_id
         const batches = [...new Set(data.map((r: any) => r.batch_id || r.metadata?.batch_id).filter(Boolean))].sort().reverse();

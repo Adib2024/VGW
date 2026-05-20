@@ -5,7 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { Part } from '../../types/database';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
-import { supabase } from '../../lib/supabase';
+import { supabase, fetchAllRows } from '../../lib/supabase';
 import { Search } from 'lucide-react';
 
 import { useAuth } from '../../contexts/AuthContext';
@@ -45,13 +45,13 @@ export default function StockTakeListView() {
   const fetchParts = async () => {
     try {
       const tablesToFetch = tableParam ? [tableParam] : ['b17', 'b22', 'loma', 'b22_seq', 'check_part'];
-      const promises = tablesToFetch.map(table => supabase.from(table).select('*').order('id', { ascending: true }));
+      const promises = tablesToFetch.map(table => fetchAllRows(table, 'id'));
       const results = await Promise.all(promises);
 
       let combinedParts: any[] = [];
       results.forEach((res, index) => {
-        if (!res.error && res.data) {
-          const tableData = res.data.map(p => ({ ...p, _table: tablesToFetch[index] }));
+        if (res && res.length > 0) {
+          const tableData = res.map((p: any) => ({ ...p, _table: tablesToFetch[index] }));
           combinedParts = [...combinedParts, ...tableData];
         }
       });
@@ -122,7 +122,10 @@ export default function StockTakeListView() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Navigation title="List View" backTo="/stock-take" />
+      <Navigation 
+        title={`List View${tableParam ? ` - LOCATION ${tableParam.toUpperCase().replace('_', ' ')}` : ''}`} 
+        backTo="/stock-take" 
+      />
 
       <main className="container flex-col gap-6" style={{ flex: 1, padding: '2rem 1rem' }}>
 

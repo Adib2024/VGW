@@ -17,12 +17,15 @@ export const Input: React.FC<InputProps> = ({ label, error, icon, className = ''
           style={{
             width: '100%',
             padding: icon ? '0.75rem 1rem 0.75rem 2.5rem' : '0.75rem 1rem',
-            backgroundColor: 'var(--surface-highlight)',
-            border: `1px solid ${error ? 'var(--danger-color)' : 'transparent'}`,
+            backgroundColor: props.disabled ? 'var(--background-color)' : 'var(--surface-highlight)',
+            border: `1px solid ${error ? 'var(--danger-color)' : props.disabled ? 'var(--border-color)' : 'transparent'}`,
             borderRadius: 'var(--radius-md)',
-            color: 'var(--text-primary)',
+            color: props.disabled ? 'var(--text-secondary)' : 'var(--text-primary)',
             outline: 'none',
-            transition: 'border-color 0.2s ease, background-color 0.2s ease'
+            opacity: props.disabled ? 0.7 : 1,
+            cursor: props.disabled ? 'not-allowed' : 'text',
+            transition: 'border-color 0.2s ease, background-color 0.2s ease, opacity 0.2s ease',
+            ...props.style
           }}
           onFocus={(e) => { 
             e.currentTarget.style.borderColor = 'var(--primary-color)'; 
