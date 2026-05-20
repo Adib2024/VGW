@@ -20,6 +20,9 @@ export default function StockTakeListView() {
   const [parts, setParts] = useState<Part[]>([]);
   const [batches, setBatches] = useState<string[]>([]);
   const [selectedBatch, setSelectedBatch] = useState<string>('');
+  
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [locationFilter, setLocationFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, completed: 0, percentage: 0 });
@@ -87,14 +90,6 @@ export default function StockTakeListView() {
     }
   };
 
-  const filteredParts = parts.filter(p => {
-    const searchLower = search.toLowerCase();
-    // Search across all string values in the part object
-    return Object.values(p).some(val =>
-      val && typeof val === 'string' && val.toLowerCase().includes(searchLower)
-    );
-  });
-
   const getDisplayColumns = () => {
     if (parts.length === 0) return [];
     
@@ -117,6 +112,26 @@ export default function StockTakeListView() {
   };
 
   const displayColumns = getDisplayColumns();
+  const locationColName = displayColumns[1]; 
+  const uniqueLocations = locationColName ? [...new Set(parts.map(p => (p as any)[locationColName]).filter(Boolean))] as string[] : [];
+  uniqueLocations.sort();
+
+  const filteredParts = parts.filter(p => {
+    const searchLower = search.toLowerCase();
+    
+    // 1. Search Match
+    const matchesSearch = search === '' || Object.values(p).some(val =>
+      val && typeof val === 'string' && val.toLowerCase().includes(searchLower)
+    );
+    
+    // 2. Status Match
+    const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
+    
+    // 3. Location / Rack Match
+    const matchesLocation = locationFilter === 'all' || (locationColName && (p as any)[locationColName] === locationFilter);
+
+    return matchesSearch && matchesStatus && matchesLocation;
+  });
 
 
 
@@ -214,7 +229,10 @@ export default function StockTakeListView() {
               </select>
             )}
 
+            {/* Status Dropdown */}
             <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
               style={{
                 padding: '0.75rem 1rem',
                 backgroundColor: 'var(--surface-color)',
@@ -222,11 +240,38 @@ export default function StockTakeListView() {
                 borderRadius: 'var(--radius-md)',
                 color: 'var(--text-primary)',
                 outline: 'none',
-                minWidth: '200px'
+                minWidth: '160px',
+                cursor: 'pointer'
               }}
             >
-              <option value="all">All Groups</option>
+              <option value="all">All Status</option>
+              <option value="Not Counted">Not Counted</option>
+              <option value="Counted">Counted</option>
+              <option value="Verified">Verified</option>
             </select>
+
+            {/* Location / Rack Filter Dropdown */}
+            {locationColName && uniqueLocations.length > 0 && (
+              <select
+                value={locationFilter}
+                onChange={(e) => setLocationFilter(e.target.value)}
+                style={{
+                  padding: '0.75rem 1rem',
+                  backgroundColor: 'var(--surface-color)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--text-primary)',
+                  outline: 'none',
+                  minWidth: '160px',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="all">All {locationColName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+                {uniqueLocations.map(loc => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div style={{ overflowX: 'auto', padding: '1.5rem' }}>

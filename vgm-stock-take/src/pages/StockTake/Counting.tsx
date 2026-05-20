@@ -117,7 +117,7 @@ export default function StockTakeCounting() {
         counterKeys.forEach(k => {
           updates[k] = formData[k] !== '' ? parseInt(formData[k]) : null;
         });
-        if (boxTotal > 0 && part.status === 'Not Counted') {
+        if (boxTotal > 0 && (part.status === 'Not Counted' || part.status === 'Verified')) {
           newStatus = 'Counted';
         }
       }
@@ -320,14 +320,14 @@ export default function StockTakeCounting() {
                         type="number"
                         value={formData[key] || ''}
                         onChange={(e) => handleInputChange(key, e.target.value)}
-                        disabled={!isEditing || !canEditRecount() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined)}
+                        disabled={!isEditing || !canEditRecount()}
                         style={{
                           width: '100%', padding: '0.75rem 1rem', borderRadius: '8px',
                           border: formData[key] ? '1px solid #0066cc' : '1px solid #cbd5e1',
-                          backgroundColor: (!isEditing || !canEditRecount() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined)) ? '#f8fafc' : 'white',
+                          backgroundColor: (!isEditing || !canEditRecount()) ? '#f8fafc' : 'white',
                           color: formData[key] ? '#0066cc' : '#0f172a',
                           fontWeight: formData[key] ? 800 : 500, outline: 'none',
-                          cursor: (!isEditing || !canEditRecount() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined)) ? 'not-allowed' : 'text'
+                          cursor: (!isEditing || !canEditRecount()) ? 'not-allowed' : 'text'
                         }}
                       />
                        {formData[key] && (
