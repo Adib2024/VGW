@@ -70,7 +70,7 @@ export default function StockTakeCounting() {
   const canEditRecount = () => {
     if (user?.role === 'Admin') return adminUnlock;
     if (user?.role === 'Verifier') {
-      return part?.status === 'Counted';
+      return true; // Verifiers can edit, but previously filled recounts are locked individually
     }
     return false;
   };
@@ -320,14 +320,14 @@ export default function StockTakeCounting() {
                         type="number"
                         value={formData[key] || ''}
                         onChange={(e) => handleInputChange(key, e.target.value)}
-                        disabled={!isEditing || !canEditRecount()}
+                        disabled={!isEditing || !canEditRecount() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined)}
                         style={{
                           width: '100%', padding: '0.75rem 1rem', borderRadius: '8px',
                           border: formData[key] ? '1px solid #0066cc' : '1px solid #cbd5e1',
-                          backgroundColor: (!isEditing || !canEditRecount()) ? '#f8fafc' : 'white',
+                          backgroundColor: (!isEditing || !canEditRecount() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined)) ? '#f8fafc' : 'white',
                           color: formData[key] ? '#0066cc' : '#0f172a',
                           fontWeight: formData[key] ? 800 : 500, outline: 'none',
-                          cursor: (!isEditing || !canEditRecount()) ? 'not-allowed' : 'text'
+                          cursor: (!isEditing || !canEditRecount() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined)) ? 'not-allowed' : 'text'
                         }}
                       />
                        {formData[key] && (
