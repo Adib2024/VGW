@@ -93,7 +93,8 @@ export default function StockTakeCounting() {
       const { error } = await supabase.from(table!).update({ status: 'Verified', verify_by: user?.name }).eq('id', id);
       if (error) throw error;
       addToast('Part Verified successfully', 'success');
-      navigate(`/stock-take/list?table=${table}`);
+      setIsEditing(false);
+      await fetchPart();
     } catch (err: any) {
       console.error(err);
       addToast(err.message || 'Failed to verify', 'error');
@@ -147,7 +148,8 @@ export default function StockTakeCounting() {
       if (error) throw error;
 
       addToast('Data saved successfully', 'success');
-      navigate(`/stock-take/list?table=${table}`);
+      setIsEditing(false);
+      await fetchPart();
     } catch (err: any) {
       console.error(err);
       addToast(err.message || 'Failed to save data', 'error');
