@@ -98,7 +98,7 @@ export default function UserProgress() {
                 <thead>
                   <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
                     <th style={{ padding: '0.75rem', textAlign: 'left' }}>Material</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>Part No</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>Part Name</th>
                     <th style={{ padding: '0.75rem', textAlign: 'left' }}>Location</th>
                     <th style={{ padding: '0.75rem', textAlign: 'left' }}>Status</th>
                     <th style={{ padding: '0.75rem', textAlign: 'left' }}>Last Updated</th>
@@ -108,7 +108,7 @@ export default function UserProgress() {
                   {parts.slice(0, 20).map(part => (
                     <tr key={part.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                       <td style={{ padding: '0.75rem' }}>{part.material}</td>
-                      <td style={{ padding: '0.75rem' }}>{part.part_no}</td>
+                      <td style={{ padding: '0.75rem' }}>{part.part_name || '-'}</td>
                       <td style={{ padding: '0.75rem' }}>{part.location}</td>
                       <td style={{ padding: '0.75rem', 
                         color: part.status === 'Verified' ? 'var(--success-color)' : 

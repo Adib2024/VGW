@@ -45,7 +45,7 @@ export default function StockTakeListView() {
   const fetchParts = async () => {
     try {
       const tablesToFetch = tableParam ? [tableParam] : ['b17', 'b22', 'loma', 'b22_seq', 'check_part'];
-      const promises = tablesToFetch.map(table => supabase.from(table).select('*').order('part_no', { ascending: true }));
+      const promises = tablesToFetch.map(table => supabase.from(table).select('*').order('id', { ascending: true }));
       const results = await Promise.all(promises);
 
       let combinedParts: any[] = [];
@@ -95,27 +95,30 @@ export default function StockTakeListView() {
     );
   });
 
-  // Dynamically determine columns to display
   const getDisplayColumns = () => {
     if (parts.length === 0) return [];
-    const sample = parts[0];
-    const exclude = ['id', 'batch_id', 'status', '_table', 'metadata'];
-    return Object.keys(sample).filter(k => !exclude.includes(k)).slice(0, 3);
+    
+    // Explicitly configure columns per zone requirement
+    switch (tableParam) {
+      case 'b17':
+        return ['material', 'rack_number'];
+      case 'b22':
+        return ['material', 'location'];
+      case 'b22_seq':
+        return ['material', 'location'];
+      case 'loma':
+        return ['material', 'storage_bin'];
+      default:
+        // Fallback for global view or check_part:
+        const sample = parts[0];
+        const exclude = ['id', 'batch_id', 'status', '_table', 'metadata', 'no', 'csv_status', 'verify_by', 'remark'];
+        return Object.keys(sample).filter(k => !exclude.includes(k) && !/box|seq|recount|unknown|luqman|nisha/i.test(k)).slice(0, 3);
+    }
   };
 
   const displayColumns = getDisplayColumns();
 
-  const getStatusDot = (status: string) => {
-    if (status === 'Verified') return 'status-dot green';
-    if (status === 'Counted') return 'status-dot yellow';
-    return 'status-dot red'; // Not Counted
-  };
 
-  const getStatusText = (status: string) => {
-    if (status === 'Verified') return t('verified');
-    if (status === 'Counted') return t('counted');
-    return t('notCounted');
-  };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>

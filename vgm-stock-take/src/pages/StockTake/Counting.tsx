@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Navigation } from '../../components/Navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
-import { Part } from '../../types/database';
+// import { Part } from '../../types/database';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -24,7 +24,7 @@ export default function StockTakeCounting() {
   const [formData, setFormData] = useState<Record<string, string>>({});
 
   // UI State
-  const [visibleBoxes, setVisibleBoxes] = useState(1);
+  const [isEditing, setIsEditing] = useState(false);
   const [adminUnlock, setAdminUnlock] = useState(false);
 
   useEffect(() => {
@@ -79,6 +79,33 @@ export default function StockTakeCounting() {
       return part?.status === 'Counted'; // Verifier only edits if already counted
     }
     return false;
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    // Reset formData to original part values
+    const initialForm: Record<string, string> = {};
+    Object.keys(part).forEach(key => {
+      if (part[key] !== null && part[key] !== undefined) {
+        initialForm[key] = String(part[key]);
+      }
+    });
+    setFormData(initialForm);
+  };
+
+  const handleVerify = async () => {
+    if (!part) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from(table!).update({ status: 'Verified' }).eq('id', id);
+      if (error) throw error;
+      addToast('Part Verified successfully', 'success');
+      navigate('/stock-take/list');
+    } catch (err: any) {
+      console.error(err);
+      addToast(err.message || 'Failed to verify', 'error');
+      setSaving(false);
+    }
   };
 
   const handleSave = async () => {
@@ -155,6 +182,22 @@ export default function StockTakeCounting() {
   };
   const displayCols = getDisplayColumns();
 
+  // Waterfall logic: only show up to the first empty input
+  const getVisibleKeys = (keys: string[]) => {
+    const visible: string[] = [];
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      visible.push(key);
+      if (!formData[key] || formData[key].trim() === '') {
+        break; // Stop showing more keys after the first empty one
+      }
+    }
+    return visible;
+  };
+
+  const visibleCounterKeys = getVisibleKeys(counterKeys);
+  const visibleVerifierKeys = getVisibleKeys(verifierKeys);
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navigation title="Counting Interface" backTo="/stock-take/list" />
@@ -201,18 +244,18 @@ export default function StockTakeCounting() {
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {counterKeys.map((key) => (
-                    <div key={key}>
+                  {visibleCounterKeys.map((key) => (
+                    <div key={key} style={{ animation: 'fade-in 0.3s ease-out' }}>
                       <Input
                         type="number"
                         label={key.replace(/_/g, ' ').toUpperCase()}
                         placeholder="0"
                         value={formData[key] || ''}
                         onChange={(e) => handleInputChange(key, e.target.value)}
-                        disabled={!canEditBox()}
+                        disabled={!isEditing || !canEditBox()}
                         style={{
-                          opacity: canEditBox() ? 1 : 0.6,
-                          backgroundColor: canEditBox() ? 'var(--surface-color)' : 'rgba(0,0,0,0.2)'
+                          opacity: (isEditing && canEditBox()) ? 1 : 0.6,
+                          backgroundColor: (isEditing && canEditBox()) ? 'var(--surface-color)' : 'rgba(0,0,0,0.2)'
                         }}
                       />
                     </div>
@@ -237,20 +280,21 @@ export default function StockTakeCounting() {
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {verifierKeys.map(key => (
-                    <Input
-                      key={key}
-                      type="number"
-                      label={key.replace(/_/g, ' ').toUpperCase()}
-                      placeholder="0"
-                      value={formData[key] || ''}
-                      onChange={(e) => handleInputChange(key, e.target.value)}
-                      disabled={!canEditRecount()}
-                      style={{
-                        opacity: canEditRecount() ? 1 : 0.6,
-                        backgroundColor: canEditRecount() ? 'var(--surface-color)' : 'rgba(0,0,0,0.2)'
-                      }}
-                    />
+                  {visibleVerifierKeys.map(key => (
+                    <div key={key} style={{ animation: 'fade-in 0.3s ease-out' }}>
+                      <Input
+                        type="number"
+                        label={key.replace(/_/g, ' ').toUpperCase()}
+                        placeholder="0"
+                        value={formData[key] || ''}
+                        onChange={(e) => handleInputChange(key, e.target.value)}
+                        disabled={!isEditing || !canEditRecount()}
+                        style={{
+                          opacity: (isEditing && canEditRecount()) ? 1 : 0.6,
+                          backgroundColor: (isEditing && canEditRecount()) ? 'var(--surface-color)' : 'rgba(0,0,0,0.2)'
+                        }}
+                      />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -271,10 +315,10 @@ export default function StockTakeCounting() {
                       label={key.replace(/_/g, ' ').toUpperCase()}
                       value={formData[key] || ''}
                       onChange={(e) => handleInputChange(key, e.target.value)}
-                      disabled={!canEditBox()}
+                      disabled={!isEditing || (!canEditBox() && !canEditRecount())}
                       style={{
-                        opacity: canEditBox() ? 1 : 0.6,
-                        backgroundColor: canEditBox() ? 'var(--surface-color)' : 'rgba(0,0,0,0.2)'
+                        opacity: (isEditing && (canEditBox() || canEditRecount())) ? 1 : 0.6,
+                        backgroundColor: (isEditing && (canEditBox() || canEditRecount())) ? 'var(--surface-color)' : 'rgba(0,0,0,0.2)'
                       }}
                     />
                   ))}
@@ -284,12 +328,32 @@ export default function StockTakeCounting() {
 
             {/* Actions */}
             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-              <Button variant="secondary" onClick={() => navigate('/stock-take/list')}>
-                Cancel
-              </Button>
-              <Button onClick={handleSave} disabled={saving || (!canEditBox() && !canEditRecount())}>
-                <Save size={18} /> {saving ? 'Saving...' : 'Save Data'}
-              </Button>
+              {!isEditing ? (
+                <>
+                  <Button variant="secondary" onClick={() => navigate('/stock-take/list')}>
+                    Back
+                  </Button>
+                  {(canEditBox() || canEditRecount()) && (
+                    <Button onClick={() => setIsEditing(true)}>
+                      <Edit3 size={18} /> Edit
+                    </Button>
+                  )}
+                  {canEditRecount() && part.status === 'Counted' && (
+                    <Button onClick={handleVerify} style={{ backgroundColor: 'var(--success-color)' }}>
+                      Verify
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Button variant="secondary" onClick={handleCancel}>
+                    Batal
+                  </Button>
+                  <Button onClick={handleSave} disabled={saving}>
+                    <Save size={18} /> {saving ? 'Saving...' : 'Save Data'}
+                  </Button>
+                </>
+              )}
             </div>
 
           </div>

@@ -111,11 +111,14 @@ export default function AdminSettings() {
         addLog(`Extracted ${rawHeaders.length} headers from CSV...`);
         
         // Sanitize headers, using Array.from to prevent sparse array skipping
-        const SYSTEM_COLUMNS = ['id', 'batch_id', 'status', 'metadata', 'created_at'];
+        const SYSTEM_COLUMNS = ['id', 'batch_id', 'metadata', 'created_at'];
         const sanitizedHeaders = Array.from(rawHeaders).map((h, idx) => {
           let sanitized = sanitizeString(h || '');
           if (!sanitized) {
             sanitized = `unknown_col_${idx}`;
+          }
+          if (sanitized === 'csv_status') {
+            sanitized = 'status';
           }
           if (SYSTEM_COLUMNS.includes(sanitized)) {
             sanitized = `csv_${sanitized}`;
@@ -126,14 +129,13 @@ export default function AdminSettings() {
         
         // 1. Generate DDL for dynamic schema
         addLog(`Generating DDL for table '${targetTable}'...`);
-        const columnDefinitions = sanitizedHeaders.map(col => `"${col}" TEXT`).join(', ');
+        const columnDefinitions = sanitizedHeaders.filter(col => col !== 'status').map(col => `"${col}" TEXT`).join(', ');
         
         const ddlString = `
           CREATE TABLE IF NOT EXISTS "${targetTable}" (
             id BIGSERIAL PRIMARY KEY,
             batch_id TEXT,
-            status TEXT DEFAULT 'Not Counted',
-            ${columnDefinitions}
+            status TEXT DEFAULT 'Not Counted'${columnDefinitions ? ',\n            ' + columnDefinitions : ''}
           );
           
           ALTER TABLE "${targetTable}" ENABLE ROW LEVEL SECURITY;
@@ -166,7 +168,12 @@ export default function AdminSettings() {
             status: 'Not Counted'
           };
           sanitizedHeaders.forEach((col, idx) => {
-            rowObj[col] = String(row[idx] ?? '');
+            const val = String(row[idx] ?? '').trim();
+            if (col === 'status') {
+              if (val) rowObj[col] = val;
+            } else {
+              rowObj[col] = val;
+            }
           });
           return rowObj;
         });
