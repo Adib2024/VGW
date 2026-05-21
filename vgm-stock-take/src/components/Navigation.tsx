@@ -21,8 +21,10 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
   };
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    if (window.confirm('Are you sure you want to log out?')) {
+      logout();
+      navigate('/');
+    }
   };
 
   return (

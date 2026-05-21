@@ -11,7 +11,14 @@ import jsPDF from 'jspdf';
 export default function UserProgress() {
   const [parts, setParts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const reportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -26,7 +33,7 @@ export default function UserProgress() {
         const { data } = await supabase
           .from(t)
           .select('*')
-          .limit(100); // Limit to prevent massive fetching
+          .select('*');
         if (data) allParts = [...allParts, ...data.map(d => ({ ...d, _table: t }))];
       }
       
@@ -103,52 +110,84 @@ export default function UserProgress() {
             {loading ? (
               <p>Loading data...</p>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', fontSize: '0.875rem', minWidth: '600px', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid var(--border-color)', backgroundColor: 'var(--surface-highlight)' }}>
-                      <th style={{ padding: '0.75rem', textAlign: 'left' }}>Material</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'left' }}>Location / Zone</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'left' }}>Status</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'left' }}>Verified By</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'left' }}>Batch ID (Date)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {parts.slice(0, 50).map(p => (
-                      <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                        <td style={{ padding: '0.75rem', fontWeight: 600 }}>{p.material || p.part_no || '-'}</td>
-                        <td style={{ padding: '0.75rem' }}>{p.location || p.rack_number || p.storage_bin || '-'} <span style={{fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase'}}>({p._table})</span></td>
-                        <td style={{ padding: '0.75rem' }}>
-                          <span style={{
-                            padding: '0.25rem 0.5rem',
-                            borderRadius: '4px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            backgroundColor: p.status === 'Verified' ? '#dcfce7' : p.status === 'Counted' ? '#fef3c7' : '#fee2e2',
-                            color: p.status === 'Verified' ? '#166534' : p.status === 'Counted' ? '#92400e' : '#991b1b'
-                          }}>
+              <div>
+                {isMobile ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {parts.map((p, index) => (
+                      <div key={`${p.id}-${index}`} style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', borderLeft: `6px solid ${p.status === 'Verified' ? '#2ecc71' : p.status === 'Counted' ? '#f39c12' : '#e74c3c'}` }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                          <span style={{ fontWeight: 900, fontSize: '1.1rem', color: '#0f172a' }}>{p.material || p.part_no || '-'}</span>
+                          <span style={{ padding: '0.25rem 0.75rem', borderRadius: '4px', backgroundColor: p.status === 'Verified' ? '#dcfce7' : p.status === 'Counted' ? '#fef3c7' : '#fee2e2', color: p.status === 'Verified' ? '#166534' : p.status === 'Counted' ? '#92400e' : '#991b1b', fontSize: '0.75rem', fontWeight: 700 }}>
                             {p.status}
                           </span>
-                        </td>
-                        <td style={{ padding: '0.75rem' }}>{p.verify_by || '-'}</td>
-                        <td style={{ padding: '0.75rem', color: 'var(--text-secondary)' }}>
-                          {p.batch_id ? new Date(p.batch_id).toLocaleString() : '-'}
-                        </td>
-                      </tr>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '0.5rem' }}>
+                            <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700 }}>Location / Zone</span>
+                            <span style={{ fontWeight: 700, color: '#334155', fontSize: '0.875rem' }}>{p.location || p.rack_number || p.storage_bin || '-'} ({p._table})</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '0.5rem' }}>
+                            <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700 }}>Verified By</span>
+                            <span style={{ fontWeight: 700, color: '#334155', fontSize: '0.875rem' }}>{p.verify_by || '-'}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem' }}>
+                            <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700 }}>Batch ID</span>
+                            <span style={{ fontWeight: 700, color: '#334155', fontSize: '0.875rem' }}>{p.batch_id ? new Date(p.batch_id).toLocaleString() : '-'}</span>
+                          </div>
+                        </div>
+                      </div>
                     ))}
                     {parts.length === 0 && (
-                      <tr>
-                        <td colSpan={5} style={{ padding: '2rem', textAlign: 'center' }}>No activity found.</td>
-                      </tr>
+                      <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No activity found.</p>
                     )}
-                  </tbody>
-                </table>
+                  </div>
+                ) : (
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', fontSize: '0.875rem', minWidth: '600px', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '2px solid var(--border-color)', backgroundColor: 'var(--surface-highlight)' }}>
+                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>Material</th>
+                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>Location / Zone</th>
+                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>Status</th>
+                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>Verified By</th>
+                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>Batch ID (Date)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {parts.map((p, index) => (
+                          <tr key={`${p.id}-${index}`} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                            <td style={{ padding: '0.75rem', fontWeight: 600 }}>{p.material || p.part_no || '-'}</td>
+                            <td style={{ padding: '0.75rem' }}>{p.location || p.rack_number || p.storage_bin || '-'} <span style={{fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase'}}>({p._table})</span></td>
+                            <td style={{ padding: '0.75rem' }}>
+                              <span style={{
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '4px',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                backgroundColor: p.status === 'Verified' ? '#dcfce7' : p.status === 'Counted' ? '#fef3c7' : '#fee2e2',
+                                color: p.status === 'Verified' ? '#166534' : p.status === 'Counted' ? '#92400e' : '#991b1b'
+                              }}>
+                                {p.status}
+                              </span>
+                            </td>
+                            <td style={{ padding: '0.75rem' }}>{p.verify_by || '-'}</td>
+                            <td style={{ padding: '0.75rem', color: 'var(--text-secondary)' }}>
+                              {p.batch_id ? new Date(p.batch_id).toLocaleString() : '-'}
+                            </td>
+                          </tr>
+                        ))}
+                        {parts.length === 0 && (
+                          <tr>
+                            <td colSpan={5} style={{ padding: '2rem', textAlign: 'center' }}>No activity found.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
-            <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-              Showing latest 20 updates. Generated on {new Date().toLocaleString()}.
-            </p>
+              Generated on {new Date().toLocaleString()}.
           </div>
         </Card>
       </main>
