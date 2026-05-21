@@ -299,10 +299,10 @@ export default function StockTakeDashboard() {
         {/* CARDS GRID */}
         <div className="dash-grid">
           {[
-            { key: 'b17', title: 'LOCATION B17', delay: '0s', duration: '6s' },
-            { key: 'b22', title: 'LOCATION B22', bg: '#ffebee', delay: '1.5s', duration: '6.5s' },
-            { key: 'loma', title: 'LOMA', bg: '#e8f5e9', delay: '3.2s', duration: '5.5s' },
-            { key: 'b22_seq', title: 'B22 SEQ', bg: '#fff8e1', delay: '4.8s', duration: '7s' }
+            { key: 'b17', title: 'LOCATION B17', delay: '0s', duration: '15s' },
+            { key: 'b22', title: 'LOCATION B22', bg: '#ffebee', delay: '1.5s', duration: '16.5s' },
+            { key: 'loma', title: 'LOMA', bg: '#e8f5e9', delay: '3.2s', duration: '14.5s' },
+            { key: 'b22_seq', title: 'B22 SEQ', bg: '#fff8e1', delay: '4.8s', duration: '17s' }
           ].map((zone) => {
             const s = stats[zone.key];
             return (

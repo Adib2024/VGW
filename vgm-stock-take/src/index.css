@@ -170,25 +170,50 @@ p {
   transform-style: preserve-3d;
 }
 
-@keyframes driveAndPark {
+@keyframes driveParkExitLoop {
   0% {
     right: -90px;
     opacity: 0;
+    /* Smooth braking entrance */
+    animation-timing-function: cubic-bezier(0.15, 0.85, 0.35, 1);
   }
-  10% {
+  3% {
     opacity: 1;
+  }
+  15% {
+    right: calc(100% - 85px); /* Park exactly at progress */
+    opacity: 1;
+    animation-timing-function: linear; /* Stay still */
+  }
+  85% {
+    right: calc(100% - 85px); /* End of parking phase */
+    opacity: 1;
+    /* Accelerate when exiting */
+    animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53);
+  }
+  95% {
+    right: calc(100% + 90px); /* Exit path to the left */
+    opacity: 1;
+  }
+  96% {
+    right: calc(100% + 90px);
+    opacity: 0; /* Hide instantly once off-screen */
+  }
+  97% {
+    right: -90px; /* Teleport back to start while hidden */
+    opacity: 0;
   }
   100% {
-    right: calc(100% - 85px); /* Park at the end of the bar */
-    opacity: 1;
+    right: -90px;
+    opacity: 0;
   }
 }
 
 .car-icon-anim {
   position: absolute;
-  right: -90px; /* Initial hidden state */
-  /* Use a cubic-bezier for a realistic smooth braking effect when it parks */
-  animation: driveAndPark 2.5s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
+  right: -90px; 
+  /* The total duration is controlled inline (14s-17s) so the 85%-15% gap = ~10 seconds */
+  animation: driveParkExitLoop 15s infinite;
 }
 
 .car-icon-anim img {
