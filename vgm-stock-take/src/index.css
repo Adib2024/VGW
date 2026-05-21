@@ -170,40 +170,25 @@ p {
   transform-style: preserve-3d;
 }
 
-@keyframes driveRightToLeft {
+@keyframes driveAndPark {
   0% {
     right: -90px;
-    opacity: 1;
-  }
-  30% {
-    right: calc(100% - 85px); /* Stop 5px from left edge */
-    opacity: 1;
-  }
-  80% {
-    right: calc(100% - 85px); /* Wait for 3 seconds */
-    opacity: 1;
-  }
-  95% {
-    right: calc(100% + 90px); /* Continue off screen left */
-    opacity: 1;
-  }
-  95.1% {
-    right: calc(100% + 90px); /* Instantly turn invisible while still off screen left */
     opacity: 0;
   }
-  99.9% {
-    right: -90px; /* Reset position to the right while remaining invisible */
-    opacity: 0;
+  10% {
+    opacity: 1;
   }
   100% {
-    right: -90px; /* Ready for next loop */
+    right: calc(100% - 85px); /* Park at the end of the bar */
     opacity: 1;
   }
 }
 
 .car-icon-anim {
   position: absolute;
-  animation: driveRightToLeft 6s linear infinite;
+  right: -90px; /* Initial hidden state */
+  /* Use a cubic-bezier for a realistic smooth braking effect when it parks */
+  animation: driveAndPark 2.5s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
 }
 
 .car-icon-anim img {
