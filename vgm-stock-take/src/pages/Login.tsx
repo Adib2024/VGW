@@ -6,7 +6,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { CheckCircle, Globe, Lock } from 'lucide-react';
+import { CheckCircle, Globe, Lock, Download } from 'lucide-react';
 
 export default function Login() {
   const [userId, setUserId] = useState('');
@@ -16,6 +16,7 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   
   const { login } = useAuth();
   const { addToast } = useToast();
@@ -43,6 +44,15 @@ export default function Login() {
       setUserId(savedUser);
       setRememberMe(true);
     }
+
+    // PWA Install Prompt Listener
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
   useEffect(() => {
@@ -225,6 +235,30 @@ export default function Login() {
               {loading ? '...' : t('login')}
             </Button>
           </form>
+          
+          {/* Custom PWA Install Button */}
+          {deferredPrompt && (
+            <div style={{ marginTop: '1.5rem', width: '100%', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
+              <Button 
+                type="button" 
+                variant="secondary"
+                fullWidth 
+                style={{ backgroundColor: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                onClick={async () => {
+                  if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                      setDeferredPrompt(null);
+                    }
+                  }
+                }}
+              >
+                <Download size={18} />
+                Install Native App
+              </Button>
+            </div>
+          )}
         </Card>
       </div>
       {showErrorModal && (
