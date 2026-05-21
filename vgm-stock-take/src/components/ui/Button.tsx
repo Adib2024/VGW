@@ -41,8 +41,13 @@ export const Button: React.FC<ButtonProps> = ({
     gap: '0.5rem'
   };
 
+  const mergedStyle: React.CSSProperties = {
+    ...style,
+    ...(props.style as React.CSSProperties || {})
+  };
+
   return (
-    <Component style={style} className={className} {...(props as any)}>
+    <Component className={className} {...(props as any)} style={mergedStyle}>
       {children}
     </Component>
   );

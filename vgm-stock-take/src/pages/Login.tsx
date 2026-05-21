@@ -15,6 +15,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
   
   const { login } = useAuth();
   const { addToast } = useToast();
@@ -88,7 +89,7 @@ export default function Login() {
         .single();
         
       if (error || !data) {
-        window.alert('Invalid credentials. Please try again.');
+        setShowErrorModal(true);
         return;
       }
       
@@ -226,6 +227,35 @@ export default function Login() {
           </form>
         </Card>
       </div>
+      {showErrorModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '2rem',
+            borderRadius: '16px',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            textAlign: 'center',
+            maxWidth: '350px',
+            width: '90%'
+          }}>
+            <h3 style={{ margin: '0 0 1rem 0', color: '#0f172a', fontSize: '1.25rem', fontWeight: 800 }}>{window.location.host} says</h3>
+            <p style={{ margin: '0 0 1.5rem 0', color: '#475569', fontSize: '0.95rem', fontWeight: 500 }}>Invalid credentials. Please try again.</p>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <Button variant="secondary" onClick={() => setShowErrorModal(false)} style={{ minWidth: '100px', backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>
+                OK
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

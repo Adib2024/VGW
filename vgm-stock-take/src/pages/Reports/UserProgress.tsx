@@ -4,7 +4,8 @@ import { Navigation } from '../../components/Navigation';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabase';
-import { Download } from 'lucide-react';
+import { Download, User as UserIcon } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 
 export default function UserProgress() {
@@ -14,6 +15,10 @@ export default function UserProgress() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
   const reportRef = useRef<HTMLDivElement>(null);
+  
+  const { user } = useAuth();
+  const lastLogin = localStorage.getItem('last_login') || '-';
+  const lastLogout = localStorage.getItem('last_logout') || '-';
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -31,10 +36,32 @@ export default function UserProgress() {
       let allParts: any[] = [];
       
       for (const t of tables) {
-        const { data } = await supabase
-          .from(t)
-          .select('*');
-        if (data) allParts = [...allParts, ...data.map(d => ({ ...d, _table: t }))];
+        let tableData: any[] = [];
+        let from = 0;
+        const step = 1000;
+        let fetchMore = true;
+
+        while (fetchMore) {
+          const { data, error } = await supabase
+            .from(t)
+            .select('*')
+            .range(from, from + step - 1);
+            
+          if (error) {
+            console.error(`Error fetching from ${t}:`, error);
+            fetchMore = false;
+          } else if (data && data.length > 0) {
+            tableData = [...tableData, ...data];
+            from += step;
+            if (data.length < step) fetchMore = false;
+          } else {
+            fetchMore = false;
+          }
+        }
+        
+        if (tableData.length > 0) {
+          allParts = [...allParts, ...tableData.map(d => ({ ...d, _table: t }))];
+        }
       }
       
       // Sort by status instead since last_updated does not exist
@@ -65,11 +92,11 @@ export default function UserProgress() {
     document.body.removeChild(link);
   };
 
-  const uniqueLocations = Array.from(new Set(parts.map(p => `${p.location || p.rack_number || p.storage_bin || ''} (${p._table})`))).filter(Boolean);
+  const uniqueLocations = Array.from(new Set(parts.map(p => p._table?.toUpperCase()))).filter(Boolean);
 
   const filteredParts = parts.filter(p => {
     if (statusFilter !== 'all' && p.status !== statusFilter) return false;
-    const locStr = `${p.location || p.rack_number || p.storage_bin || ''} (${p._table})`;
+    const locStr = p._table?.toUpperCase();
     if (locationFilter !== 'all' && locStr !== locationFilter) return false;
     return true;
   });
@@ -84,6 +111,36 @@ export default function UserProgress() {
             <Download size={18} /> Download CSV
           </Button>
         </div>
+
+        {/* User Summary Card */}
+        <Card style={{ marginBottom: '1.5rem', padding: '0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--surface-color)', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>
+            <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--primary-color)' }}>User Summary</h2>
+            <div style={{ backgroundColor: 'var(--primary-color)', color: 'white', padding: '0.5rem', borderRadius: '8px' }}>
+              <UserIcon size={20} />
+            </div>
+          </div>
+          <div style={{ padding: '1.5rem', backgroundColor: '#fff', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
+                <span style={{ color: '#64748b', fontWeight: 500 }}>Name:</span>
+                <span style={{ fontWeight: 700, color: '#0f172a' }}>{user?.name || '-'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
+                <span style={{ color: '#64748b', fontWeight: 500 }}>Role:</span>
+                <span style={{ fontWeight: 700, color: '#0f172a' }}>{user?.role || '-'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
+                <span style={{ color: '#64748b', fontWeight: 500 }}>Last Login:</span>
+                <span style={{ fontWeight: 700, color: '#0f172a' }}>{lastLogin}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#64748b', fontWeight: 500 }}>Last Logout:</span>
+                <span style={{ fontWeight: 700, color: '#0f172a' }}>{lastLogout}</span>
+              </div>
+            </div>
+          </div>
+        </Card>
 
         <Card>
           <div ref={reportRef} style={{ padding: '1rem', backgroundColor: 'var(--surface-color)', color: 'var(--text-primary)' }}>
@@ -110,6 +167,19 @@ export default function UserProgress() {
                 </div>
                 <div style={{ color: 'var(--text-secondary)' }}>Verified</div>
               </div>
+            </div>
+
+            {/* Overall Progress Bar */}
+            <div style={{ marginBottom: '2.5rem', backgroundColor: '#f1f5f9', borderRadius: '999px', height: '12px', width: '100%', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+              <div style={{ 
+                height: '100%', 
+                backgroundColor: '#22c55e', 
+                width: `${parts.length ? (parts.filter(p => p.status === 'Verified').length / parts.length) * 100 : 0}%`,
+                transition: 'width 0.5s ease-in-out'
+              }} />
+            </div>
+            <div style={{ textAlign: 'center', marginTop: '-2rem', marginBottom: '3rem', fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
+              {parts.filter(p => p.status === 'Verified').length} of {parts.length} verified ({parts.length ? Math.round((parts.filter(p => p.status === 'Verified').length / parts.length) * 100) : 0}%)
             </div>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>

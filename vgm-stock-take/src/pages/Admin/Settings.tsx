@@ -15,6 +15,7 @@ export default function AdminSettings() {
   const [selectedZone, setSelectedZone] = useState('b17');
   const [isLocked, setIsLocked] = useState(false);
   const [checkingLock, setCheckingLock] = useState(false);
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
 
   // Check if zone is locked when selectedZone changes
   React.useEffect(() => {
@@ -40,8 +41,12 @@ export default function AdminSettings() {
     }
   };
 
-  const handleUnlockZone = async () => {
-    if (!window.confirm(`Are you sure you want to unlock and CLEAR ALL DATA for Zone ${selectedZone.toUpperCase()}? This action cannot be undone.`)) return;
+  const handleUnlockZone = () => {
+    setShowUnlockModal(true);
+  };
+
+  const confirmUnlock = async () => {
+    setShowUnlockModal(false);
     
     setCheckingLock(true);
     try {
@@ -373,6 +378,41 @@ export default function AdminSettings() {
           }
         `}</style>
       </main>
+
+      {showUnlockModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '2rem',
+            borderRadius: '16px',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            textAlign: 'center',
+            maxWidth: '400px',
+            width: '90%'
+          }}>
+            <h3 style={{ margin: '0 0 1rem 0', color: '#e11d48', fontSize: '1.25rem', fontWeight: 800 }}>Confirm Unlock</h3>
+            <p style={{ margin: '0 0 1.5rem 0', color: '#475569', fontSize: '0.95rem', fontWeight: 500 }}>
+              Are you sure you want to unlock and <strong>CLEAR ALL DATA</strong> for Zone {selectedZone.toUpperCase()}? This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <Button variant="secondary" onClick={() => setShowUnlockModal(false)} style={{ flex: 1, backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={confirmUnlock} style={{ flex: 1 }}>
+                Unlock Zone
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
