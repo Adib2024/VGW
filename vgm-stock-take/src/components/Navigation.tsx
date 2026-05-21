@@ -16,15 +16,15 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
   const { t, language, setLanguage } = useLanguage();
   const { user, logout } = useAuth();
 
+  const [showLogoutModal, setShowLogoutModal] = React.useState(false);
+
   const handleBack = () => {
     navigate(backTo);
   };
 
-  const handleLogout = () => {
-    if (window.confirm('Are you sure you want to log out?')) {
-      logout();
-      navigate('/');
-    }
+  const confirmLogout = () => {
+    logout();
+    navigate('/');
   };
 
   return (
@@ -74,10 +74,43 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
           <option value="BM">BM</option>
           <option value="DE">DE</option>
         </select>
-        <Button variant="danger" onClick={handleLogout} style={{ padding: '0.35rem 0.5rem' }} title="Logout">
+        <Button variant="danger" onClick={() => setShowLogoutModal(true)} style={{ padding: '0.35rem 0.5rem' }} title="Logout">
           <LogOut size={16} />
         </Button>
       </div>
+
+      {showLogoutModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '2rem',
+            borderRadius: '16px',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            textAlign: 'center',
+            maxWidth: '350px',
+            width: '90%'
+          }}>
+            <h3 style={{ margin: '0 0 1rem 0', color: '#0f172a', fontSize: '1.25rem', fontWeight: 800 }}>Logout</h3>
+            <p style={{ margin: '0 0 1.5rem 0', color: '#475569', fontSize: '0.95rem', fontWeight: 500 }}>Are you sure you want to log out?</p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <Button variant="secondary" onClick={() => setShowLogoutModal(false)} style={{ flex: 1, backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={confirmLogout} style={{ flex: 1 }}>
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

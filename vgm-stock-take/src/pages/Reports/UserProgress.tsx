@@ -5,13 +5,14 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabase';
 import { Download } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+
 
 export default function UserProgress() {
   const [parts, setParts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [locationFilter, setLocationFilter] = useState('all');
   const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,7 +33,6 @@ export default function UserProgress() {
       for (const t of tables) {
         const { data } = await supabase
           .from(t)
-          .select('*')
           .select('*');
         if (data) allParts = [...allParts, ...data.map(d => ({ ...d, _table: t }))];
       }
@@ -49,24 +49,30 @@ export default function UserProgress() {
     }
   };
 
-  const handleDownloadPDF = async () => {
-    if (!reportRef.current) return;
-    
-    try {
-      const canvas = await html2canvas(reportRef.current, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save('VGM_StockTake_Report.pdf');
-    } catch (err) {
-      console.error('Failed to generate PDF', err);
-      alert('Failed to generate PDF');
-    }
+  const handleDownloadCSV = () => {
+    const headers = ['Material,Location/Zone,Status,Verified By,Batch ID'];
+    const rows = filteredParts.map(p => {
+      const loc = `${p.location || p.rack_number || p.storage_bin || ''} (${p._table})`;
+      return `${p.material || p.part_no || ''},${loc},${p.status || ''},${p.verify_by || ''},${p.batch_id || ''}`;
+    });
+    const csvContent = "data:text/csv;charset=utf-8," + headers.concat(rows).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "VGM_StockTake_Report.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
+
+  const uniqueLocations = Array.from(new Set(parts.map(p => `${p.location || p.rack_number || p.storage_bin || ''} (${p._table})`))).filter(Boolean);
+
+  const filteredParts = parts.filter(p => {
+    if (statusFilter !== 'all' && p.status !== statusFilter) return false;
+    const locStr = `${p.location || p.rack_number || p.storage_bin || ''} (${p._table})`;
+    if (locationFilter !== 'all' && locStr !== locationFilter) return false;
+    return true;
+  });
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -74,8 +80,8 @@ export default function UserProgress() {
       
       <main className="container flex-col gap-6" style={{ flex: 1, padding: '2rem 1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-          <Button onClick={handleDownloadPDF}>
-            <Download size={18} /> Download PDF
+          <Button onClick={handleDownloadCSV}>
+            <Download size={18} /> Download CSV
           </Button>
         </div>
 
@@ -106,6 +112,35 @@ export default function UserProgress() {
               </div>
             </div>
 
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>Filter by Status</label>
+                <select 
+                  value={statusFilter} 
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="Not Counted">Not Counted</option>
+                  <option value="Counted">Counted</option>
+                  <option value="Verified">Verified</option>
+                </select>
+              </div>
+              <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>Filter by Location</label>
+                <select 
+                  value={locationFilter} 
+                  onChange={(e) => setLocationFilter(e.target.value)}
+                  style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
+                >
+                  <option value="all">All Locations</option>
+                  {uniqueLocations.map(loc => (
+                    <option key={loc} value={loc}>{loc}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <h3 style={{ marginBottom: '1rem' }}>Recent Activity</h3>
             {loading ? (
               <p>Loading data...</p>
@@ -113,7 +148,7 @@ export default function UserProgress() {
               <div>
                 {isMobile ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {parts.map((p, index) => (
+                    {filteredParts.map((p, index) => (
                       <div key={`${p.id}-${index}`} style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', borderLeft: `6px solid ${p.status === 'Verified' ? '#2ecc71' : p.status === 'Counted' ? '#f39c12' : '#e74c3c'}` }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                           <span style={{ fontWeight: 900, fontSize: '1.1rem', color: '#0f172a' }}>{p.material || p.part_no || '-'}</span>
@@ -137,7 +172,7 @@ export default function UserProgress() {
                         </div>
                       </div>
                     ))}
-                    {parts.length === 0 && (
+                    {filteredParts.length === 0 && (
                       <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No activity found.</p>
                     )}
                   </div>
@@ -154,7 +189,7 @@ export default function UserProgress() {
                         </tr>
                       </thead>
                       <tbody>
-                        {parts.map((p, index) => (
+                        {filteredParts.map((p, index) => (
                           <tr key={`${p.id}-${index}`} style={{ borderBottom: '1px solid var(--border-color)' }}>
                             <td style={{ padding: '0.75rem', fontWeight: 600 }}>{p.material || p.part_no || '-'}</td>
                             <td style={{ padding: '0.75rem' }}>{p.location || p.rack_number || p.storage_bin || '-'} <span style={{fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase'}}>({p._table})</span></td>
@@ -176,7 +211,7 @@ export default function UserProgress() {
                             </td>
                           </tr>
                         ))}
-                        {parts.length === 0 && (
+                        {filteredParts.length === 0 && (
                           <tr>
                             <td colSpan={5} style={{ padding: '2rem', textAlign: 'center' }}>No activity found.</td>
                           </tr>
