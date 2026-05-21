@@ -352,7 +352,9 @@ export default function AdminSettings() {
               lineHeight: 1.6,
               maxHeight: '200px',
               overflowY: 'auto',
-              boxShadow: 'inset 0 2px 4px 0 rgba(0,0,0,0.2)'
+              boxShadow: 'inset 0 2px 4px 0 rgba(0,0,0,0.2)',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word'
             }}>
               <h4 style={{ color: '#fff', marginBottom: '1rem', borderBottom: '1px solid #334155', paddingBottom: '0.5rem' }}>Parsing Integrity Verification Log</h4>
               {logs.map((log, i) => (

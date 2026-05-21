@@ -61,7 +61,7 @@ export default function StockTakeCounting() {
 
   const canEditBox = () => {
     if (user?.role === 'Admin') return adminUnlock;
-    if (user?.role === 'Counter B17' || user?.role === 'Counter B22') {
+    if (user?.role?.startsWith('Counter B17') || user?.role?.startsWith('Counter B22')) {
       return true; // Operators can edit, but previously filled boxes are locked individually
     }
     return false;
@@ -114,7 +114,7 @@ export default function StockTakeCounting() {
 
       const boxTotal = calculateTotal(counterKeys);
 
-      if (user?.role === 'Counter B17' || user?.role === 'Counter B22' || (user?.role === 'Admin' && adminUnlock)) {
+      if (user?.role?.startsWith('Counter B17') || user?.role?.startsWith('Counter B22') || (user?.role === 'Admin' && adminUnlock)) {
         counterKeys.forEach(k => {
           updates[k] = formData[k] !== '' ? parseInt(formData[k]) : null;
         });
@@ -292,11 +292,11 @@ export default function StockTakeCounting() {
                         type="number"
                         value={formData[key] || ''}
                         onChange={(e) => handleInputChange(key, e.target.value)}
-                        disabled={!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined)}
+                        disabled={!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined && part[key] !== '')}
                         style={{
                           width: '100%', padding: '0.75rem 1rem', borderRadius: '8px',
                           border: formData[key] ? '1px solid #22c55e' : '1px solid #cbd5e1',
-                          backgroundColor: (!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined)) ? '#f8fafc' : 'white',
+                          backgroundColor: (!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined && part[key] !== '')) ? '#f8fafc' : 'white',
                           color: formData[key] ? '#22c55e' : '#0f172a',
                           fontWeight: formData[key] ? 800 : 500, outline: 'none',
                           cursor: (!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined)) ? 'not-allowed' : 'text'

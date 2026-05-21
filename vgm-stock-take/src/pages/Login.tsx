@@ -120,14 +120,14 @@ export default function Login() {
 
 
   return (
-    <div className="flex justify-center items-center" style={{ minHeight: '100vh', padding: '1rem', position: 'relative' }}>
+    <div className="flex justify-center items-center" style={{ minHeight: '100vh', padding: '1rem', position: 'relative', overflow: 'hidden' }}>
       
       {/* Background Decor */}
       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '800px', height: '800px', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '50%', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '1200px', height: '1200px', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%', pointerEvents: 'none' }} />
 
-      {/* Language Toggle Centered Top */}
-      <div style={{ position: 'absolute', top: '1.5rem', left: '50%', transform: 'translateX(-50%)', zIndex: 20 }}>
+      {/* Language Toggle */}
+      <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 20 }}>
         <select 
           value={language}
           onChange={(e) => setLanguage(e.target.value as any)}
