@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 export type Role = 'Counter B17' | 'Counter B22' | 'Verifier' | 'Operator Batt' | 'QA Inspector' | 'Admin' | null;
 
@@ -25,12 +26,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = (userData: User) => {
     setUser(userData);
     localStorage.setItem('vgm_user', JSON.stringify(userData));
-    localStorage.setItem(`last_login_${userData.id}`, new Date().toLocaleString());
+    const now = new Date().toLocaleString();
+    localStorage.setItem(`last_login_${userData.id}`, now);
+    // Persist to database for audit purposes
+    supabase.from('users').update({ last_login: now }).eq('id', userData.id).then();
   };
 
   const logout = () => {
     if (user) {
-      localStorage.setItem(`last_logout_${user.id}`, new Date().toLocaleString());
+      const now = new Date().toLocaleString();
+      localStorage.setItem(`last_logout_${user.id}`, now);
+      // Persist to database for audit purposes
+      supabase.from('users').update({ last_logout: now }).eq('id', user.id).then();
     }
     setUser(null);
     localStorage.removeItem('vgm_user');
