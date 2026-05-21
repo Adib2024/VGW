@@ -2,8 +2,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useBattery } from '../hooks/useBattery';
 import { Button } from './ui/Button';
-import { ChevronLeft, LogOut } from 'lucide-react';
+import { ChevronLeft, LogOut, Battery, BatteryWarning } from 'lucide-react';
 
 interface NavigationProps {
   title: string;
@@ -15,6 +16,7 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
   const navigate = useNavigate();
   const { t, language, setLanguage } = useLanguage();
   const { user, logout } = useAuth();
+  const battery = useBattery();
 
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
@@ -51,6 +53,12 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
       </div>
       
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'nowrap', marginLeft: 'auto' }}>
+        {battery.supported && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: battery.level <= 0.15 && !battery.charging ? '#ef4444' : '#64748b', marginRight: '0.5rem' }} title={`Battery: ${Math.round(battery.level * 100)}%`}>
+            {battery.level <= 0.15 && !battery.charging ? <BatteryWarning size={16} /> : <Battery size={16} />}
+            <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>{Math.round(battery.level * 100)}%</span>
+          </div>
+        )}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', color: 'var(--text-secondary)', fontSize: '0.75rem', lineHeight: '1.2' }}>
           <span style={{ fontWeight: 600, color: '#0f172a' }}>{user?.name}</span>
           <span style={{ fontSize: '0.65rem' }}>({user?.role})</span>

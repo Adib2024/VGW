@@ -1,17 +1,19 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { ToastContainer } from './components/ui/ToastContainer';
-import Login from './pages/Login';
-import Hub from './pages/Hub';
-import StockTakeDashboard from './pages/StockTake/Dashboard';
-import StockTakeListView from './pages/StockTake/ListView';
-import StockTakeCounting from './pages/StockTake/Counting';
-import AdminSettings from './pages/Admin/Settings';
-import UserProgress from './pages/Reports/UserProgress';
-import BatteryTracker from './pages/Battery/Tracker';
+import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
+
+const Login = lazy(() => import('./pages/Login'));
+const Hub = lazy(() => import('./pages/Hub'));
+const StockTakeDashboard = lazy(() => import('./pages/StockTake/Dashboard'));
+const StockTakeListView = lazy(() => import('./pages/StockTake/ListView'));
+const StockTakeCounting = lazy(() => import('./pages/StockTake/Counting'));
+const AdminSettings = lazy(() => import('./pages/Admin/Settings'));
+const UserProgress = lazy(() => import('./pages/Reports/UserProgress'));
+const BatteryTracker = lazy(() => import('./pages/Battery/Tracker'));
 
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: string[] }) => {
   const { user } = useAuth();
@@ -31,8 +33,15 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
 };
 
 function AppRoutes() {
+  const loadingFallback = (
+    <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#0f172a' }}>
+      <div style={{ color: '#3b82f6', fontSize: '1.25rem', fontWeight: 'bold' }}>Loading VGM Stock Take...</div>
+    </div>
+  );
+
   return (
-    <Routes>
+    <Suspense fallback={loadingFallback}>
+      <Routes>
       <Route path="/" element={<Login />} />
       <Route 
         path="/hub" 
@@ -85,21 +94,24 @@ function AppRoutes() {
       {/* Placeholder routes for other modules */}
       <Route path="/battery" element={<ProtectedRoute allowedRoles={['Admin', 'Operator Batt']}><BatteryTracker /></ProtectedRoute>} />
       <Route path="/qa" element={<ProtectedRoute allowedRoles={['Admin', 'QA Inspector']}><div className="container" style={{paddingTop: '5rem'}}><h2>QA Module (WIP)</h2></div></ProtectedRoute>} />
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <ToastProvider>
-        <AuthProvider>
-          <Router>
-            <ToastContainer />
-            <AppRoutes />
-          </Router>
-        </AuthProvider>
-      </ToastProvider>
-    </LanguageProvider>
+    <GlobalErrorBoundary>
+      <LanguageProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <Router>
+              <ToastContainer />
+              <AppRoutes />
+            </Router>
+          </AuthProvider>
+        </ToastProvider>
+      </LanguageProvider>
+    </GlobalErrorBoundary>
   );
 }
