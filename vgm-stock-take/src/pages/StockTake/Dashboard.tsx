@@ -51,13 +51,13 @@ export default function StockTakeDashboard() {
       results.forEach((res, index) => {
         const table = tables[index];
         const data = res || [];
-        
+
         // Find latest batch_id
         const batches = [...new Set(data.map((r: any) => r.batch_id || r.metadata?.batch_id).filter(Boolean))].sort().reverse();
         const latestBatch = batches[0];
-        
+
         // Filter by latest batch if it exists, otherwise use all (for legacy data)
-        const currentData = latestBatch 
+        const currentData = latestBatch
           ? data.filter((r: any) => (r.batch_id === latestBatch || r.metadata?.batch_id === latestBatch))
           : data;
 
@@ -67,7 +67,7 @@ export default function StockTakeDashboard() {
         newStats[table] = { total, completed, percentage };
       });
       setStats(newStats);
-      
+
       if (isManualRefresh) {
         addToast(t('dataRefreshed'), 'success');
       }
@@ -95,98 +95,99 @@ export default function StockTakeDashboard() {
       <style>{`
         .dash-main {
           min-height: 100vh;
-          background: linear-gradient(135deg, #f0f9ff 0%, #bae6fd 100%);
-          padding: 0.75rem;
+          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+          padding: 0.5rem;
           font-family: 'Inter', sans-serif;
-          padding-bottom: 2rem;
+          padding-bottom: 1.5rem;
         }
         .dash-header {
           display: flex;
           flex-wrap: wrap;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 1.5rem;
-          gap: 0.5rem;
+          margin-bottom: 0.75rem;
+          gap: 0.4rem;
         }
         .dash-title {
-          font-size: 1.5rem;
+          font-size: 1.35rem;
           font-weight: 800;
           color: #001e50;
-          margin: 0 0 0.15rem 0;
-          letter-spacing: -0.02em;
+          margin: 0 0 0.1rem 0;
+          letter-spacing: -0.03em;
         }
         .dash-grid {
           display: flex;
           flex-direction: column;
-          gap: 0.85rem;
+          gap: 0.5rem;
           max-width: 800px;
           margin: 0 auto;
         }
         .dash-card {
-          padding: 1rem 1.25rem !important;
-          border-radius: 16px !important;
-          background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%) !important;
-          backdrop-filter: blur(10px) !important;
+          padding: 0.75rem 1rem !important;
+          border-radius: 14px !important;
+          background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(253,254,255,0.95) 100%) !important;
+          backdrop-filter: blur(12px) !important;
           border: 1px solid rgba(255,255,255,0.8) !important;
-          box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.025) !important;
+          box-shadow: 0 10px 30px -5px rgba(0,30,80,0.04), 0 4px 10px -2px rgba(0,30,80,0.02) !important;
           cursor: pointer;
           transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .dash-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04) !important;
+          transform: translateY(-2px);
+          box-shadow: 0 20px 40px -5px rgba(0,30,80,0.06), 0 8px 15px -4px rgba(0,30,80,0.03) !important;
         }
         .dash-card-header {
           display: flex;
-          gap: 0.85rem;
-          margin-bottom: 0.85rem;
+          gap: 0.75rem;
+          margin-bottom: 0.5rem;
           align-items: center;
         }
         .dash-card-icon {
-          width: 44px;
-          height: 44px;
-          border-radius: 12px;
+          width: 38px;
+          height: 38px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+          box-shadow: inset 0 1px 2px rgba(255,255,255,0.9), 0 2px 5px rgba(0,30,80,0.03);
         }
         .dash-card-icon img {
-          width: 28px;
-          height: 28px;
+          width: 24px;
+          height: 24px;
         }
         .dash-card-title {
-          margin: 0 0 0.15rem 0;
-          font-size: 1.05rem;
+          margin: 0 0 0.1rem 0;
+          font-size: 0.95rem;
           color: #0f172a;
           font-weight: 700;
           letter-spacing: -0.01em;
         }
         .dash-card-subtitle {
           color: #64748b;
-          font-size: 0.85rem;
+          font-size: 0.75rem;
+          font-weight: 500;
         }
         .dash-actions {
           display: flex;
           flex-direction: column;
-          gap: 0.85rem;
+          gap: 0.5rem;
           max-width: 800px;
-          margin: 1.5rem auto 0 auto;
+          margin: 1rem auto 0 auto;
         }
         .dash-btn {
           width: 100%;
-          padding: 1rem;
-          border-radius: 14px;
-          background: linear-gradient(145deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%);
-          backdrop-filter: blur(10px);
+          padding: 0.75rem;
+          border-radius: 12px;
+          background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(253,254,255,0.9) 100%);
+          backdrop-filter: blur(12px);
           border: 1px solid rgba(255,255,255,0.8);
-          box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+          box-shadow: 0 8px 20px -5px rgba(0,30,80,0.04);
           display: flex;
           justify-content: center;
           align-items: center;
-          gap: 0.6rem;
-          font-size: 0.95rem;
+          gap: 0.5rem;
+          font-size: 0.85rem;
           font-weight: 700;
           cursor: pointer;
           transition: transform 0.2s, box-shadow 0.2s;
@@ -195,7 +196,7 @@ export default function StockTakeDashboard() {
           transform: scale(0.98);
         }
         .dash-btn:hover {
-          box-shadow: 0 10px 15px -3px rgba(0,0,0,0.06);
+          box-shadow: 0 12px 25px -5px rgba(0,30,80,0.06);
         }
         
         @media (min-width: 768px) {
@@ -212,41 +213,41 @@ export default function StockTakeDashboard() {
           }
           .dash-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 1.5rem;
           }
           .dash-card {
-            padding: 1.75rem 1.5rem !important;
-            border-radius: 20px !important;
+            padding: 1.5rem !important;
+            border-radius: 16px !important;
           }
           .dash-card-header {
             gap: 1.25rem;
             margin-bottom: 1.5rem;
           }
           .dash-card-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 16px;
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
           }
           .dash-card-icon img {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
           }
           .dash-card-title {
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             margin-bottom: 0.25rem;
           }
           .dash-card-subtitle {
             font-size: 0.95rem;
           }
           .dash-actions {
-            flex-direction: row;
-            gap: 1.25rem;
-            margin-top: 2.5rem;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 2rem;
           }
           .dash-btn {
-            padding: 1.25rem;
-            border-radius: 16px;
+            padding: 1.15rem;
+            border-radius: 14px;
             font-size: 1.05rem;
           }
         }
@@ -256,10 +257,10 @@ export default function StockTakeDashboard() {
         {/* HEADER SECTION */}
         <div className="dash-header">
           {/* Left Side: Title & User */}
-          <div style={{ flex: '1 1 auto', minWidth: '150px', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <div style={{ flex: '1 1 auto', minWidth: '150px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {(user?.role === 'Admin' || user?.role === 'Verifier') && (
-              <button onClick={() => navigate('/hub')} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(5px)', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#334155', boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}>
-                <ChevronLeft size={20} />
+              <button onClick={() => navigate('/hub')} style={{ padding: '0.4rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.8)', background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(10px)', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#334155', boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}>
+                <ChevronLeft size={18} />
               </button>
             )}
             <div>
