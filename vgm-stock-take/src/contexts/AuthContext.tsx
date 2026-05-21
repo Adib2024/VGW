@@ -46,6 +46,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       device_type: getDeviceType()
     });
     if (error) console.error("Error inserting audit log:", error);
+
+    // Update user ping status for server-side auto-logout sweeper
+    await supabase.from('users').update({
+      is_logged_in: true,
+      last_ping: new Date().toISOString()
+    }).eq('id', userData.id);
   };
 
   const logout = async () => {
@@ -56,6 +62,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         device_type: getDeviceType()
       });
       if (error) console.error("Error inserting audit log:", error);
+
+      await supabase.from('users').update({
+        is_logged_in: false
+      }).eq('id', user.id);
     }
     setUser(null);
     localStorage.removeItem('vgm_user');
@@ -80,20 +90,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       heartbeatInterval = window.setInterval(async () => {
         const lastActivity = parseInt(localStorage.getItem('vgm_last_activity') || '0', 10);
         const now = Date.now();
-        if (now - lastActivity > 5 * 60 * 1000) { // 5 minutes
+        
+        // If active in the last 90 seconds, ping the server
+        if (now - lastActivity < 90 * 1000) {
+          await supabase.from('users').update({ 
+            last_ping: new Date().toISOString() 
+          }).eq('id', user.id);
+        }
+
+        // If inactive for 5 minutes, log them out locally.
+        // The server-side pg_cron sweeper will handle inserting the AUTO_LOGOUT record.
+        if (now - lastActivity > 5 * 60 * 1000) {
           clearInterval(heartbeatInterval);
           
-          await supabase.from('audit_logs').insert({
-            user_id: user.id,
-            action: 'AUTO_LOGOUT',
-            device_type: getDeviceType()
-          });
+          await supabase.from('users').update({
+            is_logged_in: false
+          }).eq('id', user.id);
           
           setUser(null);
           localStorage.removeItem('vgm_user');
           window.location.href = '/';
         }
-      }, 1000);
+      }, 60 * 1000); // Check every 60 seconds
     }
 
     return () => {

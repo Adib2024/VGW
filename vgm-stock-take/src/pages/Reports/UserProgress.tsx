@@ -32,7 +32,7 @@ export default function UserProgress() {
         .limit(1)
         .then(({ data }) => {
           if (data && data.length > 0) {
-            setLastLogin(new Date(data[0].created_at).toLocaleString());
+            setLastLogin(new Date(data[0].created_at).toLocaleString('en-GB', { timeZone: 'Asia/Kuala_Lumpur', dateStyle: 'medium', timeStyle: 'short' }));
             setLoginDevice(data[0].device_type || '-');
           }
         });
@@ -45,7 +45,7 @@ export default function UserProgress() {
         .limit(1)
         .then(({ data }) => {
           if (data && data.length > 0) {
-            setLastLogout(new Date(data[0].created_at).toLocaleString());
+            setLastLogout(new Date(data[0].created_at).toLocaleString('en-GB', { timeZone: 'Asia/Kuala_Lumpur', dateStyle: 'medium', timeStyle: 'short' }));
             setLogoutDevice(data[0].device_type || '-');
           }
         });
