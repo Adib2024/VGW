@@ -84,7 +84,8 @@ const translations: Translations = {
     recentActivity: 'Recent Activity',
     loadingData: 'Loading data...',
     lastUpdated: 'Last Updated',
-    showingLatestUpdates: 'Showing latest 20 updates. Generated on'
+    showingLatestUpdates: 'Showing latest 20 updates. Generated on',
+    dataRefreshed: 'Data refreshed successfully!'
   },
   BM: {
     login: 'Log Masuk',
@@ -161,7 +162,8 @@ const translations: Translations = {
     recentActivity: 'Aktiviti Terkini',
     loadingData: 'Memuatkan data...',
     lastUpdated: 'Kemas Kini Terakhir',
-    showingLatestUpdates: 'Menunjukkan 20 kemas kini terkini. Dijana pada'
+    showingLatestUpdates: 'Menunjukkan 20 kemas kini terkini. Dijana pada',
+    dataRefreshed: 'Data berjaya disegarkan!'
   },
   DE: {
     login: 'Anmelden',
@@ -238,7 +240,8 @@ const translations: Translations = {
     recentActivity: 'Letzte Aktivität',
     loadingData: 'Daten werden geladen...',
     lastUpdated: 'Zuletzt aktualisiert',
-    showingLatestUpdates: 'Zeigt die letzten 20 Updates an. Generiert am'
+    showingLatestUpdates: 'Zeigt die letzten 20 Updates an. Generiert am',
+    dataRefreshed: 'Daten erfolgreich aktualisiert!'
   }
 };
 

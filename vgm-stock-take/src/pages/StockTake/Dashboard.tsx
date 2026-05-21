@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import { Card } from '../../components/ui/Card';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { supabase, fetchAllRows } from '../../lib/supabase';
@@ -16,6 +17,7 @@ interface ZoneStats {
 export default function StockTakeDashboard() {
   const { language, setLanguage, t } = useLanguage();
   const { user, logout } = useAuth();
+  const { addToast } = useToast();
   const navigate = useNavigate();
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -32,14 +34,14 @@ export default function StockTakeDashboard() {
     const tables = ['b17', 'b22', 'loma', 'b22_seq'];
     const channels = tables.map(table =>
       supabase.channel(`${table}-changes`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: table }, fetchStats)
+        .on('postgres_changes', { event: '*', schema: 'public', table: table }, () => fetchStats(false))
         .subscribe()
     );
     return () => { channels.forEach(ch => supabase.removeChannel(ch)); };
   }, []);
 
-  const fetchStats = async () => {
-    setIsRefreshing(true);
+  const fetchStats = async (isManualRefresh: boolean = false) => {
+    if (isManualRefresh) setIsRefreshing(true);
     try {
       const tables = ['b17', 'b22', 'loma', 'b22_seq'];
       const promises = tables.map(table => fetchAllRows(table));
@@ -65,11 +67,17 @@ export default function StockTakeDashboard() {
         newStats[table] = { total, completed, percentage };
       });
       setStats(newStats);
+      
+      if (isManualRefresh) {
+        addToast(t('dataRefreshed'), 'success');
+      }
     } catch (err) {
       console.error('Error fetching stats:', err);
     } finally {
-      // Add a small delay so the user can see the spin animation even if fetch is very fast
-      setTimeout(() => setIsRefreshing(false), 500);
+      if (isManualRefresh) {
+        // Add a small delay so the user can see the spin animation even if fetch is very fast
+        setTimeout(() => setIsRefreshing(false), 500);
+      }
     }
   };
 
@@ -106,7 +114,7 @@ export default function StockTakeDashboard() {
           <button onClick={() => setShowLogoutConfirm(true)} style={{ padding: '0.25rem 1rem', borderRadius: '999px', border: '1px solid red', backgroundColor: 'transparent', color: 'red', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>
             {t('logout')}
           </button>
-          <button onClick={fetchStats} disabled={isRefreshing} style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1px solid #1877f2', backgroundColor: 'transparent', color: '#1877f2', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isRefreshing ? 'default' : 'pointer', opacity: isRefreshing ? 0.7 : 1 }}>
+          <button onClick={() => fetchStats(true)} disabled={isRefreshing} style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1px solid #1877f2', backgroundColor: 'transparent', color: '#1877f2', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isRefreshing ? 'default' : 'pointer', opacity: isRefreshing ? 0.7 : 1 }}>
             <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
           </button>
           <select value={language} onChange={(e) => setLanguage(e.target.value as any)} style={{ padding: '0.25rem 0.5rem', borderRadius: '999px', border: '1px solid #1877f2', backgroundColor: 'transparent', color: '#1877f2', fontSize: '0.75rem', fontWeight: 600, outline: 'none', cursor: 'pointer' }}>
