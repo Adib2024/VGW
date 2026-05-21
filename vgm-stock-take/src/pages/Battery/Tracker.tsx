@@ -24,7 +24,14 @@ export default function Tracker() {
     setTimeout(() => {
       scannerRef.current = new Html5QrcodeScanner(
         "reader",
-        { fps: 10, qrbox: {width: 250, height: 150}, supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA] },
+        { 
+          fps: 10, 
+          qrbox: {width: 250, height: 150}, 
+          supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+          videoConstraints: {
+            facingMode: "environment"
+          }
+        },
         false
       );
       

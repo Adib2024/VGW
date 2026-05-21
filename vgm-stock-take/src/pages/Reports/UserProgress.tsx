@@ -18,12 +18,14 @@ export default function UserProgress() {
   
   const { user } = useAuth();
   const [lastLogin, setLastLogin] = useState('-');
+  const [loginDevice, setLoginDevice] = useState('-');
   const [lastLogout, setLastLogout] = useState('-');
+  const [logoutDevice, setLogoutDevice] = useState('-');
 
   useEffect(() => {
     if (user) {
       supabase.from('audit_logs')
-        .select('created_at')
+        .select('created_at, device_type')
         .eq('user_id', user.id)
         .eq('action', 'LOGIN')
         .order('created_at', { ascending: false })
@@ -31,11 +33,12 @@ export default function UserProgress() {
         .then(({ data }) => {
           if (data && data.length > 0) {
             setLastLogin(new Date(data[0].created_at).toLocaleString());
+            setLoginDevice(data[0].device_type || '-');
           }
         });
         
       supabase.from('audit_logs')
-        .select('created_at')
+        .select('created_at, device_type')
         .eq('user_id', user.id)
         .in('action', ['MANUAL_LOGOUT', 'AUTO_LOGOUT'])
         .order('created_at', { ascending: false })
@@ -43,6 +46,7 @@ export default function UserProgress() {
         .then(({ data }) => {
           if (data && data.length > 0) {
             setLastLogout(new Date(data[0].created_at).toLocaleString());
+            setLogoutDevice(data[0].device_type || '-');
           }
         });
     }
@@ -160,11 +164,17 @@ export default function UserProgress() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
                 <span style={{ color: '#64748b', fontWeight: 500 }}>Last Login:</span>
-                <span style={{ fontWeight: 700, color: '#0f172a' }}>{lastLogin}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>{lastLogin}</span>
+                  {loginDevice !== '-' && <span style={{ fontSize: '0.75rem', color: '#64748b' }}>via {loginDevice}</span>}
+                </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#64748b', fontWeight: 500 }}>Last Logout:</span>
-                <span style={{ fontWeight: 700, color: '#0f172a' }}>{lastLogout}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>{lastLogout}</span>
+                  {logoutDevice !== '-' && <span style={{ fontSize: '0.75rem', color: '#64748b' }}>via {logoutDevice}</span>}
+                </div>
               </div>
             </div>
           </div>
