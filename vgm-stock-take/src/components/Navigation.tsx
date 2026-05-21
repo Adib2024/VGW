@@ -48,7 +48,7 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
         <h2 style={{ margin: 0, fontSize: '1.1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</h2>
       </div>
       
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'nowrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'nowrap', marginLeft: 'auto' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', color: 'var(--text-secondary)', fontSize: '0.75rem', lineHeight: '1.2' }}>
           <span style={{ fontWeight: 600, color: '#0f172a' }}>{user?.name}</span>
           <span style={{ fontSize: '0.65rem' }}>({user?.role})</span>

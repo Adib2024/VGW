@@ -23,9 +23,16 @@ export default function StockTakeListView() {
   
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [locationFilter, setLocationFilter] = useState<string>('all');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, completed: 0, percentage: 0 });
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchParts();
@@ -274,63 +281,91 @@ export default function StockTakeListView() {
             )}
           </div>
 
-          <div style={{ overflowX: 'auto', padding: '1.5rem' }}>
+          <div style={{ padding: isMobile ? '1rem' : '1.5rem' }}>
             {loading ? (
               <p style={{ textAlign: 'center', padding: '2rem' }}>{t('loadingParts')}</p>
-            ) : (
-              <table style={{ width: '100%', minWidth: '800px', borderCollapse: 'separate', borderSpacing: '0 0.5rem' }}>
-                <thead>
-                  <tr style={{ color: '#666', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', textAlign: 'left' }}>
-                    <th style={{ padding: '0.5rem 1rem' }}>NO</th>
-                    {displayColumns.map(col => (
-                      <th key={col} style={{ padding: '0.5rem 1rem' }}>{col.replace(/_/g, ' ')}</th>
-                    ))}
-                    <th style={{ padding: '0.5rem 1rem' }}>STATUS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredParts.map((part: any, index) => (
-                    <tr
-                      key={part.id}
-                      onClick={() => navigate(`/stock-take/count/${part._table}/${part.id}`)}
-                      style={{ backgroundColor: '#fff', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}
-                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                    >
-                      <td style={{ padding: '1rem', borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px', borderLeft: '4px solid #2ecc71', fontWeight: 800, color: '#333' }}>
-                        {index + 1}
-                      </td>
-
+            ) : isMobile ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {filteredParts.map((part: any, index) => (
+                  <div 
+                    key={part.id} 
+                    onClick={() => navigate(`/stock-take/count/${part._table}/${part.id}`)}
+                    style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', borderLeft: `6px solid ${part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c'}`, cursor: 'pointer' }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <span style={{ fontWeight: 900, fontSize: '1.25rem', color: '#0f172a' }}>#{index + 1}</span>
+                      <span style={{ padding: '0.25rem 0.75rem', borderRadius: '4px', border: `1px solid ${part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c'}`, color: part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c', fontSize: '0.75rem', fontWeight: 700 }}>
+                        {part.status}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       {displayColumns.map(col => (
-                        <td key={col} style={{ padding: '1rem', fontWeight: 500, color: '#333' }}>
-                          {part[col] || (part.metadata && part.metadata[col]) || '-'}
-                        </td>
-                      ))}
-
-                      <td style={{ padding: '1rem', borderTopRightRadius: '8px', borderBottomRightRadius: '8px' }}>
-                        <div
-                          style={{
-                            display: 'inline-block',
-                            padding: '0.25rem 0.75rem',
-                            borderRadius: '4px',
-                            border: `1px solid ${part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c'}`,
-                            color: part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c',
-                            fontSize: '0.75rem',
-                            fontWeight: 600
-                          }}
-                        >
-                          {part.status}
+                        <div key={col} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '0.5rem' }}>
+                          <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700 }}>{col.replace(/_/g, ' ')}</span>
+                          <span style={{ fontWeight: 700, color: '#334155', fontSize: '0.875rem' }}>{part[col] || (part.metadata && part.metadata[col]) || '-'}</span>
                         </div>
-                      </td>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                {filteredParts.length === 0 && <p style={{ textAlign: 'center', color: '#666', padding: '2rem' }}>{t('noParts')}</p>}
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', minWidth: '800px', borderCollapse: 'separate', borderSpacing: '0 0.5rem' }}>
+                  <thead>
+                    <tr style={{ color: '#666', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', textAlign: 'left' }}>
+                      <th style={{ padding: '0.5rem 1rem' }}>NO</th>
+                      {displayColumns.map(col => (
+                        <th key={col} style={{ padding: '0.5rem 1rem' }}>{col.replace(/_/g, ' ')}</th>
+                      ))}
+                      <th style={{ padding: '0.5rem 1rem' }}>STATUS</th>
                     </tr>
-                  ))}
-                  {filteredParts.length === 0 && (
-                    <tr>
-                      <td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>{t('noParts')}</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filteredParts.map((part: any, index) => (
+                      <tr
+                        key={part.id}
+                        onClick={() => navigate(`/stock-take/count/${part._table}/${part.id}`)}
+                        style={{ backgroundColor: '#fff', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                      >
+                        <td style={{ padding: '1rem', borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px', borderLeft: `4px solid ${part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c'}`, fontWeight: 800, color: '#333' }}>
+                          {index + 1}
+                        </td>
+
+                        {displayColumns.map(col => (
+                          <td key={col} style={{ padding: '1rem', fontWeight: 500, color: '#333' }}>
+                            {part[col] || (part.metadata && part.metadata[col]) || '-'}
+                          </td>
+                        ))}
+
+                        <td style={{ padding: '1rem', borderTopRightRadius: '8px', borderBottomRightRadius: '8px' }}>
+                          <div
+                            style={{
+                              display: 'inline-block',
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '4px',
+                              border: `1px solid ${part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c'}`,
+                              color: part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c',
+                              fontSize: '0.75rem',
+                              fontWeight: 600
+                            }}
+                          >
+                            {part.status}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredParts.length === 0 && (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>{t('noParts')}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </Card>
