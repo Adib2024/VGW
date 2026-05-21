@@ -246,10 +246,15 @@ export default function Login() {
                 style={{ backgroundColor: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                 onClick={async () => {
                   if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    if (outcome === 'accepted') {
-                      setDeferredPrompt(null);
+                    try {
+                      deferredPrompt.prompt();
+                      const { outcome } = await deferredPrompt.userChoice;
+                      if (outcome === 'accepted') {
+                        setDeferredPrompt(null);
+                      }
+                    } catch (err) {
+                      console.error("Install prompt error:", err);
+                      alert("Automatic install failed. Please click 'Share' or the browser menu, then select 'Add to Home Screen' manually.");
                     }
                   }
                 }}

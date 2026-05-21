@@ -25,6 +25,7 @@ export default function StockTakeDashboard() {
     loma: { total: 0, completed: 0, percentage: 0 },
     b22_seq: { total: 0, completed: 0, percentage: 0 }
   });
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -38,6 +39,7 @@ export default function StockTakeDashboard() {
   }, []);
 
   const fetchStats = async () => {
+    setIsRefreshing(true);
     try {
       const tables = ['b17', 'b22', 'loma', 'b22_seq'];
       const promises = tables.map(table => fetchAllRows(table));
@@ -65,6 +67,9 @@ export default function StockTakeDashboard() {
       setStats(newStats);
     } catch (err) {
       console.error('Error fetching stats:', err);
+    } finally {
+      // Add a small delay so the user can see the spin animation even if fetch is very fast
+      setTimeout(() => setIsRefreshing(false), 500);
     }
   };
 
@@ -101,8 +106,8 @@ export default function StockTakeDashboard() {
           <button onClick={() => setShowLogoutConfirm(true)} style={{ padding: '0.25rem 1rem', borderRadius: '999px', border: '1px solid red', backgroundColor: 'transparent', color: 'red', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>
             {t('logout')}
           </button>
-          <button onClick={fetchStats} style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1px solid #1877f2', backgroundColor: 'transparent', color: '#1877f2', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <RefreshCw size={14} />
+          <button onClick={fetchStats} disabled={isRefreshing} style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1px solid #1877f2', backgroundColor: 'transparent', color: '#1877f2', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isRefreshing ? 'default' : 'pointer', opacity: isRefreshing ? 0.7 : 1 }}>
+            <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
           </button>
           <select value={language} onChange={(e) => setLanguage(e.target.value as any)} style={{ padding: '0.25rem 0.5rem', borderRadius: '999px', border: '1px solid #1877f2', backgroundColor: 'transparent', color: '#1877f2', fontSize: '0.75rem', fontWeight: 600, outline: 'none', cursor: 'pointer' }}>
             <option value="EN">English</option>
