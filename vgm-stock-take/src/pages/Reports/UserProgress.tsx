@@ -17,8 +17,8 @@ export default function UserProgress() {
   const reportRef = useRef<HTMLDivElement>(null);
   
   const { user } = useAuth();
-  const lastLogin = localStorage.getItem('last_login') || '-';
-  const lastLogout = localStorage.getItem('last_logout') || '-';
+  const lastLogin = user ? (localStorage.getItem(`last_login_${user.id}`) || '-') : '-';
+  const lastLogout = user ? (localStorage.getItem(`last_logout_${user.id}`) || '-') : '-';
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);

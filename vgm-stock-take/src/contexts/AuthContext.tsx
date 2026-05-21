@@ -25,13 +25,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = (userData: User) => {
     setUser(userData);
     localStorage.setItem('vgm_user', JSON.stringify(userData));
-    localStorage.setItem('last_login', new Date().toLocaleString());
+    localStorage.setItem(`last_login_${userData.id}`, new Date().toLocaleString());
   };
 
   const logout = () => {
+    if (user) {
+      localStorage.setItem(`last_logout_${user.id}`, new Date().toLocaleString());
+    }
     setUser(null);
     localStorage.removeItem('vgm_user');
-    localStorage.setItem('last_logout', new Date().toLocaleString());
   };
 
   useEffect(() => {
