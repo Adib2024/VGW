@@ -68,8 +68,8 @@ export default function StockTakeDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 

@@ -17,8 +17,36 @@ export default function UserProgress() {
   const reportRef = useRef<HTMLDivElement>(null);
   
   const { user } = useAuth();
-  const lastLogin = user ? (localStorage.getItem(`last_login_${user.id}`) || '-') : '-';
-  const lastLogout = user ? (localStorage.getItem(`last_logout_${user.id}`) || '-') : '-';
+  const [lastLogin, setLastLogin] = useState('-');
+  const [lastLogout, setLastLogout] = useState('-');
+
+  useEffect(() => {
+    if (user) {
+      supabase.from('audit_logs')
+        .select('created_at')
+        .eq('user_id', user.id)
+        .eq('action', 'LOGIN')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            setLastLogin(new Date(data[0].created_at).toLocaleString());
+          }
+        });
+        
+      supabase.from('audit_logs')
+        .select('created_at')
+        .eq('user_id', user.id)
+        .in('action', ['MANUAL_LOGOUT', 'AUTO_LOGOUT'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            setLastLogout(new Date(data[0].created_at).toLocaleString());
+          }
+        });
+    }
+  }, [user]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);

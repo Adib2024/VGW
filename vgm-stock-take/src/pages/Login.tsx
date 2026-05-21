@@ -99,7 +99,7 @@ export default function Login() {
         localStorage.removeItem('vgm_remembered_user');
       }
 
-      login({ id: data.id, name: data.name, role: data.role as Role });
+      await login({ id: data.id, name: data.name, role: data.role as Role });
       
       // Navigate based on role
       if (data.role === 'Admin' || data.role === 'Verifier') {

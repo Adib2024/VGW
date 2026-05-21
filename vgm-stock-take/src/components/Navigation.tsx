@@ -22,8 +22,8 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
     navigate(backTo);
   };
 
-  const confirmLogout = () => {
-    logout();
+  const confirmLogout = async () => {
+    await logout();
     navigate('/');
   };
 

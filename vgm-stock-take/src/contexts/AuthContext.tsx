@@ -23,53 +23,71 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  const login = (userData: User) => {
+  const login = async (userData: User) => {
     setUser(userData);
     localStorage.setItem('vgm_user', JSON.stringify(userData));
-    const now = new Date().toLocaleString();
-    localStorage.setItem(`last_login_${userData.id}`, now);
+    localStorage.setItem('vgm_last_activity', Date.now().toString());
+    
     // Persist to database for audit purposes
-    supabase.from('users').update({ last_login: now }).eq('id', userData.id).then();
+    const { error } = await supabase.from('audit_logs').insert({
+      user_id: userData.id,
+      action: 'LOGIN'
+    });
+    if (error) console.error("Error inserting audit log:", error);
   };
 
-  const logout = () => {
+  const logout = async () => {
     if (user) {
-      const now = new Date().toLocaleString();
-      localStorage.setItem(`last_logout_${user.id}`, now);
-      // Persist to database for audit purposes
-      supabase.from('users').update({ last_logout: now }).eq('id', user.id).then();
+      const { error } = await supabase.from('audit_logs').insert({
+        user_id: user.id,
+        action: 'MANUAL_LOGOUT'
+      });
+      if (error) console.error("Error inserting audit log:", error);
     }
     setUser(null);
     localStorage.removeItem('vgm_user');
   };
 
   useEffect(() => {
-    let timeoutId: number;
+    let heartbeatInterval: number;
 
-    const resetTimeout = () => {
-      clearTimeout(timeoutId);
+    const trackActivity = () => {
       if (user) {
-        timeoutId = window.setTimeout(() => {
-          logout();
-          window.location.href = '/';
-        }, 5 * 60 * 1000); // 5 minutes
+        localStorage.setItem('vgm_last_activity', Date.now().toString());
       }
     };
 
     if (user) {
-      resetTimeout();
-      window.addEventListener('mousemove', resetTimeout);
-      window.addEventListener('keydown', resetTimeout);
-      window.addEventListener('click', resetTimeout);
-      window.addEventListener('scroll', resetTimeout);
+      trackActivity();
+      window.addEventListener('mousemove', trackActivity);
+      window.addEventListener('keydown', trackActivity);
+      window.addEventListener('click', trackActivity);
+      window.addEventListener('scroll', trackActivity);
+
+      heartbeatInterval = window.setInterval(async () => {
+        const lastActivity = parseInt(localStorage.getItem('vgm_last_activity') || '0', 10);
+        const now = Date.now();
+        if (now - lastActivity > 5 * 60 * 1000) { // 5 minutes
+          clearInterval(heartbeatInterval);
+          
+          await supabase.from('audit_logs').insert({
+            user_id: user.id,
+            action: 'AUTO_LOGOUT'
+          });
+          
+          setUser(null);
+          localStorage.removeItem('vgm_user');
+          window.location.href = '/';
+        }
+      }, 1000);
     }
 
     return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('mousemove', resetTimeout);
-      window.removeEventListener('keydown', resetTimeout);
-      window.removeEventListener('click', resetTimeout);
-      window.removeEventListener('scroll', resetTimeout);
+      clearInterval(heartbeatInterval);
+      window.removeEventListener('mousemove', trackActivity);
+      window.removeEventListener('keydown', trackActivity);
+      window.removeEventListener('click', trackActivity);
+      window.removeEventListener('scroll', trackActivity);
     };
   }, [user]);
 

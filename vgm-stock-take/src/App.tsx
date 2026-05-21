@@ -11,6 +11,7 @@ import StockTakeListView from './pages/StockTake/ListView';
 import StockTakeCounting from './pages/StockTake/Counting';
 import AdminSettings from './pages/Admin/Settings';
 import UserProgress from './pages/Reports/UserProgress';
+import BatteryTracker from './pages/Battery/Tracker';
 
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: string[] }) => {
   const { user } = useAuth();
@@ -82,7 +83,7 @@ function AppRoutes() {
         } 
       />
       {/* Placeholder routes for other modules */}
-      <Route path="/battery" element={<ProtectedRoute allowedRoles={['Admin', 'Operator Batt']}><div className="container" style={{paddingTop: '5rem'}}><h2>Battery Module (WIP)</h2></div></ProtectedRoute>} />
+      <Route path="/battery" element={<ProtectedRoute allowedRoles={['Admin', 'Operator Batt']}><BatteryTracker /></ProtectedRoute>} />
       <Route path="/qa" element={<ProtectedRoute allowedRoles={['Admin', 'QA Inspector']}><div className="container" style={{paddingTop: '5rem'}}><h2>QA Module (WIP)</h2></div></ProtectedRoute>} />
     </Routes>
   );
