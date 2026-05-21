@@ -129,7 +129,7 @@ export default function Tracker() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--background-color)' }}>
-      <Navigation title="Battery Scanner" showBack={false} />
+      <Navigation title="Battery Scanner" showBack={true} />
       
       <div style={{ padding: '1rem', maxWidth: '600px', margin: '0 auto' }}>
         
