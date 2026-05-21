@@ -232,12 +232,12 @@ export default function AdminSettings() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f0f2f5' }}>
       <Navigation title={t('adminSettings')} backTo="/stock-take" />
       
-      <main className="container flex-col gap-6" style={{ flex: 1, padding: '2rem 1rem', maxWidth: '800px' }}>
-        
-        <Card>
+      <main style={{ flex: 1, padding: '2rem 1rem', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ width: '100%', maxWidth: '700px' }}>
+          <Card style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
             <div style={{ padding: '1rem', backgroundColor: 'rgba(59, 130, 246, 0.2)', borderRadius: '50%', color: 'var(--primary-color)' }}>
               <Upload size={24} />
@@ -372,6 +372,7 @@ export default function AdminSettings() {
           )}
 
         </Card>
+        </div>
         <style>{`
           @keyframes spin {
             to { transform: rotate(360deg); }

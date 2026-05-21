@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export type Role = 'Counter B17' | 'Counter B22' | 'Verifier' | 'Operator Batt' | 'QA Inspector' | 'Admin' | null;
 
@@ -33,6 +33,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('vgm_user');
     localStorage.setItem('last_logout', new Date().toLocaleString());
   };
+
+  useEffect(() => {
+    let timeoutId: number;
+
+    const resetTimeout = () => {
+      clearTimeout(timeoutId);
+      if (user) {
+        timeoutId = window.setTimeout(() => {
+          logout();
+          window.location.href = '/';
+        }, 5 * 60 * 1000); // 5 minutes
+      }
+    };
+
+    if (user) {
+      resetTimeout();
+      window.addEventListener('mousemove', resetTimeout);
+      window.addEventListener('keydown', resetTimeout);
+      window.addEventListener('click', resetTimeout);
+      window.addEventListener('scroll', resetTimeout);
+    }
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('mousemove', resetTimeout);
+      window.removeEventListener('keydown', resetTimeout);
+      window.removeEventListener('click', resetTimeout);
+      window.removeEventListener('scroll', resetTimeout);
+    };
+  }, [user]);
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
