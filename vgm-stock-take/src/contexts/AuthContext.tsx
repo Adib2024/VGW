@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(userData);
     localStorage.setItem('vgm_user', JSON.stringify(userData));
     localStorage.setItem('vgm_last_activity', Date.now().toString());
-    
+
     // Persist to database for audit purposes
     const { error } = await supabase.from('audit_logs').insert({
       user_id: userData.id,
@@ -90,11 +90,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       heartbeatInterval = window.setInterval(async () => {
         const lastActivity = parseInt(localStorage.getItem('vgm_last_activity') || '0', 10);
         const now = Date.now();
-        
+
         // If active in the last 90 seconds, ping the server
         if (now - lastActivity < 90 * 1000) {
-          await supabase.from('users').update({ 
-            last_ping: new Date().toISOString() 
+          await supabase.from('users').update({
+            last_ping: new Date().toISOString()
           }).eq('id', user.id);
         }
 
@@ -102,11 +102,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // The server-side pg_cron sweeper will handle inserting the AUTO_LOGOUT record.
         if (now - lastActivity > 5 * 60 * 1000) {
           clearInterval(heartbeatInterval);
-          
+
           await supabase.from('users').update({
             is_logged_in: false
           }).eq('id', user.id);
-          
+
           setUser(null);
           localStorage.removeItem('vgm_user');
           window.location.href = '/';

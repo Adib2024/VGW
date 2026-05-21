@@ -7,12 +7,12 @@ DECLARE
     expired_user RECORD;
 BEGIN
     FOR expired_user IN 
-        SELECT id, last_ping FROM users 
+        SELECT id, last_ping, last_device_type FROM users 
         WHERE is_logged_in = true 
         AND last_ping < NOW() - INTERVAL '5 minutes'
     LOOP
         INSERT INTO audit_logs (user_id, action, device_type, created_at)
-        VALUES (expired_user.id, 'AUTO_LOGOUT', 'Background Timeout', expired_user.last_ping + INTERVAL '5 minutes');
+        VALUES (expired_user.id, 'AUTO_LOGOUT', COALESCE(expired_user.last_device_type, 'Background Timeout'), expired_user.last_ping + INTERVAL '5 minutes');
         
         UPDATE users 
         SET is_logged_in = false 
