@@ -95,7 +95,7 @@ export default function StockTakeDashboard() {
       <style>{`
         .dash-main {
           min-height: 100vh;
-          background-color: #f0f2f5;
+          background: linear-gradient(135deg, #f0f9ff 0%, #bae6fd 100%);
           padding: 0.75rem;
           font-family: 'Inter', sans-serif;
           padding-bottom: 2rem;
@@ -105,7 +105,7 @@ export default function StockTakeDashboard() {
           flex-wrap: wrap;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 1rem;
+          margin-bottom: 1.5rem;
           gap: 0.5rem;
         }
         .dash-title {
@@ -113,39 +113,44 @@ export default function StockTakeDashboard() {
           font-weight: 800;
           color: #001e50;
           margin: 0 0 0.15rem 0;
+          letter-spacing: -0.02em;
         }
         .dash-grid {
           display: flex;
           flex-direction: column;
-          gap: 0.75rem;
+          gap: 0.85rem;
           max-width: 800px;
           margin: 0 auto;
         }
         .dash-card {
-          padding: 1rem !important;
-          border-radius: 12px !important;
-          background-color: #fff !important;
-          box-shadow: 0 4px 10px rgba(0,0,0,0.03) !important;
+          padding: 1rem 1.25rem !important;
+          border-radius: 16px !important;
+          background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%) !important;
+          backdrop-filter: blur(10px) !important;
+          border: 1px solid rgba(255,255,255,0.8) !important;
+          box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.025) !important;
           cursor: pointer;
-          transition: transform 0.2s;
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .dash-card:hover {
-          transform: translateY(-2px);
+          transform: translateY(-3px);
+          box-shadow: 0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04) !important;
         }
         .dash-card-header {
           display: flex;
-          gap: 0.75rem;
-          margin-bottom: 0.75rem;
+          gap: 0.85rem;
+          margin-bottom: 0.85rem;
           align-items: center;
         }
         .dash-card-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
+          width: 44px;
+          height: 44px;
+          border-radius: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
         .dash-card-icon img {
           width: 28px;
@@ -154,88 +159,95 @@ export default function StockTakeDashboard() {
         .dash-card-title {
           margin: 0 0 0.15rem 0;
           font-size: 1.05rem;
-          color: #001e50;
+          color: #0f172a;
           font-weight: 700;
+          letter-spacing: -0.01em;
         }
         .dash-card-subtitle {
-          color: #666;
-          font-size: 0.8rem;
+          color: #64748b;
+          font-size: 0.85rem;
         }
         .dash-actions {
           display: flex;
           flex-direction: column;
-          gap: 0.75rem;
+          gap: 0.85rem;
           max-width: 800px;
-          margin: 1rem auto 0 auto;
+          margin: 1.5rem auto 0 auto;
         }
         .dash-btn {
           width: 100%;
-          padding: 0.85rem;
-          border-radius: 10px;
-          background-color: #fff;
-          border: none;
-          box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+          padding: 1rem;
+          border-radius: 14px;
+          background: linear-gradient(145deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255,255,255,0.8);
+          box-shadow: 0 4px 10px rgba(0,0,0,0.04);
           display: flex;
           justify-content: center;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.6rem;
           font-size: 0.95rem;
           font-weight: 700;
           cursor: pointer;
-          transition: transform 0.1s;
+          transition: transform 0.2s, box-shadow 0.2s;
         }
         .dash-btn:active {
           transform: scale(0.98);
         }
+        .dash-btn:hover {
+          box-shadow: 0 10px 15px -3px rgba(0,0,0,0.06);
+        }
         
         @media (min-width: 768px) {
           .dash-main {
-            padding: 1.5rem;
+            padding: 2rem 1.5rem;
             padding-bottom: 3rem;
           }
           .dash-header {
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
             gap: 1rem;
           }
           .dash-title {
-            font-size: 1.75rem;
+            font-size: 2rem;
           }
           .dash-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.25rem;
+            gap: 1.5rem;
           }
           .dash-card {
-            padding: 1.5rem !important;
-            border-radius: 16px !important;
+            padding: 1.75rem 1.5rem !important;
+            border-radius: 20px !important;
           }
           .dash-card-header {
-            gap: 1rem;
+            gap: 1.25rem;
             margin-bottom: 1.5rem;
           }
           .dash-card-icon {
-            width: 48px;
-            height: 48px;
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
           }
           .dash-card-icon img {
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
           }
           .dash-card-title {
-            font-size: 1.15rem;
+            font-size: 1.25rem;
             margin-bottom: 0.25rem;
           }
           .dash-card-subtitle {
-            font-size: 0.875rem;
+            font-size: 0.95rem;
           }
           .dash-actions {
-            gap: 1rem;
-            margin-top: 2rem;
+            flex-direction: row;
+            gap: 1.25rem;
+            margin-top: 2.5rem;
           }
           .dash-btn {
-            padding: 1rem;
-            border-radius: 12px;
-            font-size: 1rem;
+            padding: 1.25rem;
+            border-radius: 16px;
+            font-size: 1.05rem;
           }
         }
       `}</style>
@@ -244,10 +256,10 @@ export default function StockTakeDashboard() {
         {/* HEADER SECTION */}
         <div className="dash-header">
           {/* Left Side: Title & User */}
-          <div style={{ flex: '1 1 auto', minWidth: '150px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ flex: '1 1 auto', minWidth: '150px', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
             {(user?.role === 'Admin' || user?.role === 'Verifier') && (
-              <button onClick={() => navigate('/hub')} style={{ padding: '0.4rem', borderRadius: '8px', border: '1px solid #ccc', backgroundColor: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#333' }}>
-                <ChevronLeft size={18} />
+              <button onClick={() => navigate('/hub')} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(5px)', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#334155', boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}>
+                <ChevronLeft size={20} />
               </button>
             )}
             <div>
