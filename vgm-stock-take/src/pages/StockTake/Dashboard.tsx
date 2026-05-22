@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -30,29 +30,41 @@ export default function StockTakeDashboard() {
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const isMounted = useRef(true);
 
   useEffect(() => {
+    isMounted.current = true;
     fetchStats();
     const tables = ['b17', 'b22', 'loma', 'b22_seq'];
     const channels = tables.map(table =>
       supabase.channel(`${table}-changes`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: table }, () => fetchStats(false))
+        .on('postgres_changes', { event: '*', schema: 'public', table: table }, () => {
+          if (isMounted.current) fetchStats(false);
+        })
         .subscribe()
     );
-    return () => { channels.forEach(ch => supabase.removeChannel(ch)); };
+    return () => { 
+      isMounted.current = false;
+      channels.forEach(ch => supabase.removeChannel(ch)); 
+    };
   }, []);
 
   const fetchStats = async (isManualRefresh: boolean = false) => {
-    if (isManualRefresh) setIsRefreshing(true);
+    if (isManualRefresh && isMounted.current) setIsRefreshing(true);
     try {
       const tables = ['b17', 'b22', 'loma', 'b22_seq'];
-      const promises = tables.map(table => fetchAllRows(table));
+      
+      // OPTIMIZATION: Only fetch 'status, batch_id, metadata' instead of '*'
+      const promises = tables.map(table => 
+        supabase.from(table).select('status, batch_id, metadata')
+      );
+      
       const results = await Promise.all(promises);
 
       const newStats: Record<string, ZoneStats> = {};
       results.forEach((res, index) => {
         const table = tables[index];
-        const data = res || [];
+        const data = res.data || [];
 
         // Find latest batch_id
         const batches = [...new Set(data.map((r: any) => r.batch_id || r.metadata?.batch_id).filter(Boolean))].sort().reverse();
@@ -68,7 +80,8 @@ export default function StockTakeDashboard() {
         const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
         newStats[table] = { total, completed, percentage };
       });
-      setStats(newStats);
+      
+      if (isMounted.current) setStats(newStats);
 
       if (isManualRefresh) {
         addToast(t('dataRefreshed'), 'success');
@@ -76,9 +89,11 @@ export default function StockTakeDashboard() {
     } catch (err) {
       console.error('Error fetching stats:', err);
     } finally {
-      if (isManualRefresh) {
+      if (isManualRefresh && isMounted.current) {
         // Add a small delay so the user can see the spin animation even if fetch is very fast
-        setTimeout(() => setIsRefreshing(false), 500);
+        setTimeout(() => {
+          if (isMounted.current) setIsRefreshing(false);
+        }, 500);
       }
     }
   };

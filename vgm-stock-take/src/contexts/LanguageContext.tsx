@@ -96,7 +96,16 @@ const translations: Translations = {
     allStatuses: 'All Statuses',
     allLocations: 'All Locations',
     generatedOn: 'Generated on',
-    verifiedBy: 'Verified By'
+    verifiedBy: 'Verified By',
+    itemDetails: 'Item Details',
+    edit: 'Edit',
+    unlock: 'Unlock',
+    locked: 'Locked',
+    save: 'Save',
+    itemInformation: 'Item Information',
+    countData: 'Count Data',
+    verifyNow: 'Verify Now',
+    addRemarkPlaceholder: 'Click to add remark...'
   },
   BM: {
     login: 'Log Masuk',
@@ -185,7 +194,16 @@ const translations: Translations = {
     allStatuses: 'Semua Status',
     allLocations: 'Semua Lokasi',
     generatedOn: 'Dijana pada',
-    verifiedBy: 'Disahkan Oleh'
+    verifiedBy: 'Disahkan Oleh',
+    itemDetails: 'Butiran Item',
+    edit: 'Sunting',
+    unlock: 'Buka Kunci',
+    locked: 'Terkunci',
+    save: 'Simpan',
+    itemInformation: 'Maklumat Item',
+    countData: 'Data Kiraan',
+    verifyNow: 'Sahkan Sekarang',
+    addRemarkPlaceholder: 'Klik untuk tambah catatan...'
   },
   DE: {
     login: 'Anmelden',
@@ -274,7 +292,16 @@ const translations: Translations = {
     allStatuses: 'Alle Status',
     allLocations: 'Alle Standorte',
     generatedOn: 'Erstellt am',
-    verifiedBy: 'Überprüft von'
+    verifiedBy: 'Überprüft von',
+    itemDetails: 'Artikeldetails',
+    edit: 'Bearbeiten',
+    unlock: 'Entsperren',
+    locked: 'Gesperrt',
+    save: 'Speichern',
+    itemInformation: 'Artikelinformationen',
+    countData: 'Zähldaten',
+    verifyNow: 'Jetzt Bestätigen',
+    addRemarkPlaceholder: 'Klicken Sie, um eine Bemerkung hinzuzufügen...'
   }
 };
 

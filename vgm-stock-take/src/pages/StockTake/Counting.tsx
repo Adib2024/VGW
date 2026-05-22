@@ -3,27 +3,34 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabase';
 import { Save, Lock, Edit3, Circle } from 'lucide-react';
+
+import { Part } from '../../types/database';
 
 export default function StockTakeCounting() {
   const { table, id } = useParams<{ table: string; id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addToast } = useToast();
+  const { t } = useLanguage();
 
-  const [part, setPart] = useState<any>(null);
+  const [part, setPart] = useState<Part | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const isMounted = React.useRef(true);
 
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [adminUnlock, setAdminUnlock] = useState(false);
 
   useEffect(() => {
+    isMounted.current = true;
     if (id) fetchPart();
+    return () => { isMounted.current = false; };
   }, [id]);
 
   const fetchPart = async () => {
@@ -31,23 +38,25 @@ export default function StockTakeCounting() {
       if (!table || !id) throw new Error('Missing parameters');
       const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
       if (error) throw error;
-      setPart(data);
-      const initialForm: Record<string, string> = {};
-      Object.keys(data).forEach(key => {
-        if (data[key] !== null && data[key] !== undefined) {
-          if (/remark|luqman/i.test(key)) {
-            initialForm[key] = ''; // Start empty for typing new remark
-          } else {
-            initialForm[key] = String(data[key]);
+      if (isMounted.current) {
+        setPart(data);
+        const initialForm: Record<string, string> = {};
+        Object.keys(data).forEach(key => {
+          if (data[key] !== null && data[key] !== undefined) {
+            if (/remark|luqman/i.test(key)) {
+              initialForm[key] = ''; // Start empty for typing new remark
+            } else {
+              initialForm[key] = String(data[key]);
+            }
           }
-        }
-      });
-      setFormData(initialForm);
+        });
+        setFormData(initialForm);
+      }
     } catch (err) {
       console.error(err);
       addToast('Failed to load part details', 'error');
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   };
 
@@ -157,8 +166,8 @@ export default function StockTakeCounting() {
     }
   };
 
-  if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>;
-  if (!part) return <div style={{ padding: '2rem', textAlign: 'center' }}>Part not found</div>;
+  if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>{t('loadingData')}</div>;
+  if (!part) return <div style={{ padding: '2rem', textAlign: 'center' }}>{t('noParts')}</div>;
 
   const counterKeys = part ? Object.keys(part).filter(k => /box|seq/i.test(k)).sort() : [];
   const verifierKeys = part ? Object.keys(part).filter(k => /recount/i.test(k)).sort() : [];
@@ -200,13 +209,13 @@ export default function StockTakeCounting() {
           onClick={() => navigate(`/stock-take/list?table=${table}`)}
           style={{ padding: '0.5rem 1.5rem', backgroundColor: '#e2e8f0', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: '#475569' }}
         >
-          Back
+          {t('back')}
         </button>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0066cc', textTransform: 'uppercase', letterSpacing: '1px' }}>
             COUNTER {table?.toUpperCase()} VIEW
           </div>
-          <h1 style={{ margin: '0', fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>Item Details</h1>
+          <h1 style={{ margin: '0', fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{t('itemDetails')}</h1>
         </div>
       </div>
 
@@ -227,7 +236,7 @@ export default function StockTakeCounting() {
                     onClick={() => setIsEditing(true)}
                     style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: '8px', backgroundColor: 'transparent', cursor: 'pointer', color: '#0066cc', fontWeight: 600 }}
                   >
-                    <Edit3 size={16} /> Edit
+                    <Edit3 size={16} /> {t('edit')}
                   </button>
                 )}
                 {user?.role === 'Admin' && (
@@ -235,7 +244,7 @@ export default function StockTakeCounting() {
                     onClick={() => setAdminUnlock(!adminUnlock)}
                     style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: '8px', backgroundColor: adminUnlock ? '#f1f5f9' : 'transparent', cursor: 'pointer', color: '#64748b', fontWeight: 600 }}
                   >
-                    <Lock size={16} /> {adminUnlock ? 'Locked' : 'Unlock'}
+                    <Lock size={16} /> {adminUnlock ? t('locked') : t('unlock')}
                   </button>
                 )}
               </div>
@@ -245,13 +254,13 @@ export default function StockTakeCounting() {
                   onClick={handleCancel}
                   style={{ padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: '8px', backgroundColor: 'transparent', cursor: 'pointer', color: '#64748b', fontWeight: 600 }}
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button 
                   onClick={handleSave} disabled={saving}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.5rem', border: 'none', borderRadius: '8px', backgroundColor: '#0066cc', cursor: 'pointer', color: 'white', fontWeight: 600 }}
                 >
-                  <Save size={16} /> {saving ? 'Saving...' : 'Save'}
+                  <Save size={16} /> {saving ? t('saving') : t('save')}
                 </button>
               </div>
             )}
@@ -259,7 +268,7 @@ export default function StockTakeCounting() {
 
           {/* Item Information Table */}
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '0.875rem', fontWeight: 800, color: '#475569', marginBottom: '1rem', textTransform: 'uppercase' }}>Item Information</h3>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 800, color: '#475569', marginBottom: '1rem', textTransform: 'uppercase' }}>{t('itemInformation')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {displayCols.map((col) => (
                 <div key={col} style={{ display: 'flex', padding: '1rem 0', borderBottom: '1px solid #f1f5f9' }}>
@@ -278,7 +287,7 @@ export default function StockTakeCounting() {
           {(counterKeys.length > 0 || verifierKeys.length > 0) && (
             <div style={{ marginBottom: '2rem' }}>
               <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0066cc', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                Count Data <Circle size={18} fill="#334155" color="#334155" />
+                {t('countData')} <Circle size={18} fill="#334155" color="#334155" />
               </h3>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -347,19 +356,19 @@ export default function StockTakeCounting() {
           {/* Status & Remarks */}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', padding: '1rem 0', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ width: '120px', color: '#64748b', fontWeight: 600, fontSize: '0.875rem' }}>Status</div>
+              <div style={{ width: '120px', color: '#64748b', fontWeight: 600, fontSize: '0.875rem' }}>{t('status')}</div>
               <div style={{ flex: 1, color: '#0f172a', fontWeight: 800, fontSize: '0.875rem' }}>
-                {part.status}
+                {part.status === 'Verified' ? t('verified') : part.status === 'Counted' ? t('counted') : t('notCounted')}
               </div>
               {!isEditing && canEditRecount() && part.status === 'Counted' && (
                   <Button onClick={handleVerify} style={{ padding: '0.25rem 1rem', backgroundColor: '#22c55e', fontSize: '0.75rem', marginLeft: 'auto' }}>
-                    Verify Now
+                    {t('verifyNow')}
                   </Button>
               )}
             </div>
             
             <div style={{ display: 'flex', padding: '1rem 0', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ width: '120px', color: '#64748b', fontWeight: 600, fontSize: '0.875rem' }}>Verified By</div>
+              <div style={{ width: '120px', color: '#64748b', fontWeight: 600, fontSize: '0.875rem' }}>{t('verifiedBy')}</div>
               <div style={{ flex: 1, color: '#0f172a', fontWeight: 500, fontSize: '0.875rem' }}>{part.verify_by || '-'}</div>
             </div>
 
@@ -376,7 +385,7 @@ export default function StockTakeCounting() {
                      value={formData[key] || ''}
                      onChange={(e) => handleInputChange(key, e.target.value)}
                      disabled={!isEditing || (!canEditBox() && !canEditRecount())}
-                     placeholder="Click to add remark..."
+                     placeholder={t('addRemarkPlaceholder')}
                      rows={2}
                      style={{
                        width: '100%', padding: '0.75rem 1rem', borderRadius: '8px',

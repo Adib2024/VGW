@@ -17,10 +17,13 @@ export default function AdminSettings() {
   const [isLocked, setIsLocked] = useState(false);
   const [checkingLock, setCheckingLock] = useState(false);
   const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const isMounted = React.useRef(true);
 
   // Check if zone is locked when selectedZone changes
   React.useEffect(() => {
+    isMounted.current = true;
     checkZoneLock(selectedZone);
+    return () => { isMounted.current = false; };
   }, [selectedZone]);
 
   const checkZoneLock = async (zone: string) => {
@@ -30,15 +33,17 @@ export default function AdminSettings() {
       // If there is no error querying the table, the table EXISTS.
       // We lock it so the Admin must explicitly 'Unlock & Clear' (which Drops the table) 
       // ensuring we never upload into a corrupted or outdated schema.
-      if (!error) {
-        setIsLocked(true);
-      } else {
-        setIsLocked(false);
+      if (isMounted.current) {
+        if (!error) {
+          setIsLocked(true);
+        } else {
+          setIsLocked(false);
+        }
       }
     } catch (err) {
-      setIsLocked(false);
+      if (isMounted.current) setIsLocked(false);
     } finally {
-      setCheckingLock(false);
+      if (isMounted.current) setCheckingLock(false);
     }
   };
 
@@ -54,17 +59,19 @@ export default function AdminSettings() {
       const { error } = await supabase.rpc('create_dynamic_table', { query: `DROP TABLE IF EXISTS "${selectedZone}";` });
       if (error) throw error;
       
-      setIsLocked(false);
-      setMessage({ type: 'success', text: `Zone ${selectedZone.toUpperCase()} has been unlocked and cleared. You can now upload.` });
+      if (isMounted.current) {
+        setIsLocked(false);
+        setMessage({ type: 'success', text: `Zone ${selectedZone.toUpperCase()} has been unlocked and cleared. You can now upload.` });
+      }
     } catch (err: any) {
-      setMessage({ type: 'error', text: `Failed to unlock zone: ${err.message}` });
+      if (isMounted.current) setMessage({ type: 'error', text: `Failed to unlock zone: ${err.message}` });
     } finally {
-      setCheckingLock(false);
+      if (isMounted.current) setCheckingLock(false);
     }
   };
 
   const addLog = (log: string) => {
-    setLogs(prev => [...prev, log]);
+    if (isMounted.current) setLogs(prev => [...prev, log]);
   };
 
   const sanitizeString = (str: string) => {
@@ -163,6 +170,8 @@ export default function AdminSettings() {
         
         // Wait 1.5 seconds to ensure PostgREST schema cache reloads before we insert
         await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        if (!isMounted.current) return;
 
         // 3. Transform Data rows
         const batchId = new Date().toISOString();
@@ -213,10 +222,12 @@ export default function AdminSettings() {
           throw lastInsertError;
         }
 
+        if (!isMounted.current) return;
         addLog(`Successfully ingested ${transformedData.length} records!`);
         setMessage({ type: 'success', text: `Upload complete! ${transformedData.length} parts added.` });
         setIsLocked(true); // Lock it immediately after successful upload
       } catch (err: any) {
+        if (!isMounted.current) return;
         console.error(err);
         if (err.message?.includes('schema cache')) {
            setMessage({ type: 'error', text: `Supabase Cache Error: Still waiting for Supabase to refresh. Try clicking upload again in 5 seconds.` });
@@ -224,7 +235,7 @@ export default function AdminSettings() {
            setMessage({ type: 'error', text: err.message || 'Error processing file. Ensure it has Material, PartNo, Location, Zone columns.' });
         }
       } finally {
-        setUploading(false);
+        if (isMounted.current) setUploading(false);
         // Reset file input
         e.target.value = '';
       }

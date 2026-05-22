@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Navigation } from '../../components/Navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -27,14 +27,16 @@ export default function StockTakeListView() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, completed: 0, percentage: 0 });
+  const isMounted = useRef(true);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMounted.current && setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
+    isMounted.current = true;
     fetchParts();
 
     const tablesToWatch = tableParam ? [tableParam] : ['b17', 'b22', 'loma', 'b22_seq', 'check_part'];
@@ -42,12 +44,13 @@ export default function StockTakeListView() {
       supabase
         .channel(`${table}-list`)
         .on('postgres_changes', { event: '*', schema: 'public', table: table }, () => {
-          fetchParts();
+          if (isMounted.current) fetchParts();
         })
         .subscribe()
     );
 
     return () => {
+      isMounted.current = false;
       channels.forEach(ch => supabase.removeChannel(ch));
     };
   }, [tableParam, selectedBatch]);
@@ -69,31 +72,28 @@ export default function StockTakeListView() {
       // Extract unique batches and sort them newest first
       const allBatches = [...new Set(combinedParts.map(p => p.batch_id || p.metadata?.batch_id).filter(Boolean))] as string[];
       allBatches.sort().reverse();
-      setBatches(allBatches);
-
-      // Select the latest batch by default if none is selected
+      
       const currentBatch = selectedBatch || allBatches[0];
-      if (!selectedBatch && allBatches.length > 0) {
-        setSelectedBatch(allBatches[0]);
-      }
-
-      // Filter by the selected batch (or latest if none selected)
+      
       const currentParts = currentBatch
         ? combinedParts.filter(p => (p.batch_id === currentBatch || p.metadata?.batch_id === currentBatch))
-        : combinedParts; // Fallback for old data without batch_id
+        : combinedParts;
 
-      setParts(currentParts);
-
-      // Compute stats
       const total = currentParts.length;
       const completed = currentParts.filter(p => p.status === 'Verified' || p.status === 'Counted').length;
       const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
-      setStats({ total, completed, percentage });
+
+      if (isMounted.current) {
+        setBatches(allBatches);
+        if (!selectedBatch && allBatches.length > 0) setSelectedBatch(allBatches[0]);
+        setParts(currentParts);
+        setStats({ total, completed, percentage });
+      }
 
     } catch (err) {
       console.error('Error fetching parts:', err);
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   };
 
@@ -120,7 +120,7 @@ export default function StockTakeListView() {
 
   const displayColumns = getDisplayColumns();
   const locationColName = displayColumns[1]; 
-  const uniqueLocations = locationColName ? [...new Set(parts.map(p => (p as any)[locationColName]).filter(Boolean))] as string[] : [];
+  const uniqueLocations = locationColName ? [...new Set(parts.map(p => p[locationColName]).filter(Boolean))] as string[] : [];
   uniqueLocations.sort();
 
   const filteredParts = parts.filter(p => {
@@ -135,7 +135,7 @@ export default function StockTakeListView() {
     const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
     
     // 3. Location / Rack Match
-    const matchesLocation = locationFilter === 'all' || (locationColName && (p as any)[locationColName] === locationFilter);
+    const matchesLocation = locationFilter === 'all' || (locationColName && p[locationColName] === locationFilter);
 
     return matchesSearch && matchesStatus && matchesLocation;
   });
