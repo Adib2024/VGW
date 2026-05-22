@@ -85,7 +85,18 @@ const translations: Translations = {
     loadingData: 'Loading data...',
     lastUpdated: 'Last Updated',
     showingLatestUpdates: 'Showing latest 20 updates. Generated on',
-    dataRefreshed: 'Data refreshed successfully!'
+    dataRefreshed: 'Data refreshed successfully!',
+    downloadCsv: 'Download CSV',
+    userSummary: 'User Summary',
+    name: 'Name',
+    lastLogin: 'Last Login',
+    lastLogout: 'Last Logout',
+    filterByStatus: 'Filter by Status',
+    filterByLocation: 'Filter by Location',
+    allStatuses: 'All Statuses',
+    allLocations: 'All Locations',
+    generatedOn: 'Generated on',
+    verifiedBy: 'Verified By'
   },
   BM: {
     login: 'Log Masuk',
@@ -163,7 +174,18 @@ const translations: Translations = {
     loadingData: 'Memuatkan data...',
     lastUpdated: 'Kemas Kini Terakhir',
     showingLatestUpdates: 'Menunjukkan 20 kemas kini terkini. Dijana pada',
-    dataRefreshed: 'Data berjaya disegarkan!'
+    dataRefreshed: 'Data berjaya disegarkan!',
+    downloadCsv: 'Muat Turun CSV',
+    userSummary: 'Ringkasan Pengguna',
+    name: 'Nama',
+    lastLogin: 'Log Masuk Terakhir',
+    lastLogout: 'Log Keluar Terakhir',
+    filterByStatus: 'Tapis ikut Status',
+    filterByLocation: 'Tapis ikut Lokasi',
+    allStatuses: 'Semua Status',
+    allLocations: 'Semua Lokasi',
+    generatedOn: 'Dijana pada',
+    verifiedBy: 'Disahkan Oleh'
   },
   DE: {
     login: 'Anmelden',
@@ -241,7 +263,18 @@ const translations: Translations = {
     loadingData: 'Daten werden geladen...',
     lastUpdated: 'Zuletzt aktualisiert',
     showingLatestUpdates: 'Zeigt die letzten 20 Updates an. Generiert am',
-    dataRefreshed: 'Daten erfolgreich aktualisiert!'
+    dataRefreshed: 'Daten erfolgreich aktualisiert!',
+    downloadCsv: 'CSV herunterladen',
+    userSummary: 'Benutzerübersicht',
+    name: 'Name',
+    lastLogin: 'Letzter Login',
+    lastLogout: 'Letzter Logout',
+    filterByStatus: 'Nach Status filtern',
+    filterByLocation: 'Nach Standort filtern',
+    allStatuses: 'Alle Status',
+    allLocations: 'Alle Standorte',
+    generatedOn: 'Erstellt am',
+    verifiedBy: 'Überprüft von'
   }
 };
 

@@ -273,7 +273,10 @@ export default function StockTakeDashboard() {
           </div>
 
           {/* Right: Profile Toggle */}
-          <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', position: 'relative' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+              ({language})
+            </span>
             <button 
               onClick={() => setShowMenu(!showMenu)}
               style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#001e50', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', boxShadow: '0 4px 10px rgba(0,30,80,0.2)' }}

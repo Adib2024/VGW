@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabase';
 import { Download, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { BottomNav } from '../../components/ui/BottomNav';
 
 
@@ -18,6 +19,7 @@ export default function UserProgress() {
   const reportRef = useRef<HTMLDivElement>(null);
   
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [lastLogin, setLastLogin] = useState('-');
   const [loginDevice, setLoginDevice] = useState('-');
   const [lastLogout, setLastLogout] = useState('-');
@@ -136,19 +138,19 @@ export default function UserProgress() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Navigation title="User Progress Report" backTo="/stock-take" />
+      <Navigation title={t('userProgressReport') || 'User Progress Report'} backTo="/stock-take" />
       
       <main className="container flex-col gap-6" style={{ flex: 1, padding: '2rem 1rem 6rem' }}>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
           <Button onClick={handleDownloadCSV}>
-            <Download size={18} /> Download CSV
+            <Download size={18} /> {t('downloadCsv') || 'Download CSV'}
           </Button>
         </div>
 
         {/* User Summary Card */}
         <Card style={{ marginBottom: '1.5rem', padding: '0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--surface-color)', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>
-            <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--primary-color)' }}>User Summary</h2>
+            <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--primary-color)' }}>{t('userSummary') || 'User Summary'}</h2>
             <div style={{ backgroundColor: 'var(--primary-color)', color: 'white', padding: '0.5rem', borderRadius: '8px' }}>
               <UserIcon size={20} />
             </div>
@@ -156,22 +158,22 @@ export default function UserProgress() {
           <div style={{ padding: '1.5rem', backgroundColor: '#fff', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
-                <span style={{ color: '#64748b', fontWeight: 500 }}>Name:</span>
+                <span style={{ color: '#64748b', fontWeight: 500 }}>{t('name') || 'Name'}:</span>
                 <span style={{ fontWeight: 700, color: '#0f172a' }}>{user?.name || '-'}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
-                <span style={{ color: '#64748b', fontWeight: 500 }}>Role:</span>
+                <span style={{ color: '#64748b', fontWeight: 500 }}>{t('role')}:</span>
                 <span style={{ fontWeight: 700, color: '#0f172a' }}>{user?.role || '-'}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
-                <span style={{ color: '#64748b', fontWeight: 500 }}>Last Login:</span>
+                <span style={{ color: '#64748b', fontWeight: 500 }}>{t('lastLogin') || 'Last Login'}:</span>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                   <span style={{ fontWeight: 700, color: '#0f172a' }}>{lastLogin}</span>
                   {loginDevice !== '-' && <span style={{ fontSize: '0.75rem', color: '#64748b' }}>via {loginDevice}</span>}
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748b', fontWeight: 500 }}>Last Logout:</span>
+                <span style={{ color: '#64748b', fontWeight: 500 }}>{t('lastLogout') || 'Last Logout'}:</span>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                   <span style={{ fontWeight: 700, color: '#0f172a' }}>{lastLogout}</span>
                   {logoutDevice !== '-' && <span style={{ fontSize: '0.75rem', color: '#64748b' }}>via {logoutDevice}</span>}
@@ -187,24 +189,24 @@ export default function UserProgress() {
               VGM CKD - Progress Summary
             </h2>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '2rem' }}>
               <div style={{ backgroundColor: 'var(--surface-highlight)', padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                 <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--danger-color)' }}>
                   {parts.filter(p => p.status === 'Not Counted').length}
                 </div>
-                <div style={{ color: 'var(--text-secondary)' }}>Not Counted</div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', wordBreak: 'break-word', hyphens: 'auto' }}>{t('notCounted')}</div>
               </div>
               <div style={{ backgroundColor: 'var(--surface-highlight)', padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                 <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--warning-color)' }}>
                   {parts.filter(p => p.status === 'Counted').length}
                 </div>
-                <div style={{ color: 'var(--text-secondary)' }}>Counted</div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', wordBreak: 'break-word', hyphens: 'auto' }}>{t('counted')}</div>
               </div>
               <div style={{ backgroundColor: 'var(--surface-highlight)', padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                 <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--success-color)' }}>
                   {parts.filter(p => p.status === 'Verified').length}
                 </div>
-                <div style={{ color: 'var(--text-secondary)' }}>Verified</div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', wordBreak: 'break-word', hyphens: 'auto' }}>{t('verified')}</div>
               </div>
             </div>
 
@@ -218,31 +220,31 @@ export default function UserProgress() {
               }} />
             </div>
             <div style={{ textAlign: 'center', marginTop: '-2rem', marginBottom: '3rem', fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
-              {parts.filter(p => p.status === 'Verified').length} of {parts.length} verified ({parts.length ? Math.round((parts.filter(p => p.status === 'Verified').length / parts.length) * 100) : 0}%)
+              {parts.filter(p => p.status === 'Verified').length} {t('verified').toLowerCase()} ({parts.length ? Math.round((parts.filter(p => p.status === 'Verified').length / parts.length) * 100) : 0}%)
             </div>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
               <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>Filter by Status</label>
+                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>{t('filterByStatus') || 'Filter by Status'}</label>
                 <select 
                   value={statusFilter} 
                   onChange={(e) => setStatusFilter(e.target.value)}
                   style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
                 >
-                  <option value="all">All Statuses</option>
-                  <option value="Not Counted">Not Counted</option>
-                  <option value="Counted">Counted</option>
-                  <option value="Verified">Verified</option>
+                  <option value="all">{t('allStatuses') || 'All Statuses'}</option>
+                  <option value="Not Counted">{t('notCounted')}</option>
+                  <option value="Counted">{t('counted')}</option>
+                  <option value="Verified">{t('verified')}</option>
                 </select>
               </div>
               <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>Filter by Location</label>
+                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>{t('filterByLocation') || 'Filter by Location'}</label>
                 <select 
                   value={locationFilter} 
                   onChange={(e) => setLocationFilter(e.target.value)}
                   style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
                 >
-                  <option value="all">All Locations</option>
+                  <option value="all">{t('allLocations') || 'All Locations'}</option>
                   {uniqueLocations.map(loc => (
                     <option key={loc} value={loc}>{loc}</option>
                   ))}
@@ -250,9 +252,9 @@ export default function UserProgress() {
               </div>
             </div>
 
-            <h3 style={{ marginBottom: '1rem' }}>Recent Activity</h3>
+            <h3 style={{ marginBottom: '1rem' }}>{t('recentActivity')}</h3>
             {loading ? (
-              <p>Loading data...</p>
+              <p>{t('loadingData') || 'Loading data...'}</p>
             ) : (
               <div>
                 {isMobile ? (
@@ -266,23 +268,23 @@ export default function UserProgress() {
                           </span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '0.5rem' }}>
-                            <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700 }}>Location / Zone</span>
-                            <span style={{ fontWeight: 700, color: '#334155', fontSize: '0.875rem' }}>{p.location || p.rack_number || p.storage_bin || '-'} ({p._table})</span>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid #f8fafc', paddingBottom: '0.5rem' }}>
+                            <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0 }}>{t('location') || 'Location'} / {t('zone') || 'Zone'}</span>
+                            <span style={{ fontWeight: 700, color: '#334155', fontSize: '0.875rem', textAlign: 'right' }}>{p.location || p.rack_number || p.storage_bin || '-'} ({p._table})</span>
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '0.5rem' }}>
-                            <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700 }}>Verified By</span>
-                            <span style={{ fontWeight: 700, color: '#334155', fontSize: '0.875rem' }}>{p.verify_by || '-'}</span>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid #f8fafc', paddingBottom: '0.5rem' }}>
+                            <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0 }}>{t('verifiedBy') || 'Verified By'}</span>
+                            <span style={{ fontWeight: 700, color: '#334155', fontSize: '0.875rem', textAlign: 'right' }}>{p.verify_by || '-'}</span>
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem' }}>
-                            <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700 }}>Batch ID</span>
-                            <span style={{ fontWeight: 700, color: '#334155', fontSize: '0.875rem' }}>{p.batch_id ? new Date(p.batch_id).toLocaleString() : '-'}</span>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', paddingBottom: '0.5rem' }}>
+                            <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0 }}>Batch ID</span>
+                            <span style={{ fontWeight: 700, color: '#334155', fontSize: '0.875rem', textAlign: 'right' }}>{p.batch_id ? new Date(p.batch_id).toLocaleString() : '-'}</span>
                           </div>
                         </div>
                       </div>
                     ))}
                     {filteredParts.length === 0 && (
-                      <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No activity found.</p>
+                      <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>{t('noParts') || 'No activity found.'}</p>
                     )}
                   </div>
                 ) : (
@@ -290,10 +292,10 @@ export default function UserProgress() {
                     <table style={{ width: '100%', fontSize: '0.875rem', minWidth: '600px', borderCollapse: 'collapse' }}>
                       <thead>
                         <tr style={{ borderBottom: '2px solid var(--border-color)', backgroundColor: 'var(--surface-highlight)' }}>
-                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>Material</th>
-                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>Location / Zone</th>
-                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>Status</th>
-                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>Verified By</th>
+                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>{t('material') || 'Material'}</th>
+                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>{t('location') || 'Location'} / {t('zone') || 'Zone'}</th>
+                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>{t('status') || 'Status'}</th>
+                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>{t('verifiedBy') || 'Verified By'}</th>
                           <th style={{ padding: '0.75rem', textAlign: 'left' }}>Batch ID (Date)</th>
                         </tr>
                       </thead>
@@ -322,7 +324,7 @@ export default function UserProgress() {
                         ))}
                         {filteredParts.length === 0 && (
                           <tr>
-                            <td colSpan={5} style={{ padding: '2rem', textAlign: 'center' }}>No activity found.</td>
+                            <td colSpan={5} style={{ padding: '2rem', textAlign: 'center' }}>{t('noParts') || 'No activity found.'}</td>
                           </tr>
                         )}
                       </tbody>
@@ -331,7 +333,7 @@ export default function UserProgress() {
                 )}
               </div>
             )}
-              Generated on {new Date().toLocaleString()}.
+              {t('showingLatestUpdates') || 'Showing latest updates. Generated on'} {new Date().toLocaleString()}.
           </div>
         </Card>
       </main>

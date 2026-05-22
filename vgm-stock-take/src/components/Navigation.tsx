@@ -53,9 +53,10 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          flex: 1;
+          min-width: 0;
+          user-select: none;
+          -webkit-user-select: none;
         }
         .profile-menu {
           position: absolute;
@@ -111,6 +112,8 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
           }
           .global-nav-title {
             font-size: 1.5rem;
+            user-select: none;
+            -webkit-user-select: none;
           }
         }
       `}</style>
@@ -119,15 +122,20 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
         {/* Left: Brand & Title */}
         <div className="global-nav-title">
           {showBack && (
-            <button onClick={handleBack} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0, display: 'flex', color: '#001e50', marginRight: '0.25rem' }}>
+            <button onClick={handleBack} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0, display: 'flex', color: '#001e50', marginRight: '0.25rem', flexShrink: 0 }}>
               <ChevronLeft size={24} />
             </button>
           )}
-          {title}
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+            {title}
+          </span>
         </div>
 
-        {/* Right: Profile Toggle */}
-        <div style={{ position: 'relative' }}>
+        {/* Right: Profile Toggle & Language Indicator */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', position: 'relative' }}>
+          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+            ({language})
+          </span>
           <button 
             onClick={() => setShowMenu(!showMenu)}
             style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#001e50', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', boxShadow: '0 4px 10px rgba(0,30,80,0.2)' }}

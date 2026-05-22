@@ -26,7 +26,7 @@ export default function Hub() {
   }, []);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', userSelect: 'none', WebkitUserSelect: 'none' }}>
       <Navigation title={t('hub')} showBack={false} />
       
       <style>{`
