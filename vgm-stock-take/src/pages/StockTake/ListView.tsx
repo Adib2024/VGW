@@ -145,7 +145,7 @@ export default function StockTakeListView() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navigation 
-        title={`List View${tableParam ? ` - LOCATION ${tableParam.toUpperCase().replace('_', ' ')}` : ''}`} 
+        title="List View" 
         backTo="/stock-take" 
       />
 

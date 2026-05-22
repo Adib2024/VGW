@@ -168,11 +168,10 @@ export default function StockTakeDashboard() {
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
-          border: 1px solid #e2e8f0;
         }
         .dash-card-icon img {
-          width: 28px;
-          height: 28px;
+          width: 38px;
+          height: 38px;
         }
         .dash-card-title {
           margin: 0 0 0.2rem 0;
@@ -313,10 +312,10 @@ export default function StockTakeDashboard() {
         {/* CARDS GRID */}
         <div className="dash-grid">
           {[
-            { key: 'b17', title: 'LOCATION B17', delay: '0s', duration: '15s' },
-            { key: 'b22', title: 'LOCATION B22', delay: '1.5s', duration: '16.5s' },
-            { key: 'loma', title: 'LOMA', delay: '3.2s', duration: '14.5s' },
-            { key: 'b22_seq', title: 'B22 SEQ', delay: '4.8s', duration: '17s' }
+            { key: 'b17', title: 'LOCATION B17', delay: '0s', duration: '15s', bg: '#e0f2fe' },
+            { key: 'b22', title: 'LOCATION B22', delay: '1.5s', duration: '16.5s', bg: '#ffe4e6' },
+            { key: 'loma', title: 'LOMA', delay: '3.2s', duration: '14.5s', bg: '#dcfce7' },
+            { key: 'b22_seq', title: 'B22 SEQ', delay: '4.8s', duration: '17s', bg: '#fef3c7' }
           ].map((zone) => {
             const s = stats[zone.key];
             return (

@@ -18,6 +18,22 @@ export const BottomNav: React.FC = () => {
     return location.pathname === path && !location.search.includes('table=check_part');
   };
 
+  const handleNavClick = (path: string) => {
+    // If currently on dashboard, PUSH to history. If on a tab, REPLACE history.
+    // If clicking Dashboard from a tab, POP history so the physical back button returns to Hub.
+    const isDashboard = location.pathname === '/stock-take' || location.pathname === '/hub';
+    
+    if (path === '/stock-take' || path === '/hub') {
+       if (!isDashboard && window.history.state && window.history.state.idx > 0) {
+         navigate(-1); // Pop the current tab to return to the Dashboard that pushed it
+       } else {
+         navigate(path); // Fallback
+       }
+    } else {
+       navigate(path, { replace: !isDashboard });
+    }
+  };
+
   return (
     <>
       <style>{`
@@ -76,7 +92,7 @@ export const BottomNav: React.FC = () => {
       <div className="bottom-nav">
         <button 
           className={`nav-item ${isActive('/stock-take') || isActive('/hub') ? 'active' : ''}`} 
-          onClick={() => navigate('/stock-take', { replace: true })}
+          onClick={() => handleNavClick('/stock-take')}
         >
           <LayoutDashboard size={24} strokeWidth={isActive('/stock-take') || isActive('/hub') ? 2.5 : 2} />
           <span>Dashboard</span>
@@ -84,7 +100,7 @@ export const BottomNav: React.FC = () => {
         
         <button 
           className={`nav-item ${isActive('/reports/progress') ? 'active' : ''}`} 
-          onClick={() => navigate('/reports/progress', { replace: true })}
+          onClick={() => handleNavClick('/reports/progress')}
         >
           <Users size={24} strokeWidth={isActive('/reports/progress') ? 2.5 : 2} />
           <span>{t('userProgress') || 'Progress'}</span>
@@ -92,7 +108,7 @@ export const BottomNav: React.FC = () => {
         
         <button 
           className={`nav-item ${isActive('/stock-take/list', 'table=check_part') ? 'active' : ''}`} 
-          onClick={() => navigate('/stock-take/list?table=check_part', { replace: true })}
+          onClick={() => handleNavClick('/stock-take/list?table=check_part')}
         >
           <AlertTriangle size={24} strokeWidth={isActive('/stock-take/list', 'table=check_part') ? 2.5 : 2} />
           <span>Check Part</span>
@@ -101,7 +117,7 @@ export const BottomNav: React.FC = () => {
         {user?.role === 'Admin' && (
           <button 
             className={`nav-item ${isActive('/admin/settings') ? 'active' : ''}`} 
-            onClick={() => navigate('/admin/settings', { replace: true })}
+            onClick={() => handleNavClick('/admin/settings')}
           >
             <Settings size={24} strokeWidth={isActive('/admin/settings') ? 2.5 : 2} />
             <span>Admin</span>
