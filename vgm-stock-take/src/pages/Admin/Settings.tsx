@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { Upload, AlertTriangle, CheckCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { BottomNav } from '../../components/ui/BottomNav';
 
 export default function AdminSettings() {
   const { t } = useLanguage();
@@ -235,7 +236,7 @@ export default function AdminSettings() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f0f2f5' }}>
       <Navigation title={t('adminSettings')} backTo="/stock-take" />
       
-      <main style={{ flex: 1, padding: '2rem 1rem', display: 'flex', justifyContent: 'center' }}>
+      <main style={{ flex: 1, padding: '2rem 1rem 6rem', display: 'flex', justifyContent: 'center' }}>
         <div style={{ width: '100%', maxWidth: '700px' }}>
           <Card style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -414,6 +415,7 @@ export default function AdminSettings() {
           </div>
         </div>
       )}
+      <BottomNav />
     </div>
   );
 }

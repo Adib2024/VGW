@@ -7,8 +7,8 @@ import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { supabase, fetchAllRows } from '../../lib/supabase';
 import { Search } from 'lucide-react';
-
 import { useAuth } from '../../contexts/AuthContext';
+import { BottomNav } from '../../components/ui/BottomNav';
 
 export default function StockTakeListView() {
   const { t } = useLanguage();
@@ -149,7 +149,7 @@ export default function StockTakeListView() {
         backTo="/stock-take" 
       />
 
-      <main className="container flex-col gap-6" style={{ flex: 1, padding: '2rem 1rem' }}>
+      <main className="container flex-col gap-6" style={{ flex: 1, padding: '2rem 1rem 6rem' }}>
 
         {/* Progress Bar with Car Animation */}
         {!loading && (
@@ -370,6 +370,7 @@ export default function StockTakeListView() {
           </div>
         </Card>
       </main>
+      <BottomNav />
     </div>
   );
 }

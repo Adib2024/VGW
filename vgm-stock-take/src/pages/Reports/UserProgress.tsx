@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabase';
 import { Download, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { BottomNav } from '../../components/ui/BottomNav';
 
 
 export default function UserProgress() {
@@ -137,7 +138,7 @@ export default function UserProgress() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navigation title="User Progress Report" backTo="/stock-take" />
       
-      <main className="container flex-col gap-6" style={{ flex: 1, padding: '2rem 1rem' }}>
+      <main className="container flex-col gap-6" style={{ flex: 1, padding: '2rem 1rem 6rem' }}>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
           <Button onClick={handleDownloadCSV}>
             <Download size={18} /> Download CSV
@@ -334,6 +335,7 @@ export default function UserProgress() {
           </div>
         </Card>
       </main>
+      <BottomNav />
     </div>
   );
 }
