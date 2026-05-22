@@ -8,22 +8,32 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'VGM Stock Take 2026',
-        short_name: 'VGM Stock',
-        description: 'VGM Stock Take app for efficient warehouse auditing',
-        theme_color: '#0f172a',
-        background_color: '#ffffff',
+        name: 'VGM CKD',
+        short_name: 'VGM CKD',
+        description: 'VGM CKD App for efficient warehouse auditing',
+        theme_color: '#001e50',
+        background_color: '#f0f9ff',
         display: 'standalone',
         icons: [
           {
-            src: 'vw-logo.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
             purpose: 'any maskable'
           }
         ]
+      },
+      devOptions: {
+        enabled: true,
+        type: 'module',
       }
     })
   ],

@@ -80,7 +80,7 @@ const translations: Translations = {
     saving: 'Saving...',
     userProgressReport: 'User Progress Report',
     downloadPdf: 'Download PDF',
-    progressSummary: 'VGM Stock Take - Progress Summary',
+    progressSummary: 'VGM CKD - Progress Summary',
     recentActivity: 'Recent Activity',
     loadingData: 'Loading data...',
     lastUpdated: 'Last Updated',

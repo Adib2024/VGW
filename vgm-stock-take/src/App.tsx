@@ -35,7 +35,7 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
 function AppRoutes() {
   const loadingFallback = (
     <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#0f172a' }}>
-      <div style={{ color: '#3b82f6', fontSize: '1.25rem', fontWeight: 'bold' }}>Loading VGM Stock Take...</div>
+      <div style={{ color: '#3b82f6', fontSize: '1.25rem', fontWeight: 'bold' }}>Loading VGM CKD...</div>
     </div>
   );
 
