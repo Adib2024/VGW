@@ -2,9 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { useBattery } from '../hooks/useBattery';
-import { Button } from './ui/Button';
-import { ChevronLeft, LogOut, Battery, BatteryWarning } from 'lucide-react';
+import { ChevronLeft, LogOut } from 'lucide-react';
 
 interface NavigationProps {
   title: string;

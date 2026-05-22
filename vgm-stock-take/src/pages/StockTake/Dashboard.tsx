@@ -7,7 +7,7 @@ import { Card } from '../../components/ui/Card';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { BottomNav } from '../../components/ui/BottomNav';
 import { supabase, fetchAllRows } from '../../lib/supabase';
-import { RefreshCw, Users, AlertTriangle, ChevronLeft, Settings, LayoutDashboard, LogOut } from 'lucide-react';
+import { RefreshCw, ChevronLeft, LogOut } from 'lucide-react';
 
 interface ZoneStats {
   total: number;
