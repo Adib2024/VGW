@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/AuthContext';
@@ -21,7 +21,7 @@ export default function StockTakeCounting() {
   const [part, setPart] = useState<Part | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const isMounted = React.useRef(true);
+  const isMounted = useRef(true);
 
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [isEditing, setIsEditing] = useState(false);
@@ -85,6 +85,7 @@ export default function StockTakeCounting() {
   };
 
   const handleCancel = () => {
+    if (!part) return;
     setIsEditing(false);
     const initialForm: Record<string, string> = {};
     Object.keys(part).forEach(key => {

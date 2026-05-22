@@ -30,7 +30,7 @@ export default function StockTakeListView() {
   const isMounted = useRef(true);
 
   useEffect(() => {
-    const handleResize = () => setIsMounted.current && setIsMobile(window.innerWidth < 768);
+    const handleResize = () => isMounted.current && setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
