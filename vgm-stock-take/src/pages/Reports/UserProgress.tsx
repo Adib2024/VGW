@@ -176,19 +176,19 @@ export default function UserProgress() {
                 <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--danger-color)' }}>
                   {parts.filter(p => p.status === 'Not Counted').length}
                 </div>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', wordBreak: 'break-word', hyphens: 'auto' }}>{t('notCounted')}</div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t('notCounted')}</div>
               </div>
               <div style={{ backgroundColor: 'var(--surface-highlight)', padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                 <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--warning-color)' }}>
                   {parts.filter(p => p.status === 'Counted').length}
                 </div>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', wordBreak: 'break-word', hyphens: 'auto' }}>{t('counted')}</div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t('counted')}</div>
               </div>
               <div style={{ backgroundColor: 'var(--surface-highlight)', padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                 <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--success-color)' }}>
                   {parts.filter(p => p.status === 'Verified').length}
                 </div>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', wordBreak: 'break-word', hyphens: 'auto' }}>{t('verified')}</div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t('verified')}</div>
               </div>
             </div>
 
