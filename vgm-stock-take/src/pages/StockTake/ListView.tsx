@@ -58,7 +58,7 @@ export default function StockTakeListView() {
   const fetchParts = async () => {
     try {
       const tablesToFetch = tableParam ? [tableParam] : ['b17', 'b22', 'loma', 'b22_seq', 'check_part'];
-      const promises = tablesToFetch.map(table => fetchAllRows(table, 'id'));
+      const promises = tablesToFetch.map(table => fetchAllRows(table));
       const results = await Promise.all(promises);
 
       let combinedParts: any[] = [];

@@ -9,18 +9,19 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export async function fetchAllRows(table: string, orderColumn = 'id'): Promise<any[]> {
+export async function fetchAllRows(table: string, orderColumn = ''): Promise<any[]> {
   let allData: any[] = [];
   let from = 0;
   const step = 1000;
   let hasMore = true;
 
   while (hasMore) {
-    const { data, error } = await supabase
-      .from(table)
-      .select('*')
-      .order(orderColumn, { ascending: true })
-      .range(from, from + step - 1);
+    let query = supabase.from(table).select('*');
+    if (orderColumn) {
+      query = query.order(orderColumn, { ascending: true });
+    }
+    
+    const { data, error } = await query.range(from, from + step - 1);
 
     if (error) {
       console.error(`Error fetching from ${table}:`, error);

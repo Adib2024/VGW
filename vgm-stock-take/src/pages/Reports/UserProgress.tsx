@@ -202,6 +202,7 @@ export default function UserProgress() {
               }} />
             </div>
             <div style={{ textAlign: 'center', marginTop: '-2rem', marginBottom: '3rem', fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
+              <div style={{ fontSize: '1.25rem', color: '#0f172a', marginBottom: '0.5rem', fontWeight: 900 }}>Total Parts: {parts.length}</div>
               {parts.filter(p => p.status === 'Verified').length} {t('verified').toLowerCase()} ({parts.length ? Math.round((parts.filter(p => p.status === 'Verified').length / parts.length) * 100) : 0}%)
             </div>
 
