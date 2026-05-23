@@ -6,7 +6,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { Card } from '../../components/ui/Card';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { BottomNav } from '../../components/ui/BottomNav';
-import { supabase } from '../../lib/supabase';
+import { supabase, fetchAllRows } from '../../lib/supabase';
 import { RefreshCw, ChevronLeft, LogOut } from 'lucide-react';
 
 interface ZoneStats {
@@ -54,27 +54,15 @@ export default function StockTakeDashboard() {
     try {
       const tables = ['b17', 'b22', 'loma', 'b22_seq'];
       
-      // OPTIMIZATION: Only fetch 'status, batch_id, metadata' instead of '*'
-      const promises = tables.map(table => 
-        supabase.from(table).select('status, batch_id, metadata')
-      );
-      
+      const promises = tables.map(table => fetchAllRows(table));
       const results = await Promise.all(promises);
-
+      
       const newStats: Record<string, ZoneStats> = {};
       results.forEach((res, index) => {
         const table = tables[index];
-        const data = res.data || [];
+        const data = res || [];
 
-        // Find latest batch_id
-        const batches = [...new Set(data.map((r: any) => r.batch_id || r.metadata?.batch_id).filter(Boolean))].sort().reverse();
-        const latestBatch = batches[0];
-
-        // Filter by latest batch if it exists, otherwise use all (for legacy data)
-        const currentData = latestBatch
-          ? data.filter((r: any) => (r.batch_id === latestBatch || r.metadata?.batch_id === latestBatch))
-          : data;
-
+        const currentData = data;
         const total = currentData.length;
         const completed = currentData.filter((r: any) => r.status === 'Counted' || r.status === 'Verified').length;
         const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);

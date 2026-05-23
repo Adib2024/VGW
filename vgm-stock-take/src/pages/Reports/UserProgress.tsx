@@ -3,7 +3,7 @@ import { Navigation } from '../../components/Navigation';
 
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { supabase } from '../../lib/supabase';
+import { supabase, fetchAllRows } from '../../lib/supabase';
 import { Download, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -17,7 +17,7 @@ export default function UserProgress() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
   const reportRef = useRef<HTMLDivElement>(null);
-  
+  const isMounted = useRef(true);
   const { user } = useAuth();
   const { t } = useLanguage();
   const [lastLogin, setLastLogin] = useState('-');
@@ -62,7 +62,9 @@ export default function UserProgress() {
   }, []);
 
   useEffect(() => {
+    isMounted.current = true;
     fetchData();
+    return () => { isMounted.current = false; };
   }, []);
 
   const fetchData = async () => {
@@ -71,43 +73,23 @@ export default function UserProgress() {
       let allParts: any[] = [];
       
       for (const t of tables) {
-        let tableData: any[] = [];
-        let from = 0;
-        const step = 1000;
-        let fetchMore = true;
-
-        while (fetchMore) {
-          const { data, error } = await supabase
-            .from(t)
-            .select('*')
-            .range(from, from + step - 1);
-            
-          if (error) {
-            console.error(`Error fetching from ${t}:`, error);
-            fetchMore = false;
-          } else if (data && data.length > 0) {
-            tableData = [...tableData, ...data];
-            from += step;
-            if (data.length < step) fetchMore = false;
-          } else {
-            fetchMore = false;
-          }
-        }
-        
-        if (tableData.length > 0) {
+        const tableData = await fetchAllRows(t);
+        if (tableData && tableData.length > 0) {
           allParts = [...allParts, ...tableData.map(d => ({ ...d, _table: t }))];
         }
       }
       
       // Sort by status instead since last_updated does not exist
-      setParts(allParts.sort((a, b) => {
-        const order = { 'Verified': 1, 'Counted': 2, 'Not Counted': 3 };
-        return (order[a.status as keyof typeof order] || 4) - (order[b.status as keyof typeof order] || 4);
-      }));
+      if (isMounted.current) {
+        setParts(allParts.sort((a, b) => {
+          const order = { 'Verified': 1, 'Counted': 2, 'Not Counted': 3 };
+          return (order[a.status as keyof typeof order] || 4) - (order[b.status as keyof typeof order] || 4);
+        }));
+      }
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   };
 
