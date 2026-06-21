@@ -1,0 +1,148 @@
+/* ============================================================
+   BATTERY TRACKER PAGE
+   ============================================================ */
+.battery-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.battery-main {
+  padding: var(--space-4);
+  max-width: 600px;
+  margin: 0 auto;
+  animation: fadeIn var(--duration-normal) var(--ease-out);
+}
+
+/* ── Header Icon ── */
+.battery-icon-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-6);
+  margin-top: var(--space-2);
+}
+
+.battery-icon-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-xl);
+  background: var(--color-info-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0284c7;
+}
+
+/* ── Camera Card ── */
+.battery-camera-card {
+  margin-bottom: var(--space-6);
+  overflow: hidden;
+}
+
+.battery-camera-placeholder {
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #0f172a;
+  color: var(--text-inverse);
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  transition: opacity var(--duration-fast) ease;
+}
+
+.battery-camera-placeholder:hover {
+  opacity: 0.9;
+}
+
+.battery-camera-placeholder h3 {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--text-inverse);
+}
+
+.battery-camera-placeholder p {
+  margin: var(--space-2) 0 0 0;
+  opacity: 0.7;
+  font-size: 0.85rem;
+  color: var(--text-inverse);
+}
+
+/* ── Form Card ── */
+.battery-form-card {
+  padding: var(--space-6) !important;
+}
+
+.battery-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: var(--space-4);
+}
+
+.battery-form-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.battery-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.battery-field-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-1);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ── Serial Number Display ── */
+.battery-serial-display {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: 1.05rem;
+  text-align: center;
+  word-break: break-all;
+  transition: all var(--duration-fast) ease;
+}
+
+.battery-serial-display.awaiting {
+  background: var(--surface-secondary);
+  border: 2px dashed var(--border-default);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.battery-serial-display.scanned {
+  background: var(--color-success-bg);
+  border: 2px solid var(--color-success-border);
+  color: var(--color-success-text);
+  font-weight: 800;
+}
+
+/* ── Save Button ── */
+.battery-save-btn {
+  width: 100%;
+  padding: var(--space-4);
+  margin-top: var(--space-2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.battery-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

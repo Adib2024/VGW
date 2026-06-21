@@ -1,0 +1,222 @@
+/* ============================================================
+   ADMIN SETTINGS PAGE
+   ============================================================ */
+.admin-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-main {
+  flex: 1;
+  padding: 0 var(--space-4) calc(5rem + var(--safe-bottom));
+  display: flex;
+  justify-content: center;
+}
+
+.admin-wrapper {
+  width: 100%;
+  max-width: 700px;
+}
+
+.admin-card {
+  padding: var(--space-8) !important;
+  animation: fadeIn var(--duration-normal) var(--ease-out);
+}
+
+/* ── Header ── */
+.admin-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.admin-header-icon {
+  padding: var(--space-4);
+  background: var(--brand-accent-light);
+  border-radius: 50%;
+  color: var(--brand-primary);
+  display: flex;
+}
+
+.admin-header-title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.admin-header-desc {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+/* ── Requirements Box ── */
+.admin-requirements {
+  background: var(--surface-secondary);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-default);
+  margin-bottom: var(--space-8);
+}
+
+.admin-requirements h3 {
+  font-size: 1.05rem;
+  margin-bottom: var(--space-3);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.admin-requirements ul {
+  padding-left: var(--space-6);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.admin-requirements code {
+  background: var(--surface-tertiary);
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* ── Zone Select ── */
+.admin-zone-select-group {
+  margin-bottom: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.admin-zone-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* ── Status Message ── */
+.admin-message {
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-8);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-weight: 500;
+  font-size: 0.9rem;
+  box-shadow: var(--shadow-xs);
+  animation: fadeIn var(--duration-normal) var(--ease-out);
+}
+
+.admin-message.success {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
+}
+
+.admin-message.error {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
+}
+
+/* ── Lock Panel ── */
+.admin-lock-panel {
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  text-align: center;
+  margin-bottom: var(--space-8);
+  animation: fadeIn var(--duration-normal) var(--ease-out);
+}
+
+.admin-lock-panel h3 {
+  color: var(--color-danger);
+  margin: 0 0 var(--space-2) 0;
+  font-size: 1.15rem;
+}
+
+.admin-lock-panel p {
+  color: var(--color-danger-text);
+  margin: 0 0 var(--space-6) 0;
+  font-size: 0.88rem;
+}
+
+/* ── Upload Button ── */
+.admin-upload-wrapper {
+  display: flex;
+}
+
+.admin-upload-label {
+  width: 100%;
+  cursor: pointer;
+}
+
+.admin-upload-btn {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  font-size: 1rem;
+  font-weight: 700;
+  background: var(--brand-primary);
+  color: var(--text-inverse);
+  border: none;
+  border-radius: var(--radius-md);
+  pointer-events: none;
+  transition: opacity var(--duration-fast) ease;
+}
+
+.admin-upload-btn.disabled {
+  opacity: 0.65;
+}
+
+.admin-upload-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* ── Log Terminal ── */
+.admin-log-terminal {
+  margin-top: var(--space-8);
+  padding: var(--space-5);
+  background: #0f172a;
+  border-radius: var(--radius-md);
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: #38bdf8;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.admin-log-terminal h4 {
+  color: var(--text-inverse);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid #334155;
+  padding-bottom: var(--space-2);
+  font-size: 0.85rem;
+}
+
+.admin-log-entry {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.admin-log-timestamp {
+  color: #64748b;
+}

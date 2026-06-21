@@ -1,0 +1,311 @@
+/* ============================================================
+   COUNTING PAGE
+   ============================================================ */
+.counting-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.counting-topbar {
+  padding: var(--space-4) var(--space-6);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.counting-back-btn {
+  padding: var(--space-2) var(--space-5);
+  background: var(--surface-tertiary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all var(--duration-fast) ease;
+}
+
+.counting-back-btn:hover {
+  background: var(--border-default);
+}
+
+.counting-back-btn:active {
+  transform: scale(0.97);
+}
+
+.counting-header-right {
+  text-align: right;
+}
+
+.counting-zone-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--brand-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.counting-header-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+/* ── Main Content ── */
+.counting-main {
+  flex: 1;
+  padding: 0 var(--space-4) var(--space-12);
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+  animation: fadeIn var(--duration-normal) var(--ease-out);
+}
+
+.counting-card {
+  padding: var(--space-8) !important;
+  border: none !important;
+}
+
+/* ── Item Header ── */
+.counting-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid var(--brand-accent);
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.counting-item-id {
+  font-size: 2.25rem;
+  font-weight: 900;
+  color: var(--brand-accent);
+  margin: 0;
+  line-height: 1;
+}
+
+.counting-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.counting-action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all var(--duration-fast) ease;
+}
+
+.counting-action-btn.edit {
+  color: var(--brand-accent);
+}
+
+.counting-action-btn.edit:hover {
+  background: var(--brand-accent-light);
+  border-color: var(--brand-accent);
+}
+
+.counting-action-btn.lock {
+  color: var(--text-muted);
+}
+
+.counting-action-btn.lock.active {
+  background: var(--surface-tertiary);
+}
+
+.counting-action-btn.save {
+  border: none;
+  background: var(--brand-accent);
+  color: var(--text-inverse);
+}
+
+.counting-action-btn.save:hover {
+  background: var(--brand-accent-hover);
+}
+
+.counting-action-btn.cancel {
+  color: var(--text-muted);
+}
+
+/* ── Section ── */
+.counting-section {
+  margin-bottom: var(--space-8);
+}
+
+.counting-section-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.counting-section-title.accent {
+  color: var(--brand-accent);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ── Info Rows ── */
+.counting-info-row {
+  display: flex;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.counting-info-label {
+  width: 120px;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+  flex-shrink: 0;
+}
+
+.counting-info-value {
+  flex: 1;
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+/* ── Count Inputs ── */
+.counting-input-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  animation: fade-in 0.3s ease-out;
+}
+
+.counting-input-row + .counting-input-row {
+  margin-top: var(--space-3);
+}
+
+.counting-input-label {
+  width: 100px;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.counting-input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.counting-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-default);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
+}
+
+.counting-input:focus {
+  border-color: var(--brand-accent);
+  box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.1);
+}
+
+.counting-input.filled {
+  border-color: var(--color-success);
+  color: var(--color-success);
+  font-weight: 800;
+}
+
+.counting-input.filled-blue {
+  border-color: var(--brand-accent);
+  color: var(--brand-accent);
+  font-weight: 800;
+}
+
+.counting-input:disabled {
+  background: var(--surface-secondary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.counting-input-dot {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ── Remarks ── */
+.counting-remark-row {
+  display: flex;
+  padding: var(--space-5) 0 0 0;
+  align-items: flex-start;
+}
+
+.counting-remark-history {
+  margin-bottom: var(--space-3);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.counting-remark-entry {
+  margin-bottom: var(--space-1);
+}
+
+.counting-remark-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 2px dashed var(--color-warning);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  outline: none;
+  resize: none;
+  font-family: inherit;
+  font-size: 0.85rem;
+  transition: border-color var(--duration-fast) ease;
+}
+
+.counting-remark-textarea:focus {
+  border-color: var(--color-warning);
+  border-style: solid;
+}
+
+.counting-remark-textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ── Verify Button ── */
+.counting-verify-btn {
+  padding: var(--space-1) var(--space-4);
+  background: var(--color-success);
+  color: var(--text-inverse);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: auto;
+  transition: all var(--duration-fast) ease;
+}
+
+.counting-verify-btn:hover {
+  background: #16a34a;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}

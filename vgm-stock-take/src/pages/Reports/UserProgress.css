@@ -1,0 +1,176 @@
+/* ============================================================
+   USER PROGRESS REPORT
+   ============================================================ */
+.progress-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.progress-main {
+  flex: 1;
+  padding: 0 var(--space-4) calc(5rem + var(--safe-bottom));
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Download Button Row ── */
+.progress-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-4);
+}
+
+/* ── User Summary Card ── */
+.progress-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-light);
+  background: var(--surface-secondary);
+  border-top-left-radius: var(--radius-xl);
+  border-top-right-radius: var(--radius-xl);
+}
+
+.progress-summary-icon {
+  background: var(--brand-primary);
+  color: var(--text-inverse);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  display: flex;
+}
+
+.progress-summary-body {
+  padding: var(--space-5);
+}
+
+.progress-summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: var(--space-3);
+}
+
+.progress-summary-row + .progress-summary-row {
+  border-top: 1px solid var(--border-light);
+  padding-top: var(--space-3);
+}
+
+.progress-summary-label {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.progress-summary-value {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.progress-summary-device {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ── Stats Grid ── */
+.progress-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
+}
+
+.progress-stat-card {
+  background: var(--surface-secondary);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.progress-stat-number {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.progress-stat-number.danger { color: var(--color-danger); }
+.progress-stat-number.warning { color: var(--color-warning); }
+.progress-stat-number.success { color: var(--color-success); }
+
+.progress-stat-label {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: var(--space-1);
+}
+
+/* ── Overall Progress Bar ── */
+.progress-bar-container {
+  margin-bottom: var(--space-10);
+}
+
+.progress-bar-track {
+  background: var(--surface-tertiary);
+  border-radius: var(--radius-full);
+  height: 10px;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--color-success);
+  transition: width 0.5s ease-in-out;
+}
+
+.progress-bar-label {
+  text-align: center;
+  margin-top: var(--space-3);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.progress-bar-total {
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  font-weight: 900;
+  margin-bottom: var(--space-2);
+}
+
+/* ── Filters ── */
+.progress-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  padding: var(--space-5);
+  background: var(--surface-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-default);
+}
+
+.progress-filter-group {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.progress-filter-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* ── Footer ── */
+.progress-footer {
+  margin-top: var(--space-4);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}

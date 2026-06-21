@@ -1,0 +1,220 @@
+/* ============================================================
+   LIST VIEW PAGE
+   ============================================================ */
+.list-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.list-main {
+  flex: 1;
+  padding: 0 var(--space-4) calc(5rem + var(--safe-bottom));
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Progress Section ── */
+.list-progress-card {
+  margin-bottom: var(--space-6);
+  padding: var(--space-4) !important;
+  animation: fadeIn var(--duration-normal) var(--ease-out);
+}
+
+.list-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+.list-progress-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.list-progress-bar-container {
+  position: relative;
+  width: 100%;
+  height: 80px;
+  overflow: hidden;
+}
+
+.list-progress-track {
+  position: absolute;
+  bottom: 10px;
+  width: 100%;
+  height: 8px;
+  background: var(--surface-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.list-progress-fill {
+  height: 100%;
+  background: var(--color-success);
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease-out;
+}
+
+.list-progress-car {
+  position: absolute;
+  top: 10px;
+  width: 80px;
+  height: 40px;
+  background-image: url("https://upload.wikimedia.org/wikipedia/commons/6/6d/Volkswagen_logo_2019.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* ── Filters ── */
+.list-filters {
+  padding: var(--space-5);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.list-search-wrapper {
+  flex: 1 1 280px;
+}
+
+/* ── Content ── */
+.list-content {
+  padding: var(--space-4);
+}
+
+/* ── Mobile Cards ── */
+.list-mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.list-mobile-item {
+  background: var(--surface-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
+  animation: fadeIn var(--duration-normal) var(--ease-out) both;
+}
+
+.list-mobile-item:active {
+  transform: scale(0.98);
+}
+
+.list-mobile-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.list-mobile-item-number {
+  font-weight: 900;
+  font-size: 1.15rem;
+  color: var(--text-primary);
+}
+
+.list-mobile-item-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.list-mobile-field {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: var(--space-2);
+}
+
+.list-mobile-field-label {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.list-mobile-field-value {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* ── Desktop Table ── */
+.list-table-wrapper {
+  overflow-x: auto;
+}
+
+.list-table {
+  width: 100%;
+  min-width: 700px;
+  border-collapse: separate;
+  border-spacing: 0 var(--space-2);
+}
+
+.list-table thead tr {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  text-align: left;
+  letter-spacing: 0.05em;
+}
+
+.list-table thead th {
+  padding: var(--space-2) var(--space-4);
+  border-bottom: none;
+}
+
+.list-table tbody tr {
+  background: var(--surface-primary);
+  cursor: pointer;
+  transition: transform var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
+}
+
+.list-table tbody tr:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.list-table tbody td {
+  padding: var(--space-4);
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-bottom: none;
+}
+
+.list-table tbody td:first-child {
+  border-top-left-radius: var(--radius-md);
+  border-bottom-left-radius: var(--radius-md);
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.list-table tbody td:last-child {
+  border-top-right-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+}
+
+/* ── Status Border Left ── */
+.border-verified { border-left: 4px solid var(--color-success); }
+.border-counted { border-left: 4px solid var(--color-warning); }
+.border-not-counted { border-left: 4px solid var(--color-danger); }
+
+/* ── Empty State ── */
+.list-empty {
+  text-align: center;
+  padding: var(--space-12);
+  color: var(--text-muted);
+}
