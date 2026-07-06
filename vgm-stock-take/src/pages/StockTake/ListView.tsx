@@ -5,6 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { Part } from '../../types/database';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
+import { ProgressBar } from '../../components/ui/ProgressBar';
 import { supabase, fetchAllRows } from '../../lib/supabase';
 import { Search } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -172,36 +173,7 @@ export default function StockTakeListView() {
               </button>
             </div>
 
-            <div style={{ position: 'relative', width: '100%', height: '80px', overflow: 'hidden' }}>
-              {/* The driving car */}
-              <div
-                className="driving-car"
-                style={{
-                  position: 'absolute',
-                  top: '10px',
-                  width: '80px',
-                  height: '40px',
-                  backgroundImage: 'url("/vw-logo.svg")',
-                  backgroundSize: 'contain',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'center',
-                  animationDelay: '0s',
-                  animationDuration: '6s'
-                }}
-              />
-
-              {/* The progress line */}
-              <div style={{ position: 'absolute', bottom: '10px', width: '100%', height: '8px', backgroundColor: '#e0e0e0', borderRadius: '999px', overflow: 'hidden' }}>
-                <div
-                  style={{
-                    height: '100%',
-                    backgroundColor: 'var(--success-color)',
-                    width: `${stats.percentage}%`,
-                    transition: 'width 0.5s ease-out'
-                  }}
-                />
-              </div>
-            </div>
+            <ProgressBar percentage={stats.percentage} showCar={true} />
           </div>
         )}
 
