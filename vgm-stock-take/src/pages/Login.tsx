@@ -80,18 +80,25 @@ export default function Login() {
     
     setLoading(true);
     try {
+      const { data: isValid, error: verifyError } = await supabase
+        .rpc('verify_password', { p_user_id: userId, p_password: password });
+
+      if (verifyError || !isValid) {
+        window.alert('Invalid credentials. Please try again.');
+        return;
+      }
+
       const { data, error } = await supabase
         .from('users')
-        .select('*')
+        .select('id, name, role')
         .eq('id', userId)
-        .eq('password', password)
         .single();
-        
+
       if (error || !data) {
         window.alert('Invalid credentials. Please try again.');
         return;
       }
-      
+
       if (rememberMe) {
         localStorage.setItem('vgm_remembered_user', userId);
       } else {

@@ -15,12 +15,13 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- STEP 2: Hash all existing plaintext passwords
 -- This updates every user's password to a bcrypt hash.
 -- Only run ONCE. After this, all passwords will be hashed.
--- Safety check: Only hash if the password doesn't already start with '$2a$'
+-- Safety check: Only hash if the password isn't already a bcrypt hash
+-- (covers all bcrypt prefixes: $2a$, $2b$, $2x$, $2y$)
 UPDATE users
 SET password = crypt(password, gen_salt('bf', 10))
 WHERE password IS NOT NULL
   AND password != ''
-  AND password NOT LIKE '$2a$%';
+  AND password NOT LIKE '$2%';
 
 -- STEP 3: Create secure password verification RPC
 -- The frontend calls: supabase.rpc('verify_password', { p_user_id: '...', p_password: '...' })
