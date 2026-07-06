@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -10,12 +10,14 @@ import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { BackgroundDecor } from '../../components/ui/BackgroundDecor';
 import { supabase } from '../../lib/supabase';
-import { Save, Lock, Edit3, Circle, Loader2, PackageX } from 'lucide-react';
+import { Save, Edit3, Circle, Loader2, PackageX } from 'lucide-react';
 
 import { Part } from '../../types/database';
 
 export default function StockTakeCounting() {
   const { table, id } = useParams<{ table: string; id: string }>();
+  const [searchParams] = useSearchParams();
+  const displayNo = searchParams.get('no');
   const { user } = useAuth();
   const { addToast } = useToast();
   const { t } = useLanguage();
@@ -27,7 +29,6 @@ export default function StockTakeCounting() {
 
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [isEditing, setIsEditing] = useState(false);
-  const [adminUnlock, setAdminUnlock] = useState(false);
 
   useEffect(() => {
     isMounted.current = true;
@@ -71,7 +72,7 @@ export default function StockTakeCounting() {
   };
 
   const canEditBox = () => {
-    if (user?.role === 'Admin') return adminUnlock;
+    if (user?.role === 'Admin') return true;
     if (user?.role?.startsWith('Counter B17') || user?.role?.startsWith('Counter B22')) {
       return true; // Operators can edit, but previously filled boxes are locked individually
     }
@@ -79,7 +80,7 @@ export default function StockTakeCounting() {
   };
 
   const canEditRecount = () => {
-    if (user?.role === 'Admin') return adminUnlock;
+    if (user?.role === 'Admin') return true;
     if (user?.role === 'Verifier') {
       return true; // Verifiers can edit, but previously filled recounts are locked individually
     }
@@ -110,7 +111,8 @@ export default function StockTakeCounting() {
     } catch (err: any) {
       console.error(err);
       addToast(err.message || 'Failed to verify', 'error');
-      setSaving(false);
+    } finally {
+      if (isMounted.current) setSaving(false);
     }
   };
 
@@ -126,7 +128,7 @@ export default function StockTakeCounting() {
 
       const boxTotal = calculateTotal(counterKeys);
 
-      if (user?.role?.startsWith('Counter B17') || user?.role?.startsWith('Counter B22') || (user?.role === 'Admin' && adminUnlock)) {
+      if (user?.role?.startsWith('Counter B17') || user?.role?.startsWith('Counter B22') || user?.role === 'Admin') {
         counterKeys.forEach(k => {
           updates[k] = formData[k] !== '' ? parseInt(formData[k]) : null;
         });
@@ -135,7 +137,7 @@ export default function StockTakeCounting() {
         }
       }
 
-      if (user?.role === 'Verifier' || (user?.role === 'Admin' && adminUnlock)) {
+      if (user?.role === 'Verifier' || user?.role === 'Admin') {
         verifierKeys.forEach(k => {
           if (formData[k] !== '') {
             updates[k] = parseInt(formData[k]);
@@ -165,7 +167,8 @@ export default function StockTakeCounting() {
     } catch (err: any) {
       console.error(err);
       addToast(err.message || 'Failed to save data', 'error');
-      setSaving(false);
+    } finally {
+      if (isMounted.current) setSaving(false);
     }
   };
 
@@ -229,25 +232,17 @@ export default function StockTakeCounting() {
           {/* Item ID & Edit Button */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid var(--primary-color)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
             <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--primary-color)', margin: 0, lineHeight: 1 }}>
-              {part.no || part.id}
+              {displayNo || part.no || part.id}
             </h2>
-            
+
             {!isEditing ? (
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 {(canEditBox() || canEditRecount()) && (
-                  <button 
+                  <button
                     onClick={() => setIsEditing(true)}
                     style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: 'var(--radius-md)', backgroundColor: 'transparent', cursor: 'pointer', color: 'var(--primary-color)', fontWeight: 600 }}
                   >
                     <Edit3 size={16} /> {t('edit')}
-                  </button>
-                )}
-                {user?.role === 'Admin' && (
-                  <button 
-                    onClick={() => setAdminUnlock(!adminUnlock)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: 'var(--radius-md)', backgroundColor: adminUnlock ? '#f1f5f9' : 'transparent', cursor: 'pointer', color: '#64748b', fontWeight: 600 }}
-                  >
-                    <Lock size={16} /> {adminUnlock ? t('locked') : t('unlock')}
                   </button>
                 )}
               </div>

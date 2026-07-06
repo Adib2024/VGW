@@ -36,11 +36,11 @@ export default function StockTakeListView() {
   const PAGE_SIZE = 50;
   const isMounted = useRef(true);
 
-  const goToPart = (part: any) => navigate(`/stock-take/count/${part._table}/${part.id}`);
-  const handlePartKeyDown = (e: KeyboardEvent, part: any) => {
+  const goToPart = (part: any, displayNo: number) => navigate(`/stock-take/count/${part._table}/${part.id}?no=${displayNo}`);
+  const handlePartKeyDown = (e: KeyboardEvent, part: any, displayNo: number) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      goToPart(part);
+      goToPart(part, displayNo);
     }
   };
 
@@ -285,17 +285,19 @@ export default function StockTakeListView() {
               </div>
             ) : isMobile ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {paginatedParts.map((part: any, index) => (
+                {paginatedParts.map((part: any, index) => {
+                  const displayNo = (page - 1) * PAGE_SIZE + index + 1;
+                  return (
                   <div
                     key={part.id}
-                    onClick={() => goToPart(part)}
-                    onKeyDown={(e) => handlePartKeyDown(e, part)}
+                    onClick={() => goToPart(part, displayNo)}
+                    onKeyDown={(e) => handlePartKeyDown(e, part, displayNo)}
                     role="button"
                     tabIndex={0}
                     style={{ backgroundColor: '#fff', borderRadius: 'var(--radius-card)', padding: '1.25rem', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', borderLeft: `6px solid ${getStatusColor(part.status)}`, cursor: 'pointer' }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                      <span style={{ fontWeight: 900, fontSize: '1.25rem', color: '#0f172a' }}>#{(page - 1) * PAGE_SIZE + index + 1}</span>
+                      <span style={{ fontWeight: 900, fontSize: '1.25rem', color: '#0f172a' }}>#{displayNo}</span>
                       <span style={{ padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-xs)', border: `1px solid ${getStatusColor(part.status)}`, color: getStatusColor(part.status), fontSize: '0.75rem', fontWeight: 700 }}>
                         {part.status}
                       </span>
@@ -309,7 +311,8 @@ export default function StockTakeListView() {
                       ))}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
                 {filteredParts.length === 0 && <EmptyState icon={<PackageSearch size={40} strokeWidth={1.5} />} message={t('noParts')} />}
                 <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
               </div>
@@ -326,11 +329,13 @@ export default function StockTakeListView() {
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedParts.map((part: any, index) => (
+                    {paginatedParts.map((part: any, index) => {
+                      const displayNo = (page - 1) * PAGE_SIZE + index + 1;
+                      return (
                       <tr
                         key={part.id}
-                        onClick={() => goToPart(part)}
-                        onKeyDown={(e) => handlePartKeyDown(e, part)}
+                        onClick={() => goToPart(part, displayNo)}
+                        onKeyDown={(e) => handlePartKeyDown(e, part, displayNo)}
                         role="button"
                         tabIndex={0}
                         style={{ backgroundColor: '#fff', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}
@@ -338,7 +343,7 @@ export default function StockTakeListView() {
                         onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                       >
                         <td style={{ padding: '1rem', borderTopLeftRadius: 'var(--radius-md)', borderBottomLeftRadius: 'var(--radius-md)', borderLeft: `4px solid ${getStatusColor(part.status)}`, fontWeight: 800, color: '#333' }}>
-                          {(page - 1) * PAGE_SIZE + index + 1}
+                          {displayNo}
                         </td>
 
                         {displayColumns.map(col => (
@@ -363,7 +368,8 @@ export default function StockTakeListView() {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                     {filteredParts.length === 0 && (
                       <tr>
                         <td colSpan={5}>

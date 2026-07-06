@@ -8,7 +8,7 @@ interface ProgressBarProps {
   carDuration?: string;
 }
 
-export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage, label, showCar = false, carDelay = '0s', carDuration = '6s' }) => {
+export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage, label, showCar = false, carDelay = '0s', carDuration = '15s' }) => {
   const safePercentage = Math.min(Math.max(percentage, 0), 100);
 
   return (
