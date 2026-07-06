@@ -1,4 +1,4 @@
-import React, { InputHTMLAttributes } from 'react';
+import React, { InputHTMLAttributes, useId } from 'react';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -7,13 +7,18 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   rightElement?: React.ReactNode;
 }
 
-export const Input: React.FC<InputProps> = ({ label, error, icon, rightElement, className = '', ...props }) => {
+export const Input: React.FC<InputProps> = ({ label, error, icon, rightElement, className = '', id, ...props }) => {
+  const generatedId = useId();
+  const inputId = id || generatedId;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
-      {label && <label style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 500 }}>{label}</label>}
+      {label && <label htmlFor={inputId} style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 500 }}>{label}</label>}
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
         {icon && <div style={{ position: 'absolute', left: '1rem', color: 'var(--text-secondary)' }}>{icon}</div>}
         <input
+          id={inputId}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${inputId}-error` : undefined}
           className={className}
           style={{
             width: '100%',
@@ -40,7 +45,7 @@ export const Input: React.FC<InputProps> = ({ label, error, icon, rightElement, 
         />
         {rightElement && <div style={{ position: 'absolute', right: '1rem' }}>{rightElement}</div>}
       </div>
-      {error && <span style={{ color: 'var(--danger-color)', fontSize: '0.75rem' }}>{error}</span>}
+      {error && <span id={`${inputId}-error`} style={{ color: 'var(--danger-color)', fontSize: '0.75rem' }}>{error}</span>}
     </div>
   );
 };

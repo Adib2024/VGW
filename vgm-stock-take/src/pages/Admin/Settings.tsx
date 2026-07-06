@@ -271,9 +271,10 @@ export default function AdminSettings() {
           </div>
 
           <div style={{ marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.95rem', fontWeight: 600, color: '#334155' }}>{t('assignZone')}</label>
-            <select 
-              value={selectedZone} 
+            <label htmlFor="assign-zone" style={{ fontSize: '0.95rem', fontWeight: 600, color: '#334155' }}>{t('assignZone')}</label>
+            <select
+              id="assign-zone"
+              value={selectedZone}
               onChange={handleZoneChange}
               style={{
                 padding: '0.75rem 1rem',

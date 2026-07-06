@@ -209,9 +209,10 @@ export default function UserProgress() {
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
               <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>{t('filterByStatus') || 'Filter by Status'}</label>
-                <select 
-                  value={statusFilter} 
+                <label htmlFor="progress-status-filter" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>{t('filterByStatus') || 'Filter by Status'}</label>
+                <select
+                  id="progress-status-filter"
+                  value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
                 >
@@ -222,9 +223,10 @@ export default function UserProgress() {
                 </select>
               </div>
               <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>{t('filterByLocation') || 'Filter by Location'}</label>
-                <select 
-                  value={locationFilter} 
+                <label htmlFor="progress-location-filter" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>{t('filterByLocation') || 'Filter by Location'}</label>
+                <select
+                  id="progress-location-filter"
+                  value={locationFilter}
                   onChange={(e) => setLocationFilter(e.target.value)}
                   style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
                 >

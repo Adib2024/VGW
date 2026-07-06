@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, KeyboardEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Navigation } from '../../components/Navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -29,6 +29,14 @@ export default function StockTakeListView() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, completed: 0, percentage: 0 });
   const isMounted = useRef(true);
+
+  const goToPart = (part: any) => navigate(`/stock-take/count/${part._table}/${part.id}`);
+  const handlePartKeyDown = (e: KeyboardEvent, part: any) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      goToPart(part);
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => isMounted.current && setIsMobile(window.innerWidth < 768);
@@ -288,9 +296,12 @@ export default function StockTakeListView() {
             ) : isMobile ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {filteredParts.map((part: any, index) => (
-                  <div 
-                    key={part.id} 
-                    onClick={() => navigate(`/stock-take/count/${part._table}/${part.id}`)}
+                  <div
+                    key={part.id}
+                    onClick={() => goToPart(part)}
+                    onKeyDown={(e) => handlePartKeyDown(e, part)}
+                    role="button"
+                    tabIndex={0}
                     style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', borderLeft: `6px solid ${getStatusColor(part.status)}`, cursor: 'pointer' }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -327,7 +338,10 @@ export default function StockTakeListView() {
                     {filteredParts.map((part: any, index) => (
                       <tr
                         key={part.id}
-                        onClick={() => navigate(`/stock-take/count/${part._table}/${part.id}`)}
+                        onClick={() => goToPart(part)}
+                        onKeyDown={(e) => handlePartKeyDown(e, part)}
+                        role="button"
+                        tabIndex={0}
                         style={{ backgroundColor: '#fff', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}
                         onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                         onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}

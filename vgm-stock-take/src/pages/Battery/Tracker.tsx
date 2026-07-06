@@ -204,7 +204,7 @@ export default function Tracker() {
                       backgroundColor: serialNumber ? '#f0fdf4' : '#f8fafc',
                       borderRadius: '8px',
                       border: serialNumber ? '2px solid #86efac' : '2px dashed #cbd5e1',
-                      color: serialNumber ? 'var(--success-text)' : '#94a3b8',
+                      color: serialNumber ? 'var(--success-text)' : '#64748b',
                       fontWeight: serialNumber ? 800 : 500,
                       fontSize: '1.1rem',
                       textAlign: 'center',
@@ -237,8 +237,9 @@ export default function Tracker() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#475569', marginBottom: '0.4rem' }}>Status</label>
-              <select 
+              <label htmlFor="battery-status" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#475569', marginBottom: '0.4rem' }}>Status</label>
+              <select
+                id="battery-status"
                 value={status}
                 onChange={e => setStatus(e.target.value)}
                 style={{ width: '100%', padding: '0.85rem', borderRadius: '8px', border: '2px solid #e2e8f0', fontSize: '1rem', backgroundColor: 'white', outline: 'none', cursor: 'pointer' }}

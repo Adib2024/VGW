@@ -59,7 +59,7 @@ export const BottomNav: React.FC = () => {
           flex-direction: column;
           align-items: center;
           gap: 0.35rem;
-          color: #94a3b8;
+          color: #64748b;
           font-size: 0.65rem;
           font-weight: 700;
           background: none;
