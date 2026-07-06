@@ -17,6 +17,7 @@
   --bg-gradient-end: #bae6fd;
   --surface-color: #ffffff;
   --surface-highlight: #f1f5f9;
+  --disabled-bg: #f8fafc;
   --text-primary: #0f172a;
   --text-secondary: #64748b;
 
@@ -296,6 +297,16 @@ button,
 select {
   font-family: inherit;
   font-size: 1rem;
+}
+
+/* Sitewide focus-visible ring for form controls whose inline styles set
+   outline:none without a replacement (raw <select> elements throughout the
+   app) - keyboard focus was otherwise completely invisible on them. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 1px;
 }
 
 /* Tables */

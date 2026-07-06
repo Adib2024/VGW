@@ -23,7 +23,7 @@ export const Input: React.FC<InputProps> = ({ label, error, icon, rightElement, 
           style={{
             width: '100%',
             padding: `0.75rem ${rightElement ? '2.5rem' : '1rem'} 0.75rem ${icon ? '2.5rem' : '1rem'}`,
-            backgroundColor: props.disabled ? 'var(--background-color)' : 'var(--surface-highlight)',
+            backgroundColor: props.disabled ? 'var(--disabled-bg)' : 'var(--surface-highlight)',
             border: `1px solid ${error ? 'var(--danger-color)' : props.disabled ? 'var(--border-color)' : 'transparent'}`,
             borderRadius: 'var(--radius-md)',
             color: props.disabled ? 'var(--text-secondary)' : 'var(--text-primary)',

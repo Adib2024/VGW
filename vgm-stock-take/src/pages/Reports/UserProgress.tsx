@@ -10,6 +10,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { BottomNav } from '../../components/ui/BottomNav';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { Pagination } from '../../components/ui/Pagination';
 import { getStatusColor, getStatusBadgeColors } from '../../lib/statusColor';
 
 
@@ -19,6 +20,8 @@ export default function UserProgress() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [statusFilter, setStatusFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
   const reportRef = useRef<HTMLDivElement>(null);
   const isMounted = useRef(true);
   const { user } = useAuth();
@@ -120,6 +123,13 @@ export default function UserProgress() {
     if (locationFilter !== 'all' && locStr !== locationFilter) return false;
     return true;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredParts.length / PAGE_SIZE));
+  const paginatedParts = filteredParts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, locationFilter]);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -255,7 +265,7 @@ export default function UserProgress() {
               <div>
                 {isMobile ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {filteredParts.map((p, index) => (
+                    {paginatedParts.map((p, index) => (
                       <div key={`${p.id}-${index}`} style={{ backgroundColor: '#fff', borderRadius: 'var(--radius-card)', padding: '1.25rem', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', borderLeft: `6px solid ${getStatusColor(p.status)}` }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                           <span style={{ fontWeight: 900, fontSize: '1.1rem', color: '#0f172a' }}>{p.material || p.part_no || '-'}</span>
@@ -282,6 +292,7 @@ export default function UserProgress() {
                     {filteredParts.length === 0 && (
                       <EmptyState icon={<PackageSearch size={40} strokeWidth={1.5} />} message={t('noParts') || 'No activity found.'} />
                     )}
+                    <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
                   </div>
                 ) : (
                   <div style={{ overflowX: 'auto' }}>
@@ -296,7 +307,7 @@ export default function UserProgress() {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredParts.map((p, index) => (
+                        {paginatedParts.map((p, index) => (
                           <tr key={`${p.id}-${index}`} style={{ borderBottom: '1px solid var(--border-color)' }}>
                             <td style={{ padding: '0.75rem', fontWeight: 600 }}>{p.material || p.part_no || '-'}</td>
                             <td style={{ padding: '0.75rem' }}>{p.location || p.rack_number || p.storage_bin || '-'} <span style={{fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase'}}>({p._table})</span></td>
@@ -327,6 +338,7 @@ export default function UserProgress() {
                         )}
                       </tbody>
                     </table>
+                    <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
                   </div>
                 )}
               </div>

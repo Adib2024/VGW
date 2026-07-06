@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { Navigation } from '../../components/Navigation';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { BackgroundDecor } from '../../components/ui/BackgroundDecor';
 import { supabase } from '../../lib/supabase';
 import { Save, Lock, Edit3, Circle, Loader2, PackageX } from 'lucide-react';
 
@@ -14,7 +16,6 @@ import { Part } from '../../types/database';
 
 export default function StockTakeCounting() {
   const { table, id } = useParams<{ table: string; id: string }>();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { addToast } = useToast();
   const { t } = useLanguage();
@@ -208,23 +209,18 @@ export default function StockTakeCounting() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f0f2f5', display: 'flex', flexDirection: 'column' }}>
-      
-      {/* Top Navbar Actions */}
-      <div style={{ padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <button 
-          onClick={() => navigate(`/stock-take/list?table=${table}`)}
-          style={{ padding: '0.5rem 1.5rem', backgroundColor: '#e2e8f0', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: 600, color: '#475569' }}
-        >
-          {t('back')}
-        </button>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary-color)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            COUNTER {table?.toUpperCase()} VIEW
-          </div>
-          <h1 style={{ margin: '0', fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{t('itemDetails')}</h1>
-        </div>
-      </div>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <BackgroundDecor />
+
+      <Navigation
+        title={t('itemDetails')}
+        backTo={`/stock-take/list?table=${table}`}
+        titleAccessory={(
+          <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--primary-color)', backgroundColor: 'var(--surface-highlight)', padding: '0.15rem 0.6rem', borderRadius: 'var(--radius-full)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {table}
+          </span>
+        )}
+      />
 
       <main className="container" style={{ flex: 1, padding: '0 1rem 3rem 1rem', maxWidth: '600px', margin: '0 auto' }}>
         
@@ -396,8 +392,9 @@ export default function StockTakeCounting() {
                      rows={2}
                      style={{
                        width: '100%', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)',
-                       border: '2px dashed var(--warning-color)', backgroundColor: formData[key] ? 'white' : '#fffbeb',
-                       color: '#d97706', outline: 'none', resize: 'none',
+                       border: (isEditing && !formData[key]) ? '2px dashed var(--warning-color)' : '1px solid var(--border-color)',
+                       backgroundColor: formData[key] ? 'var(--surface-color)' : (isEditing ? '#fffbeb' : 'var(--surface-highlight)'),
+                       color: 'var(--text-primary)', outline: 'none', resize: 'none',
                        fontFamily: 'inherit', fontSize: '0.875rem',
                        cursor: (!isEditing || (!canEditBox() && !canEditRecount())) ? 'not-allowed' : 'text'
                      }}

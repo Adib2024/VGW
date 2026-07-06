@@ -6,6 +6,7 @@ import { Navigation } from '../../components/Navigation';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { BackgroundDecor } from '../../components/ui/BackgroundDecor';
 import { Camera, Save, X, Edit2, Battery } from 'lucide-react';
 import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
 
@@ -129,14 +130,15 @@ export default function Tracker() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--background-color)' }}>
+    <div style={{ minHeight: '100vh' }}>
+      <BackgroundDecor />
       <Navigation title="Battery Scanner" showBack={true} backTo="/hub" />
-      
+
       <div style={{ padding: '1rem', maxWidth: '600px', margin: '0 auto' }}>
-        
+
         {/* Header Icon */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem', marginTop: '0.5rem' }}>
-           <div style={{ width: '60px', height: '60px', borderRadius: 'var(--radius-lg)', backgroundColor: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7' }}>
+           <div style={{ width: '60px', height: '60px', borderRadius: 'var(--radius-lg)', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)' }}>
              <Battery size={32} />
            </div>
         </div>

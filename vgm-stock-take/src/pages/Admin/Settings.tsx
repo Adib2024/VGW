@@ -3,6 +3,7 @@ import { Navigation } from '../../components/Navigation';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { BackgroundDecor } from '../../components/ui/BackgroundDecor';
 import { supabase } from '../../lib/supabase';
 import { Upload, AlertTriangle, CheckCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -245,14 +246,15 @@ export default function AdminSettings() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f0f2f5' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <BackgroundDecor />
       <Navigation title={t('adminSettings')} backTo="/stock-take" />
       
       <main style={{ flex: 1, padding: '2rem 1rem 6rem', display: 'flex', justifyContent: 'center' }}>
         <div style={{ width: '100%', maxWidth: '700px' }}>
           <Card style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-            <div style={{ padding: '1rem', backgroundColor: 'rgba(59, 130, 246, 0.2)', borderRadius: '50%', color: 'var(--primary-color)' }}>
+            <div style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%)', borderRadius: '50%', color: 'white', boxShadow: '0 10px 15px -3px rgba(0,30,80,0.3)', flexShrink: 0 }}>
               <Upload size={24} />
             </div>
             <div>

@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/Input';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { Pagination } from '../../components/ui/Pagination';
 import { supabase, fetchAllRows } from '../../lib/supabase';
 import { Search, PackageSearch } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -31,6 +32,8 @@ export default function StockTakeListView() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, completed: 0, percentage: 0 });
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
   const isMounted = useRef(true);
 
   const goToPart = (part: any) => navigate(`/stock-take/count/${part._table}/${part.id}`);
@@ -152,7 +155,12 @@ export default function StockTakeListView() {
     return matchesSearch && matchesStatus && matchesLocation;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filteredParts.length / PAGE_SIZE));
+  const paginatedParts = filteredParts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter, locationFilter, tableParam]);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -277,7 +285,7 @@ export default function StockTakeListView() {
               </div>
             ) : isMobile ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {filteredParts.map((part: any, index) => (
+                {paginatedParts.map((part: any, index) => (
                   <div
                     key={part.id}
                     onClick={() => goToPart(part)}
@@ -287,7 +295,7 @@ export default function StockTakeListView() {
                     style={{ backgroundColor: '#fff', borderRadius: 'var(--radius-card)', padding: '1.25rem', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', borderLeft: `6px solid ${getStatusColor(part.status)}`, cursor: 'pointer' }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                      <span style={{ fontWeight: 900, fontSize: '1.25rem', color: '#0f172a' }}>#{index + 1}</span>
+                      <span style={{ fontWeight: 900, fontSize: '1.25rem', color: '#0f172a' }}>#{(page - 1) * PAGE_SIZE + index + 1}</span>
                       <span style={{ padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-xs)', border: `1px solid ${getStatusColor(part.status)}`, color: getStatusColor(part.status), fontSize: '0.75rem', fontWeight: 700 }}>
                         {part.status}
                       </span>
@@ -303,6 +311,7 @@ export default function StockTakeListView() {
                   </div>
                 ))}
                 {filteredParts.length === 0 && <EmptyState icon={<PackageSearch size={40} strokeWidth={1.5} />} message={t('noParts')} />}
+                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
               </div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
@@ -317,7 +326,7 @@ export default function StockTakeListView() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredParts.map((part: any, index) => (
+                    {paginatedParts.map((part: any, index) => (
                       <tr
                         key={part.id}
                         onClick={() => goToPart(part)}
@@ -329,7 +338,7 @@ export default function StockTakeListView() {
                         onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                       >
                         <td style={{ padding: '1rem', borderTopLeftRadius: 'var(--radius-md)', borderBottomLeftRadius: 'var(--radius-md)', borderLeft: `4px solid ${getStatusColor(part.status)}`, fontWeight: 800, color: '#333' }}>
-                          {index + 1}
+                          {(page - 1) * PAGE_SIZE + index + 1}
                         </td>
 
                         {displayColumns.map(col => (
@@ -364,6 +373,7 @@ export default function StockTakeListView() {
                     )}
                   </tbody>
                 </table>
+                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
               </div>
             )}
           </div>
