@@ -20,13 +20,13 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage, label, sho
         </div>
       )}
       <div style={{ position: 'relative', width: '100%', height: '50px', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', bottom: '5px', width: '100%', height: '8px', backgroundColor: 'var(--surface-highlight)', borderRadius: '999px' }}>
+        <div style={{ position: 'absolute', bottom: '5px', width: '100%', height: '8px', backgroundColor: 'var(--surface-highlight)', borderRadius: 'var(--radius-full)' }}>
           <div
             style={{
               width: `${safePercentage}%`,
               height: '100%',
               backgroundColor: safePercentage === 100 ? 'var(--success-color)' : 'var(--primary-color)',
-              borderRadius: '999px',
+              borderRadius: 'var(--radius-full)',
               transition: 'width 0.5s ease-in-out'
             }}
           />

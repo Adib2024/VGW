@@ -30,7 +30,7 @@ export const Button: React.FC<ButtonProps> = ({
   const style: React.CSSProperties = {
     ...getVariantStyles(),
     padding: '0.875rem 1.5rem',
-    borderRadius: '12px',
+    borderRadius: 'var(--radius-card)',
     fontWeight: 500,
     cursor: 'pointer',
     transition: 'all 0.2s ease',

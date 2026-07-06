@@ -136,7 +136,7 @@ export default function Tracker() {
         
         {/* Header Icon */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem', marginTop: '0.5rem' }}>
-           <div style={{ width: '60px', height: '60px', borderRadius: '16px', backgroundColor: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7' }}>
+           <div style={{ width: '60px', height: '60px', borderRadius: 'var(--radius-lg)', backgroundColor: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7' }}>
              <Battery size={32} />
            </div>
         </div>
@@ -165,7 +165,7 @@ export default function Tracker() {
                 backgroundColor: '#0f172a',
                 color: 'white',
                 cursor: 'pointer',
-                borderRadius: '12px'
+                borderRadius: 'var(--radius-card)'
               }}
               onClick={startScanner}
             >
@@ -202,7 +202,7 @@ export default function Tracker() {
                   <div style={{
                       padding: '1rem',
                       backgroundColor: serialNumber ? '#f0fdf4' : '#f8fafc',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-md)',
                       border: serialNumber ? '2px solid #86efac' : '2px dashed #cbd5e1',
                       color: serialNumber ? 'var(--success-text)' : '#64748b',
                       fontWeight: serialNumber ? 800 : 500,
@@ -242,7 +242,7 @@ export default function Tracker() {
                 id="battery-status"
                 value={status}
                 onChange={e => setStatus(e.target.value)}
-                style={{ width: '100%', padding: '0.85rem', borderRadius: '8px', border: '2px solid #e2e8f0', fontSize: '1rem', backgroundColor: 'white', outline: 'none', cursor: 'pointer' }}
+                style={{ width: '100%', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '2px solid #e2e8f0', fontSize: '1rem', backgroundColor: 'white', outline: 'none', cursor: 'pointer' }}
               >
                 <option value="Scanned">Scanned (Awaiting Action)</option>
                 <option value="Charged">Charged</option>

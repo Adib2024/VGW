@@ -261,7 +261,7 @@ export default function AdminSettings() {
             </div>
           </div>
 
-          <div style={{ backgroundColor: 'rgba(241, 245, 249, 0.8)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(226, 232, 240, 0.8)', marginBottom: '2rem' }}>
+          <div style={{ backgroundColor: 'rgba(241, 245, 249, 0.8)', padding: '1.5rem', borderRadius: 'var(--radius-card)', border: '1px solid rgba(226, 232, 240, 0.8)', marginBottom: '2rem' }}>
             <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem', color: '#1e293b', fontWeight: 600 }}>{t('fileRequirements')}</h3>
             <ul style={{ paddingLeft: '1.5rem', color: '#475569', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <li><strong>Format:</strong> .csv, .xlsx, or .xls</li>
@@ -280,7 +280,7 @@ export default function AdminSettings() {
                 padding: '0.75rem 1rem',
                 backgroundColor: '#fff',
                 border: '1px solid #cbd5e1',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-md)',
                 color: '#334155',
                 outline: 'none',
                 width: '100%',
@@ -305,7 +305,7 @@ export default function AdminSettings() {
           {message.text && (
             <div style={{ 
               padding: '1rem 1.25rem', 
-              borderRadius: '8px', 
+              borderRadius: 'var(--radius-md)', 
               marginBottom: '2rem',
               display: 'flex',
               alignItems: 'center',
@@ -322,12 +322,12 @@ export default function AdminSettings() {
           )}
 
           {isLocked ? (
-            <div style={{ backgroundColor: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', marginBottom: '2rem' }}>
+            <div style={{ backgroundColor: '#fff1f2', border: '1px solid #fecdd3', borderRadius: 'var(--radius-card)', padding: '1.5rem', textAlign: 'center', marginBottom: '2rem' }}>
               <AlertTriangle size={32} color="#e11d48" style={{ margin: '0 auto 1rem auto' }} />
               <h3 style={{ color: '#be123c', margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>Zone Locked / Table Exists</h3>
               <p style={{ color: '#9f1239', margin: '0 0 1.5rem 0' }}>This zone already has a database table created. To prevent schema errors and duplicate data, you must unlock and clear it before uploading a new master file.</p>
               
-              <Button onClick={handleUnlockZone} disabled={checkingLock} style={{ backgroundColor: 'var(--danger-color)', color: 'white', fontWeight: 600, padding: '0.75rem 1.5rem', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+              <Button onClick={handleUnlockZone} disabled={checkingLock} style={{ backgroundColor: 'var(--danger-color)', color: 'white', fontWeight: 600, padding: '0.75rem 1.5rem', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
                 {checkingLock ? 'Unlocking...' : 'Unlock & Clear Zone Schema'}
               </Button>
             </div>
@@ -342,7 +342,7 @@ export default function AdminSettings() {
                 disabled={uploading || checkingLock}
               />
               <label htmlFor="excel-upload" style={{ width: '100%', cursor: 'pointer' }}>
-                <Button as="span" style={{ pointerEvents: 'none', width: '100%', display: 'flex', justifyContent: 'center', padding: '1rem', fontSize: '1.05rem', fontWeight: 600, backgroundColor: 'var(--primary-color)', color: '#ffffff', borderRadius: '8px', transition: 'background-color 0.2s', opacity: (uploading || checkingLock) ? 0.7 : 1 }} disabled={uploading || checkingLock}>
+                <Button as="span" style={{ pointerEvents: 'none', width: '100%', display: 'flex', justifyContent: 'center', padding: '1rem', fontSize: '1.05rem', fontWeight: 600, backgroundColor: 'var(--primary-color)', color: '#ffffff', borderRadius: 'var(--radius-md)', transition: 'background-color 0.2s', opacity: (uploading || checkingLock) ? 0.7 : 1 }} disabled={uploading || checkingLock}>
                   {uploading ? (
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <div style={{ width: '1rem', height: '1rem', border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
@@ -364,7 +364,7 @@ export default function AdminSettings() {
               marginTop: '2rem',
               padding: '1.5rem',
               backgroundColor: '#0f172a',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-md)',
               fontFamily: 'monospace',
               color: '#38bdf8',
               fontSize: '0.85rem',

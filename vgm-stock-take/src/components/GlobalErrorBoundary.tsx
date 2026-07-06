@@ -25,7 +25,7 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: any, resetErrorBo
       <div style={{ 
         backgroundColor: '#1e293b', 
         padding: '1rem', 
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-md)',
         marginBottom: '2rem',
         maxWidth: '500px',
         width: '100%',
@@ -47,7 +47,7 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: any, resetErrorBo
           color: 'white',
           border: 'none',
           padding: '0.75rem 1.5rem',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-md)',
           fontWeight: 'bold',
           cursor: 'pointer',
           fontSize: '1rem'

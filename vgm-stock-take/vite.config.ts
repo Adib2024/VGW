@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'app-icon.svg'],
+      includeAssets: ['favicon.svg', 'app-icon.svg', 'vw-logo.svg', 'car-golf.webp', 'fonts/inter-latin-variable.woff2'],
       manifest: {
         name: 'VGM CKD',
         short_name: 'VGM CKD',

@@ -6,8 +6,9 @@ import { useToast } from '../../contexts/ToastContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
+import { EmptyState } from '../../components/ui/EmptyState';
 import { supabase } from '../../lib/supabase';
-import { Save, Lock, Edit3, Circle } from 'lucide-react';
+import { Save, Lock, Edit3, Circle, Loader2, PackageX } from 'lucide-react';
 
 import { Part } from '../../types/database';
 
@@ -167,8 +168,13 @@ export default function StockTakeCounting() {
     }
   };
 
-  if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>{t('loadingData')}</div>;
-  if (!part) return <div style={{ padding: '2rem', textAlign: 'center' }}>{t('noParts')}</div>;
+  if (loading) return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '4rem 2rem', color: 'var(--text-secondary)' }}>
+      <Loader2 size={32} className="animate-spin" />
+      <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{t('loadingData')}</span>
+    </div>
+  );
+  if (!part) return <EmptyState icon={<PackageX size={40} strokeWidth={1.5} />} message={t('noParts')} />;
 
   const counterKeys = part ? Object.keys(part).filter(k => /box|seq/i.test(k)).sort() : [];
   const verifierKeys = part ? Object.keys(part).filter(k => /recount/i.test(k)).sort() : [];
@@ -208,7 +214,7 @@ export default function StockTakeCounting() {
       <div style={{ padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <button 
           onClick={() => navigate(`/stock-take/list?table=${table}`)}
-          style={{ padding: '0.5rem 1.5rem', backgroundColor: '#e2e8f0', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: '#475569' }}
+          style={{ padding: '0.5rem 1.5rem', backgroundColor: '#e2e8f0', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: 600, color: '#475569' }}
         >
           {t('back')}
         </button>
@@ -222,7 +228,7 @@ export default function StockTakeCounting() {
 
       <main className="container" style={{ flex: 1, padding: '0 1rem 3rem 1rem', maxWidth: '600px', margin: '0 auto' }}>
         
-        <Card style={{ padding: '2rem', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: 'none' }}>
+        <Card style={{ padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: 'none' }}>
           
           {/* Item ID & Edit Button */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid var(--primary-color)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
@@ -235,7 +241,7 @@ export default function StockTakeCounting() {
                 {(canEditBox() || canEditRecount()) && (
                   <button 
                     onClick={() => setIsEditing(true)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: '8px', backgroundColor: 'transparent', cursor: 'pointer', color: 'var(--primary-color)', fontWeight: 600 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: 'var(--radius-md)', backgroundColor: 'transparent', cursor: 'pointer', color: 'var(--primary-color)', fontWeight: 600 }}
                   >
                     <Edit3 size={16} /> {t('edit')}
                   </button>
@@ -243,7 +249,7 @@ export default function StockTakeCounting() {
                 {user?.role === 'Admin' && (
                   <button 
                     onClick={() => setAdminUnlock(!adminUnlock)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: '8px', backgroundColor: adminUnlock ? '#f1f5f9' : 'transparent', cursor: 'pointer', color: '#64748b', fontWeight: 600 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: 'var(--radius-md)', backgroundColor: adminUnlock ? '#f1f5f9' : 'transparent', cursor: 'pointer', color: '#64748b', fontWeight: 600 }}
                   >
                     <Lock size={16} /> {adminUnlock ? t('locked') : t('unlock')}
                   </button>
@@ -253,13 +259,13 @@ export default function StockTakeCounting() {
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button 
                   onClick={handleCancel}
-                  style={{ padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: '8px', backgroundColor: 'transparent', cursor: 'pointer', color: '#64748b', fontWeight: 600 }}
+                  style={{ padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: 'var(--radius-md)', backgroundColor: 'transparent', cursor: 'pointer', color: '#64748b', fontWeight: 600 }}
                 >
                   {t('cancel')}
                 </button>
                 <button 
                   onClick={handleSave} disabled={saving}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.5rem', border: 'none', borderRadius: '8px', backgroundColor: 'var(--primary-color)', cursor: 'pointer', color: 'white', fontWeight: 600 }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.5rem', border: 'none', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--primary-color)', cursor: 'pointer', color: 'white', fontWeight: 600 }}
                 >
                   <Save size={16} /> {saving ? t('saving') : t('save')}
                 </button>
@@ -304,7 +310,7 @@ export default function StockTakeCounting() {
                         onChange={(e) => handleInputChange(key, e.target.value)}
                         disabled={!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined && part[key] !== '')}
                         style={{
-                          width: '100%', padding: '0.75rem 1rem', borderRadius: '8px',
+                          width: '100%', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)',
                           border: formData[key] ? '1px solid var(--success-color)' : '1px solid #cbd5e1',
                           backgroundColor: (!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined && part[key] !== '')) ? '#f8fafc' : 'white',
                           color: formData[key] ? 'var(--success-color)' : '#0f172a',
@@ -334,7 +340,7 @@ export default function StockTakeCounting() {
                         onChange={(e) => handleInputChange(key, e.target.value)}
                         disabled={!isEditing || !canEditRecount()}
                         style={{
-                          width: '100%', padding: '0.75rem 1rem', borderRadius: '8px',
+                          width: '100%', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)',
                           border: formData[key] ? '1px solid var(--primary-color)' : '1px solid #cbd5e1',
                           backgroundColor: (!isEditing || !canEditRecount()) ? '#f8fafc' : 'white',
                           color: formData[key] ? 'var(--primary-color)' : '#0f172a',
@@ -389,7 +395,7 @@ export default function StockTakeCounting() {
                      placeholder={t('addRemarkPlaceholder')}
                      rows={2}
                      style={{
-                       width: '100%', padding: '0.75rem 1rem', borderRadius: '8px',
+                       width: '100%', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)',
                        border: '2px dashed var(--warning-color)', backgroundColor: formData[key] ? 'white' : '#fffbeb',
                        color: '#d97706', outline: 'none', resize: 'none',
                        fontFamily: 'inherit', fontSize: '0.875rem',

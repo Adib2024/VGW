@@ -82,7 +82,7 @@ export const BottomNav: React.FC = () => {
             max-width: 500px;
             left: 50%;
             transform: translateX(-50%);
-            border-radius: 24px 24px 0 0;
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
             border-left: 1px solid rgba(0,0,0,0.05);
             border-right: 1px solid rgba(0,0,0,0.05);
             padding: 0.75rem 2rem;

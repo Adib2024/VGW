@@ -76,7 +76,7 @@ export default function Hub() {
         .hub-icon-wrapper {
           width: 48px;
           height: 48px;
-          border-radius: 12px;
+          border-radius: var(--radius-card);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -129,7 +129,7 @@ export default function Hub() {
           .hub-icon-wrapper {
             width: 64px;
             height: 64px;
-            border-radius: 16px;
+            border-radius: var(--radius-lg);
             margin-bottom: 1.5rem;
           }
           .hub-card-title {

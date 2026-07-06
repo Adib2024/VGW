@@ -6,8 +6,10 @@ import { Part } from '../../types/database';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { ProgressBar } from '../../components/ui/ProgressBar';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { EmptyState } from '../../components/ui/EmptyState';
 import { supabase, fetchAllRows } from '../../lib/supabase';
-import { Search } from 'lucide-react';
+import { Search, PackageSearch } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { BottomNav } from '../../components/ui/BottomNav';
 import { getStatusColor } from '../../lib/statusColor';
@@ -163,7 +165,7 @@ export default function StockTakeListView() {
 
         {/* Progress Bar with Car Animation */}
         {!loading && (
-          <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#fff', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
+          <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#fff', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
               <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#666' }}>
                 {stats.percentage}% ({stats.completed}/{stats.total})
@@ -264,7 +266,15 @@ export default function StockTakeListView() {
 
           <div style={{ padding: isMobile ? '1rem' : '1.5rem' }}>
             {loading ? (
-              <p style={{ textAlign: 'center', padding: '2rem' }}>{t('loadingParts')}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {[0, 1, 2, 3].map(i => (
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1.25rem', backgroundColor: '#fff', borderRadius: 'var(--radius-card)', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                    <Skeleton width="40%" height="1.25rem" />
+                    <Skeleton width="70%" height="0.875rem" />
+                    <Skeleton width="55%" height="0.875rem" />
+                  </div>
+                ))}
+              </div>
             ) : isMobile ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {filteredParts.map((part: any, index) => (
@@ -274,11 +284,11 @@ export default function StockTakeListView() {
                     onKeyDown={(e) => handlePartKeyDown(e, part)}
                     role="button"
                     tabIndex={0}
-                    style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', borderLeft: `6px solid ${getStatusColor(part.status)}`, cursor: 'pointer' }}
+                    style={{ backgroundColor: '#fff', borderRadius: 'var(--radius-card)', padding: '1.25rem', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', borderLeft: `6px solid ${getStatusColor(part.status)}`, cursor: 'pointer' }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                       <span style={{ fontWeight: 900, fontSize: '1.25rem', color: '#0f172a' }}>#{index + 1}</span>
-                      <span style={{ padding: '0.25rem 0.75rem', borderRadius: '4px', border: `1px solid ${getStatusColor(part.status)}`, color: getStatusColor(part.status), fontSize: '0.75rem', fontWeight: 700 }}>
+                      <span style={{ padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-xs)', border: `1px solid ${getStatusColor(part.status)}`, color: getStatusColor(part.status), fontSize: '0.75rem', fontWeight: 700 }}>
                         {part.status}
                       </span>
                     </div>
@@ -292,7 +302,7 @@ export default function StockTakeListView() {
                     </div>
                   </div>
                 ))}
-                {filteredParts.length === 0 && <p style={{ textAlign: 'center', color: '#666', padding: '2rem' }}>{t('noParts')}</p>}
+                {filteredParts.length === 0 && <EmptyState icon={<PackageSearch size={40} strokeWidth={1.5} />} message={t('noParts')} />}
               </div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
@@ -318,7 +328,7 @@ export default function StockTakeListView() {
                         onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                         onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                       >
-                        <td style={{ padding: '1rem', borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px', borderLeft: `4px solid ${getStatusColor(part.status)}`, fontWeight: 800, color: '#333' }}>
+                        <td style={{ padding: '1rem', borderTopLeftRadius: 'var(--radius-md)', borderBottomLeftRadius: 'var(--radius-md)', borderLeft: `4px solid ${getStatusColor(part.status)}`, fontWeight: 800, color: '#333' }}>
                           {index + 1}
                         </td>
 
@@ -328,12 +338,12 @@ export default function StockTakeListView() {
                           </td>
                         ))}
 
-                        <td style={{ padding: '1rem', borderTopRightRadius: '8px', borderBottomRightRadius: '8px' }}>
+                        <td style={{ padding: '1rem', borderTopRightRadius: 'var(--radius-md)', borderBottomRightRadius: 'var(--radius-md)' }}>
                           <div
                             style={{
                               display: 'inline-block',
                               padding: '0.25rem 0.75rem',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-xs)',
                               border: `1px solid ${getStatusColor(part.status)}`,
                               color: getStatusColor(part.status),
                               fontSize: '0.75rem',
@@ -347,7 +357,9 @@ export default function StockTakeListView() {
                     ))}
                     {filteredParts.length === 0 && (
                       <tr>
-                        <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>{t('noParts')}</td>
+                        <td colSpan={5}>
+                          <EmptyState icon={<PackageSearch size={40} strokeWidth={1.5} />} message={t('noParts')} />
+                        </td>
                       </tr>
                     )}
                   </tbody>

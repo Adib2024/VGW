@@ -193,7 +193,7 @@ export default function Login() {
               alignItems: 'center', 
               gap: '0.4rem',
               padding: '0.4rem 0.8rem', 
-              borderRadius: '999px', 
+              borderRadius: 'var(--radius-full)', 
               border: '1px solid rgba(0,30,80,0.2)', 
               backgroundColor: 'rgba(255,255,255,0.9)',
               backdropFilter: 'blur(10px)',
@@ -217,7 +217,7 @@ export default function Login() {
           onChange={(e) => setLanguage(e.target.value as any)}
           style={{
             padding: '0.25rem 1rem',
-            borderRadius: '999px',
+            borderRadius: 'var(--radius-full)',
             border: '1px solid var(--border-color)',
             backgroundColor: 'var(--surface-color)',
             color: 'var(--text-primary)',
@@ -234,7 +234,7 @@ export default function Login() {
 
       <div style={{ width: '100%', maxWidth: '400px', zIndex: 10, padding: '0 1rem' }}>
 
-        <Card className="w-full" style={{ padding: '2.5rem 2rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#ffffff', boxShadow: '0 8px 30px rgba(0,0,0,0.05)' }}>
+        <Card className="w-full" style={{ padding: '2.5rem 2rem', borderRadius: 'var(--radius-card)', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#ffffff', boxShadow: '0 8px 30px rgba(0,0,0,0.05)' }}>
 
           {/* Logo in rounded box */}
           <div style={{
@@ -294,7 +294,7 @@ export default function Login() {
             <Button
               type="submit"
               fullWidth
-              style={{ marginTop: '1rem', backgroundColor: 'var(--primary-color)', borderRadius: '8px', padding: '0.75rem' }}
+              style={{ marginTop: '1rem', backgroundColor: 'var(--primary-color)', borderRadius: 'var(--radius-md)', padding: '0.75rem' }}
               disabled={loading}
             >
               {loading ? '...' : t('login')}
@@ -319,25 +319,25 @@ export default function Login() {
           <div style={{
             backgroundColor: 'white',
             padding: '2rem 1.5rem',
-            borderRadius: '24px',
+            borderRadius: 'var(--radius-xl)',
             boxShadow: '0 -10px 40px rgba(0,0,0,0.2)',
             textAlign: 'center',
             width: '100%',
             maxWidth: '400px',
             animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
           }}>
-            <div style={{ width: '40px', height: '4px', backgroundColor: '#e2e8f0', borderRadius: '4px', margin: '0 auto 1.5rem auto' }} />
+            <div style={{ width: '40px', height: '4px', backgroundColor: '#e2e8f0', borderRadius: 'var(--radius-xs)', margin: '0 auto 1.5rem auto' }} />
             <h3 style={{ margin: '0 0 1rem 0', color: 'var(--primary-color)', fontSize: '1.25rem', fontWeight: 800 }}>Install VGM CKD</h3>
             <p style={{ margin: '0 0 1.5rem 0', color: '#475569', fontSize: '0.9rem', lineHeight: '1.5' }}>
               Install this application on your home screen for quick and easy access when you're offline.
             </p>
-            <div style={{ backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '12px', textAlign: 'left', marginBottom: '1.5rem' }}>
+            <div style={{ backgroundColor: '#f8fafc', padding: '1rem', borderRadius: 'var(--radius-card)', textAlign: 'left', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                <span style={{ backgroundColor: 'white', padding: '0.4rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}><Share size={16} color="var(--primary-color)" /></span>
+                <span style={{ backgroundColor: 'white', padding: '0.4rem', borderRadius: 'var(--radius-md)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}><Share size={16} color="var(--primary-color)" /></span>
                 <span style={{ fontSize: '0.85rem', color: '#334155', fontWeight: 500 }}>1. Tap the <strong>Share</strong> button at the bottom of Safari.</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <span style={{ backgroundColor: 'white', padding: '0.4rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}><Download size={16} color="var(--primary-color)" /></span>
+                <span style={{ backgroundColor: 'white', padding: '0.4rem', borderRadius: 'var(--radius-md)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}><Download size={16} color="var(--primary-color)" /></span>
                 <span style={{ fontSize: '0.85rem', color: '#334155', fontWeight: 500 }}>2. Tap <strong>Add to Home Screen</strong>.</span>
               </div>
             </div>

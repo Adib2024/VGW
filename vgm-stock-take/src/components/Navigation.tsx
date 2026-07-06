@@ -67,7 +67,7 @@ export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, s
           right: 0;
           margin-top: 0.5rem;
           background: white;
-          border-radius: 16px;
+          border-radius: var(--radius-lg);
           box-shadow: 0 10px 40px rgba(0,0,0,0.1);
           border: 1px solid #f1f5f9;
           padding: 0.5rem;
@@ -87,7 +87,7 @@ export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, s
           align-items: center;
           gap: 0.75rem;
           padding: 0.75rem;
-          border-radius: 10px;
+          border-radius: var(--radius-md);
           border: none;
           background: none;
           width: 100%;
@@ -158,7 +158,7 @@ export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, s
               {extraMenuItems && extraMenuItems(() => setShowMenu(false))}
 
               <div style={{ padding: '0 0.75rem', margin: '0.5rem 0' }}>
-                <select value={language} onChange={(e) => { setLanguage(e.target.value as any); setShowMenu(false); }} style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#334155', fontSize: '0.85rem', fontWeight: 600, outline: 'none', cursor: 'pointer' }}>
+                <select value={language} onChange={(e) => { setLanguage(e.target.value as any); setShowMenu(false); }} style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#334155', fontSize: '0.85rem', fontWeight: 600, outline: 'none', cursor: 'pointer' }}>
                   <option value="EN">English</option>
                   <option value="BM">Bahasa Melayu</option>
                   <option value="DE">Deutsch</option>

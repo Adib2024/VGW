@@ -121,7 +121,7 @@ export default function StockTakeDashboard() {
         }
         .dash-card {
           padding: 1.25rem !important;
-          border-radius: 20px !important;
+          border-radius: var(--radius-panel) !important;
           background: #ffffff !important;
           border: 1px solid #f1f5f9 !important;
           box-shadow: 0 10px 30px -5px rgba(0,30,80,0.05), 0 4px 6px -2px rgba(0,30,80,0.025) !important;
@@ -148,7 +148,7 @@ export default function StockTakeDashboard() {
         .dash-card-icon {
           width: 48px;
           height: 48px;
-          border-radius: 14px;
+          border-radius: var(--radius-card);
           display: flex;
           align-items: center;
           justify-content: center;

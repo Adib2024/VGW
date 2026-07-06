@@ -4,10 +4,12 @@ import { Navigation } from '../../components/Navigation';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { supabase, fetchAllRows } from '../../lib/supabase';
-import { Download, User as UserIcon } from 'lucide-react';
+import { Download, User as UserIcon, PackageSearch } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { BottomNav } from '../../components/ui/BottomNav';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { EmptyState } from '../../components/ui/EmptyState';
 import { getStatusColor, getStatusBadgeColors } from '../../lib/statusColor';
 
 
@@ -132,13 +134,13 @@ export default function UserProgress() {
 
         {/* User Summary Card */}
         <Card style={{ marginBottom: '1.5rem', padding: '0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--surface-color)', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--surface-color)', borderTopLeftRadius: 'var(--radius-card)', borderTopRightRadius: 'var(--radius-card)' }}>
             <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--primary-color)' }}>{t('userSummary') || 'User Summary'}</h2>
-            <div style={{ backgroundColor: 'var(--primary-color)', color: 'white', padding: '0.5rem', borderRadius: '8px' }}>
+            <div style={{ backgroundColor: 'var(--primary-color)', color: 'white', padding: '0.5rem', borderRadius: 'var(--radius-md)' }}>
               <UserIcon size={20} />
             </div>
           </div>
-          <div style={{ padding: '1.5rem', backgroundColor: '#fff', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
+          <div style={{ padding: '1.5rem', backgroundColor: '#fff', borderBottomLeftRadius: 'var(--radius-card)', borderBottomRightRadius: 'var(--radius-card)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
                 <span style={{ color: '#64748b', fontWeight: 500 }}>{t('name') || 'Name'}:</span>
@@ -194,7 +196,7 @@ export default function UserProgress() {
             </div>
 
             {/* Overall Progress Bar */}
-            <div style={{ marginBottom: '2.5rem', backgroundColor: '#f1f5f9', borderRadius: '999px', height: '12px', width: '100%', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+            <div style={{ marginBottom: '2.5rem', backgroundColor: '#f1f5f9', borderRadius: 'var(--radius-full)', height: '12px', width: '100%', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
               <div style={{ 
                 height: '100%', 
                 backgroundColor: 'var(--success-color)',
@@ -207,14 +209,14 @@ export default function UserProgress() {
               {parts.filter(p => p.status === 'Verified').length} {t('verified').toLowerCase()} ({parts.length ? Math.round((parts.filter(p => p.status === 'Verified').length / parts.length) * 100) : 0}%)
             </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#f8fafc', borderRadius: 'var(--radius-card)', border: '1px solid #e2e8f0' }}>
               <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <label htmlFor="progress-status-filter" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>{t('filterByStatus') || 'Filter by Status'}</label>
                 <select
                   id="progress-status-filter"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
+                  style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #cbd5e1', outline: 'none' }}
                 >
                   <option value="all">{t('allStatuses') || 'All Statuses'}</option>
                   <option value="Not Counted">{t('notCounted')}</option>
@@ -228,7 +230,7 @@ export default function UserProgress() {
                   id="progress-location-filter"
                   value={locationFilter}
                   onChange={(e) => setLocationFilter(e.target.value)}
-                  style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
+                  style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #cbd5e1', outline: 'none' }}
                 >
                   <option value="all">{t('allLocations') || 'All Locations'}</option>
                   {uniqueLocations.map(loc => (
@@ -240,16 +242,24 @@ export default function UserProgress() {
 
             <h3 style={{ marginBottom: '1rem' }}>{t('recentActivity')}</h3>
             {loading ? (
-              <p>{t('loadingData') || 'Loading data...'}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {[0, 1, 2, 3].map(i => (
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1.25rem', backgroundColor: '#fff', borderRadius: 'var(--radius-card)', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+                    <Skeleton width="40%" height="1.1rem" />
+                    <Skeleton width="65%" height="0.875rem" />
+                    <Skeleton width="50%" height="0.875rem" />
+                  </div>
+                ))}
+              </div>
             ) : (
               <div>
                 {isMobile ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {filteredParts.map((p, index) => (
-                      <div key={`${p.id}-${index}`} style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', borderLeft: `6px solid ${getStatusColor(p.status)}` }}>
+                      <div key={`${p.id}-${index}`} style={{ backgroundColor: '#fff', borderRadius: 'var(--radius-card)', padding: '1.25rem', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', borderLeft: `6px solid ${getStatusColor(p.status)}` }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                           <span style={{ fontWeight: 900, fontSize: '1.1rem', color: '#0f172a' }}>{p.material || p.part_no || '-'}</span>
-                          <span style={{ padding: '0.25rem 0.75rem', borderRadius: '4px', backgroundColor: getStatusBadgeColors(p.status).bg, color: getStatusBadgeColors(p.status).text, fontSize: '0.75rem', fontWeight: 700 }}>
+                          <span style={{ padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-xs)', backgroundColor: getStatusBadgeColors(p.status).bg, color: getStatusBadgeColors(p.status).text, fontSize: '0.75rem', fontWeight: 700 }}>
                             {p.status}
                           </span>
                         </div>
@@ -270,7 +280,7 @@ export default function UserProgress() {
                       </div>
                     ))}
                     {filteredParts.length === 0 && (
-                      <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>{t('noParts') || 'No activity found.'}</p>
+                      <EmptyState icon={<PackageSearch size={40} strokeWidth={1.5} />} message={t('noParts') || 'No activity found.'} />
                     )}
                   </div>
                 ) : (
@@ -293,7 +303,7 @@ export default function UserProgress() {
                             <td style={{ padding: '0.75rem' }}>
                               <span style={{
                                 padding: '0.25rem 0.5rem',
-                                borderRadius: '4px',
+                                borderRadius: 'var(--radius-xs)',
                                 fontSize: '0.75rem',
                                 fontWeight: 600,
                                 backgroundColor: getStatusBadgeColors(p.status).bg,
@@ -310,7 +320,9 @@ export default function UserProgress() {
                         ))}
                         {filteredParts.length === 0 && (
                           <tr>
-                            <td colSpan={5} style={{ padding: '2rem', textAlign: 'center' }}>{t('noParts') || 'No activity found.'}</td>
+                            <td colSpan={5}>
+                              <EmptyState icon={<PackageSearch size={40} strokeWidth={1.5} />} message={t('noParts') || 'No activity found.'} />
+                            </td>
                           </tr>
                         )}
                       </tbody>
