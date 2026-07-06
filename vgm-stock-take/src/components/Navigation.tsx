@@ -3,14 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { ChevronLeft, LogOut } from 'lucide-react';
+import { ConfirmDialog } from './ui/ConfirmDialog';
 
 interface NavigationProps {
   title: string;
+  titleAccessory?: React.ReactNode;
   showBack?: boolean;
   backTo?: string;
+  extraMenuItems?: (closeMenu: () => void) => React.ReactNode;
 }
 
-export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, backTo = '/stock-take' }) => {
+export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, showBack = true, backTo = '/stock-take', extraMenuItems }) => {
   const navigate = useNavigate();
   const { t, language, setLanguage } = useLanguage();
   const { user, logout } = useAuth();
@@ -129,6 +132,7 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
             {title}
           </span>
+          {titleAccessory}
         </div>
 
         {/* Right: Profile Toggle & Language Indicator */}
@@ -150,7 +154,9 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
                 <div style={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 700 }}>{user?.name || user?.id}</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--primary-color)', fontWeight: 800, marginTop: '2px', textTransform: 'uppercase' }}>{user?.role}</div>
               </div>
-              
+
+              {extraMenuItems && extraMenuItems(() => setShowMenu(false))}
+
               <div style={{ padding: '0 0.75rem', margin: '0.5rem 0' }}>
                 <select value={language} onChange={(e) => { setLanguage(e.target.value as any); setShowMenu(false); }} style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#334155', fontSize: '0.85rem', fontWeight: 600, outline: 'none', cursor: 'pointer' }}>
                   <option value="EN">English</option>
@@ -167,18 +173,15 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
         </div>
       </div>
 
-      {showLogoutConfirm && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ backgroundColor: '#fff', padding: '2rem', borderRadius: '16px', maxWidth: '320px', width: '90%', textAlign: 'center' }}>
-            <h3 style={{ margin: '0 0 1rem 0', color: 'var(--primary-color)' }}>{t('logout')}</h3>
-            <p style={{ margin: '0 0 2rem 0', color: '#666' }}>{t('confirmLogout') || 'Are you sure you want to log out?'}</p>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-              <button onClick={() => setShowLogoutConfirm(false)} style={{ padding: '0.5rem 1.5rem', borderRadius: '8px', border: '1px solid #ccc', background: '#fff', cursor: 'pointer', fontWeight: 600 }}>{t('cancel') || 'Cancel'}</button>
-              <button onClick={confirmLogout} style={{ padding: '0.5rem 1.5rem', borderRadius: '8px', border: 'none', background: 'var(--danger-color)', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>{t('logout')}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={showLogoutConfirm}
+        title={t('logout')}
+        message={t('confirmLogout') || 'Are you sure you want to log out?'}
+        confirmLabel={t('logout')}
+        cancelLabel={t('cancel') || 'Cancel'}
+        onConfirm={confirmLogout}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </>
   );
 };

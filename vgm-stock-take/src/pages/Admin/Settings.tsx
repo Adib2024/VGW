@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Navigation } from '../../components/Navigation';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { supabase } from '../../lib/supabase';
 import { Upload, AlertTriangle, CheckCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -392,40 +393,16 @@ export default function AdminSettings() {
         `}</style>
       </main>
 
-      {showUnlockModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 9999
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '2rem',
-            borderRadius: '16px',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-            textAlign: 'center',
-            maxWidth: '400px',
-            width: '90%'
-          }}>
-            <h3 style={{ margin: '0 0 1rem 0', color: '#e11d48', fontSize: '1.25rem', fontWeight: 800 }}>Confirm Unlock</h3>
-            <p style={{ margin: '0 0 1.5rem 0', color: '#475569', fontSize: '0.95rem', fontWeight: 500 }}>
-              Are you sure you want to unlock and <strong>CLEAR ALL DATA</strong> for Zone {selectedZone.toUpperCase()}? This action cannot be undone.
-            </p>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-              <Button variant="secondary" onClick={() => setShowUnlockModal(false)} style={{ flex: 1, backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>
-                Cancel
-              </Button>
-              <Button variant="danger" onClick={confirmUnlock} style={{ flex: 1 }}>
-                Unlock Zone
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={showUnlockModal}
+        title="Confirm Unlock"
+        message={<>Are you sure you want to unlock and <strong>CLEAR ALL DATA</strong> for Zone {selectedZone.toUpperCase()}? This action cannot be undone.</>}
+        confirmLabel="Unlock Zone"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={confirmUnlock}
+        onCancel={() => setShowUnlockModal(false)}
+      />
       <BottomNav />
     </div>
   );
