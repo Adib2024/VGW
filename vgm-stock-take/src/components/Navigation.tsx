@@ -47,7 +47,7 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
         .global-nav-title {
           font-size: 1.15rem;
           font-weight: 800;
-          color: #001e50;
+          color: var(--primary-color);
           margin: 0;
           letter-spacing: -0.02em;
           display: flex;
@@ -98,7 +98,7 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
           background: #f8fafc;
         }
         .menu-item.danger {
-          color: #ef4444;
+          color: var(--danger-color);
         }
         .menu-item.danger:hover {
           background: #fef2f2;
@@ -122,7 +122,7 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
         {/* Left: Brand & Title */}
         <div className="global-nav-title">
           {showBack && (
-            <button onClick={handleBack} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0, display: 'flex', color: '#001e50', marginRight: '0.25rem', flexShrink: 0 }}>
+            <button onClick={handleBack} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0, display: 'flex', color: 'var(--primary-color)', marginRight: '0.25rem', flexShrink: 0 }}>
               <ChevronLeft size={24} />
             </button>
           )}
@@ -138,7 +138,7 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
           </span>
           <button 
             onClick={() => setShowMenu(!showMenu)}
-            style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#001e50', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', boxShadow: '0 4px 10px rgba(0,30,80,0.2)' }}
+            style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'var(--primary-color)', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', boxShadow: '0 4px 10px rgba(0,30,80,0.2)' }}
           >
             {user?.name?.charAt(0).toUpperCase() || user?.id?.charAt(0).toUpperCase() || 'U'}
           </button>
@@ -148,7 +148,7 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
               <div style={{ padding: '0.5rem 0.75rem', borderBottom: '1px solid #f1f5f9', marginBottom: '0.25rem' }}>
                 <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>{t('loggedInAs')}</div>
                 <div style={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 700 }}>{user?.name || user?.id}</div>
-                <div style={{ fontSize: '0.7rem', color: '#1877f2', fontWeight: 800, marginTop: '2px', textTransform: 'uppercase' }}>{user?.role}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--primary-color)', fontWeight: 800, marginTop: '2px', textTransform: 'uppercase' }}>{user?.role}</div>
               </div>
               
               <div style={{ padding: '0 0.75rem', margin: '0.5rem 0' }}>
@@ -170,11 +170,11 @@ export const Navigation: React.FC<NavigationProps> = ({ title, showBack = true, 
       {showLogoutConfirm && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ backgroundColor: '#fff', padding: '2rem', borderRadius: '16px', maxWidth: '320px', width: '90%', textAlign: 'center' }}>
-            <h3 style={{ margin: '0 0 1rem 0', color: '#001e50' }}>{t('logout')}</h3>
+            <h3 style={{ margin: '0 0 1rem 0', color: 'var(--primary-color)' }}>{t('logout')}</h3>
             <p style={{ margin: '0 0 2rem 0', color: '#666' }}>{t('confirmLogout') || 'Are you sure you want to log out?'}</p>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
               <button onClick={() => setShowLogoutConfirm(false)} style={{ padding: '0.5rem 1.5rem', borderRadius: '8px', border: '1px solid #ccc', background: '#fff', cursor: 'pointer', fontWeight: 600 }}>{t('cancel') || 'Cancel'}</button>
-              <button onClick={confirmLogout} style={{ padding: '0.5rem 1.5rem', borderRadius: '8px', border: 'none', background: 'red', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>{t('logout')}</button>
+              <button onClick={confirmLogout} style={{ padding: '0.5rem 1.5rem', borderRadius: '8px', border: 'none', background: 'var(--danger-color)', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>{t('logout')}</button>
             </div>
           </div>
         </div>

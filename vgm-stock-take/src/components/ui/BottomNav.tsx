@@ -69,7 +69,7 @@ export const BottomNav: React.FC = () => {
           transition: color 0.2s;
         }
         .nav-item.active {
-          color: #001e50;
+          color: var(--primary-color);
         }
         .nav-item svg {
           transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);

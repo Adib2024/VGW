@@ -9,6 +9,7 @@ import { supabase, fetchAllRows } from '../../lib/supabase';
 import { Search } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { BottomNav } from '../../components/ui/BottomNav';
+import { getStatusColor } from '../../lib/statusColor';
 
 export default function StockTakeListView() {
   const { t } = useLanguage();
@@ -158,7 +159,7 @@ export default function StockTakeListView() {
               <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#666' }}>
                 {stats.percentage}% ({stats.completed}/{stats.total})
               </div>
-              <button style={{ color: '#1877f2', fontSize: '0.75rem', fontWeight: 600, border: 'none', background: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+              <button style={{ color: 'var(--primary-color)', fontSize: '0.75rem', fontWeight: 600, border: 'none', background: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
                 Click for Status
               </button>
             </div>
@@ -186,7 +187,7 @@ export default function StockTakeListView() {
                 <div
                   style={{
                     height: '100%',
-                    backgroundColor: '#2ecc71',
+                    backgroundColor: 'var(--success-color)',
                     width: `${stats.percentage}%`,
                     transition: 'width 0.5s ease-out'
                   }}
@@ -290,11 +291,11 @@ export default function StockTakeListView() {
                   <div 
                     key={part.id} 
                     onClick={() => navigate(`/stock-take/count/${part._table}/${part.id}`)}
-                    style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', borderLeft: `6px solid ${part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c'}`, cursor: 'pointer' }}
+                    style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', borderLeft: `6px solid ${getStatusColor(part.status)}`, cursor: 'pointer' }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                       <span style={{ fontWeight: 900, fontSize: '1.25rem', color: '#0f172a' }}>#{index + 1}</span>
-                      <span style={{ padding: '0.25rem 0.75rem', borderRadius: '4px', border: `1px solid ${part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c'}`, color: part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c', fontSize: '0.75rem', fontWeight: 700 }}>
+                      <span style={{ padding: '0.25rem 0.75rem', borderRadius: '4px', border: `1px solid ${getStatusColor(part.status)}`, color: getStatusColor(part.status), fontSize: '0.75rem', fontWeight: 700 }}>
                         {part.status}
                       </span>
                     </div>
@@ -331,7 +332,7 @@ export default function StockTakeListView() {
                         onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                         onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                       >
-                        <td style={{ padding: '1rem', borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px', borderLeft: `4px solid ${part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c'}`, fontWeight: 800, color: '#333' }}>
+                        <td style={{ padding: '1rem', borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px', borderLeft: `4px solid ${getStatusColor(part.status)}`, fontWeight: 800, color: '#333' }}>
                           {index + 1}
                         </td>
 
@@ -347,8 +348,8 @@ export default function StockTakeListView() {
                               display: 'inline-block',
                               padding: '0.25rem 0.75rem',
                               borderRadius: '4px',
-                              border: `1px solid ${part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c'}`,
-                              color: part.status === 'Verified' ? '#2ecc71' : part.status === 'Counted' ? '#f39c12' : '#e74c3c',
+                              border: `1px solid ${getStatusColor(part.status)}`,
+                              color: getStatusColor(part.status),
                               fontSize: '0.75rem',
                               fontWeight: 600
                             }}

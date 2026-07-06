@@ -202,7 +202,7 @@ export default function Tracker() {
                     backgroundColor: serialNumber ? '#f0fdf4' : '#f8fafc', 
                     borderRadius: '8px', 
                     border: serialNumber ? '2px solid #86efac' : '2px dashed #cbd5e1', 
-                    color: serialNumber ? '#166534' : '#94a3b8', 
+                    color: serialNumber ? 'var(--success-text)' : '#94a3b8',
                     fontWeight: serialNumber ? 800 : 500,
                     fontSize: '1.1rem',
                     textAlign: 'center',

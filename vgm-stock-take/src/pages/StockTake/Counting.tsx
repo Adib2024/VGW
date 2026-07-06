@@ -213,7 +213,7 @@ export default function StockTakeCounting() {
           {t('back')}
         </button>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0066cc', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary-color)', textTransform: 'uppercase', letterSpacing: '1px' }}>
             COUNTER {table?.toUpperCase()} VIEW
           </div>
           <h1 style={{ margin: '0', fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{t('itemDetails')}</h1>
@@ -225,8 +225,8 @@ export default function StockTakeCounting() {
         <Card style={{ padding: '2rem', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: 'none' }}>
           
           {/* Item ID & Edit Button */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #0066cc', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0066cc', margin: 0, lineHeight: 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid var(--primary-color)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--primary-color)', margin: 0, lineHeight: 1 }}>
               {part.no || part.id}
             </h2>
             
@@ -235,7 +235,7 @@ export default function StockTakeCounting() {
                 {(canEditBox() || canEditRecount()) && (
                   <button 
                     onClick={() => setIsEditing(true)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: '8px', backgroundColor: 'transparent', cursor: 'pointer', color: '#0066cc', fontWeight: 600 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: '8px', backgroundColor: 'transparent', cursor: 'pointer', color: 'var(--primary-color)', fontWeight: 600 }}
                   >
                     <Edit3 size={16} /> {t('edit')}
                   </button>
@@ -259,7 +259,7 @@ export default function StockTakeCounting() {
                 </button>
                 <button 
                   onClick={handleSave} disabled={saving}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.5rem', border: 'none', borderRadius: '8px', backgroundColor: '#0066cc', cursor: 'pointer', color: 'white', fontWeight: 600 }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.5rem', border: 'none', borderRadius: '8px', backgroundColor: 'var(--primary-color)', cursor: 'pointer', color: 'white', fontWeight: 600 }}
                 >
                   <Save size={16} /> {saving ? t('saving') : t('save')}
                 </button>
@@ -287,7 +287,7 @@ export default function StockTakeCounting() {
           {/* Count Data */}
           {(counterKeys.length > 0 || verifierKeys.length > 0) && (
             <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0066cc', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--primary-color)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {t('countData')} <Circle size={18} fill="#334155" color="#334155" />
               </h3>
 
@@ -305,17 +305,17 @@ export default function StockTakeCounting() {
                         disabled={!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined && part[key] !== '')}
                         style={{
                           width: '100%', padding: '0.75rem 1rem', borderRadius: '8px',
-                          border: formData[key] ? '1px solid #22c55e' : '1px solid #cbd5e1',
+                          border: formData[key] ? '1px solid var(--success-color)' : '1px solid #cbd5e1',
                           backgroundColor: (!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined && part[key] !== '')) ? '#f8fafc' : 'white',
-                          color: formData[key] ? '#22c55e' : '#0f172a',
+                          color: formData[key] ? 'var(--success-color)' : '#0f172a',
                           fontWeight: formData[key] ? 800 : 500, outline: 'none',
                           cursor: (!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined)) ? 'not-allowed' : 'text'
                         }}
                         placeholder=""
                       />
                       {formData[key] && (
-                         <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#22c55e' }}>
-                           <Circle size={10} fill="#22c55e" />
+                         <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--success-color)' }}>
+                           <Circle size={10} fill="var(--success-color)" />
                          </div>
                       )}
                     </div>
@@ -335,16 +335,16 @@ export default function StockTakeCounting() {
                         disabled={!isEditing || !canEditRecount()}
                         style={{
                           width: '100%', padding: '0.75rem 1rem', borderRadius: '8px',
-                          border: formData[key] ? '1px solid #0066cc' : '1px solid #cbd5e1',
+                          border: formData[key] ? '1px solid var(--primary-color)' : '1px solid #cbd5e1',
                           backgroundColor: (!isEditing || !canEditRecount()) ? '#f8fafc' : 'white',
-                          color: formData[key] ? '#0066cc' : '#0f172a',
+                          color: formData[key] ? 'var(--primary-color)' : '#0f172a',
                           fontWeight: formData[key] ? 800 : 500, outline: 'none',
                           cursor: (!isEditing || !canEditRecount()) ? 'not-allowed' : 'text'
                         }}
                       />
                        {formData[key] && (
-                         <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#0066cc' }}>
-                           <Circle size={10} fill="#0066cc" />
+                         <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary-color)' }}>
+                           <Circle size={10} fill="var(--primary-color)" />
                          </div>
                       )}
                     </div>
@@ -362,7 +362,7 @@ export default function StockTakeCounting() {
                 {part.status === 'Verified' ? t('verified') : part.status === 'Counted' ? t('counted') : t('notCounted')}
               </div>
               {!isEditing && canEditRecount() && part.status === 'Counted' && (
-                  <Button onClick={handleVerify} style={{ padding: '0.25rem 1rem', backgroundColor: '#22c55e', fontSize: '0.75rem', marginLeft: 'auto' }}>
+                  <Button onClick={handleVerify} style={{ padding: '0.25rem 1rem', backgroundColor: 'var(--success-color)', fontSize: '0.75rem', marginLeft: 'auto' }}>
                     {t('verifyNow')}
                   </Button>
               )}
@@ -390,7 +390,7 @@ export default function StockTakeCounting() {
                      rows={2}
                      style={{
                        width: '100%', padding: '0.75rem 1rem', borderRadius: '8px',
-                       border: '2px dashed #f59e0b', backgroundColor: formData[key] ? 'white' : '#fffbeb',
+                       border: '2px dashed var(--warning-color)', backgroundColor: formData[key] ? 'white' : '#fffbeb',
                        color: '#d97706', outline: 'none', resize: 'none',
                        fontFamily: 'inherit', fontSize: '0.875rem',
                        cursor: (!isEditing || (!canEditBox() && !canEditRecount())) ? 'not-allowed' : 'text'

@@ -16,7 +16,7 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: any, resetErrorBo
       padding: '2rem',
       textAlign: 'center'
     }}>
-      <AlertTriangle size={64} color="#ef4444" style={{ marginBottom: '1.5rem' }} />
+      <AlertTriangle size={64} color="var(--danger-color)" style={{ marginBottom: '1.5rem' }} />
       <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Something went wrong</h1>
       <p style={{ color: '#94a3b8', marginBottom: '2rem', maxWidth: '400px' }}>
         The application encountered an unexpected error. This might be due to a temporary network issue or a hardware feature failing.

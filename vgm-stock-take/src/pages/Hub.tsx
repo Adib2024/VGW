@@ -47,7 +47,7 @@ export default function Hub() {
         .hub-title {
           font-size: 1.75rem;
           font-weight: 800;
-          color: #001e50;
+          color: var(--primary-color);
           margin-bottom: 0.25rem;
           letter-spacing: -0.02em;
         }

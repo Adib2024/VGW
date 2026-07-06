@@ -197,7 +197,7 @@ export default function Login() {
               border: '1px solid rgba(0,30,80,0.2)', 
               backgroundColor: 'rgba(255,255,255,0.9)',
               backdropFilter: 'blur(10px)',
-              color: '#001e50',
+              color: 'var(--primary-color)',
               fontWeight: 600,
               fontSize: '0.75rem',
               cursor: 'pointer',
@@ -251,7 +251,7 @@ export default function Login() {
             />
           </div>
 
-          <h2 style={{ textAlign: 'center', margin: '0', color: '#001e50', fontSize: '1.25rem', fontWeight: 700 }}>VGM CKD</h2>
+          <h2 style={{ textAlign: 'center', margin: '0', color: 'var(--primary-color)', fontSize: '1.25rem', fontWeight: 700 }}>VGM CKD</h2>
           <p style={{ textAlign: 'center', color: '#666', fontSize: '0.75rem', marginBottom: '2rem' }}>
             CKD Logistic Department
           </p>
@@ -302,7 +302,7 @@ export default function Login() {
             <Button
               type="submit"
               fullWidth
-              style={{ marginTop: '1rem', backgroundColor: '#1877f2', borderRadius: '8px', padding: '0.75rem' }}
+              style={{ marginTop: '1rem', backgroundColor: 'var(--primary-color)', borderRadius: '8px', padding: '0.75rem' }}
               disabled={loading}
             >
               {loading ? '...' : t('login')}
@@ -364,17 +364,17 @@ export default function Login() {
             animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
           }}>
             <div style={{ width: '40px', height: '4px', backgroundColor: '#e2e8f0', borderRadius: '4px', margin: '0 auto 1.5rem auto' }} />
-            <h3 style={{ margin: '0 0 1rem 0', color: '#001e50', fontSize: '1.25rem', fontWeight: 800 }}>Install VGM CKD</h3>
+            <h3 style={{ margin: '0 0 1rem 0', color: 'var(--primary-color)', fontSize: '1.25rem', fontWeight: 800 }}>Install VGM CKD</h3>
             <p style={{ margin: '0 0 1.5rem 0', color: '#475569', fontSize: '0.9rem', lineHeight: '1.5' }}>
               Install this application on your home screen for quick and easy access when you're offline.
             </p>
             <div style={{ backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '12px', textAlign: 'left', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                <span style={{ backgroundColor: 'white', padding: '0.4rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}><Share size={16} color="#001e50" /></span>
+                <span style={{ backgroundColor: 'white', padding: '0.4rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}><Share size={16} color="var(--primary-color)" /></span>
                 <span style={{ fontSize: '0.85rem', color: '#334155', fontWeight: 500 }}>1. Tap the <strong>Share</strong> button at the bottom of Safari.</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <span style={{ backgroundColor: 'white', padding: '0.4rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}><Download size={16} color="#001e50" /></span>
+                <span style={{ backgroundColor: 'white', padding: '0.4rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}><Download size={16} color="var(--primary-color)" /></span>
                 <span style={{ fontSize: '0.85rem', color: '#334155', fontWeight: 500 }}>2. Tap <strong>Add to Home Screen</strong>.</span>
               </div>
             </div>

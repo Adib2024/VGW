@@ -8,6 +8,7 @@ import { Download, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { BottomNav } from '../../components/ui/BottomNav';
+import { getStatusColor, getStatusBadgeColors } from '../../lib/statusColor';
 
 
 export default function UserProgress() {
@@ -196,7 +197,7 @@ export default function UserProgress() {
             <div style={{ marginBottom: '2.5rem', backgroundColor: '#f1f5f9', borderRadius: '999px', height: '12px', width: '100%', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
               <div style={{ 
                 height: '100%', 
-                backgroundColor: '#22c55e', 
+                backgroundColor: 'var(--success-color)',
                 width: `${parts.length ? (parts.filter(p => p.status === 'Verified').length / parts.length) * 100 : 0}%`,
                 transition: 'width 0.5s ease-in-out'
               }} />
@@ -243,10 +244,10 @@ export default function UserProgress() {
                 {isMobile ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {filteredParts.map((p, index) => (
-                      <div key={`${p.id}-${index}`} style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', borderLeft: `6px solid ${p.status === 'Verified' ? '#2ecc71' : p.status === 'Counted' ? '#f39c12' : '#e74c3c'}` }}>
+                      <div key={`${p.id}-${index}`} style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', borderLeft: `6px solid ${getStatusColor(p.status)}` }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                           <span style={{ fontWeight: 900, fontSize: '1.1rem', color: '#0f172a' }}>{p.material || p.part_no || '-'}</span>
-                          <span style={{ padding: '0.25rem 0.75rem', borderRadius: '4px', backgroundColor: p.status === 'Verified' ? '#dcfce7' : p.status === 'Counted' ? '#fef3c7' : '#fee2e2', color: p.status === 'Verified' ? '#166534' : p.status === 'Counted' ? '#92400e' : '#991b1b', fontSize: '0.75rem', fontWeight: 700 }}>
+                          <span style={{ padding: '0.25rem 0.75rem', borderRadius: '4px', backgroundColor: getStatusBadgeColors(p.status).bg, color: getStatusBadgeColors(p.status).text, fontSize: '0.75rem', fontWeight: 700 }}>
                             {p.status}
                           </span>
                         </div>
@@ -293,8 +294,8 @@ export default function UserProgress() {
                                 borderRadius: '4px',
                                 fontSize: '0.75rem',
                                 fontWeight: 600,
-                                backgroundColor: p.status === 'Verified' ? '#dcfce7' : p.status === 'Counted' ? '#fef3c7' : '#fee2e2',
-                                color: p.status === 'Verified' ? '#166534' : p.status === 'Counted' ? '#92400e' : '#991b1b'
+                                backgroundColor: getStatusBadgeColors(p.status).bg,
+                                color: getStatusBadgeColors(p.status).text
                               }}>
                                 {p.status}
                               </span>

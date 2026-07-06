@@ -309,12 +309,12 @@ export default function AdminSettings() {
               alignItems: 'center',
               gap: '0.75rem',
               backgroundColor: message.type === 'success' ? '#f0fdf4' : '#fef2f2',
-              color: message.type === 'success' ? '#166534' : '#991b1b',
+              color: message.type === 'success' ? 'var(--success-text)' : 'var(--danger-text)',
               border: `1px solid ${message.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
               fontWeight: 500,
               boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
             }}>
-              {message.type === 'success' ? <CheckCircle size={20} color="#22c55e" /> : <AlertTriangle size={20} color="#ef4444" />}
+              {message.type === 'success' ? <CheckCircle size={20} color="var(--success-color)" /> : <AlertTriangle size={20} color="var(--danger-color)" />}
               {message.text}
             </div>
           )}
@@ -325,7 +325,7 @@ export default function AdminSettings() {
               <h3 style={{ color: '#be123c', margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>Zone Locked / Table Exists</h3>
               <p style={{ color: '#9f1239', margin: '0 0 1.5rem 0' }}>This zone already has a database table created. To prevent schema errors and duplicate data, you must unlock and clear it before uploading a new master file.</p>
               
-              <Button onClick={handleUnlockZone} disabled={checkingLock} style={{ backgroundColor: '#e11d48', color: 'white', fontWeight: 600, padding: '0.75rem 1.5rem', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+              <Button onClick={handleUnlockZone} disabled={checkingLock} style={{ backgroundColor: 'var(--danger-color)', color: 'white', fontWeight: 600, padding: '0.75rem 1.5rem', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
                 {checkingLock ? 'Unlocking...' : 'Unlock & Clear Zone Schema'}
               </Button>
             </div>
@@ -340,7 +340,7 @@ export default function AdminSettings() {
                 disabled={uploading || checkingLock}
               />
               <label htmlFor="excel-upload" style={{ width: '100%', cursor: 'pointer' }}>
-                <Button as="span" style={{ pointerEvents: 'none', width: '100%', display: 'flex', justifyContent: 'center', padding: '1rem', fontSize: '1.05rem', fontWeight: 600, backgroundColor: '#001e50', color: '#ffffff', borderRadius: '8px', transition: 'background-color 0.2s', opacity: (uploading || checkingLock) ? 0.7 : 1 }} disabled={uploading || checkingLock}>
+                <Button as="span" style={{ pointerEvents: 'none', width: '100%', display: 'flex', justifyContent: 'center', padding: '1rem', fontSize: '1.05rem', fontWeight: 600, backgroundColor: 'var(--primary-color)', color: '#ffffff', borderRadius: '8px', transition: 'background-color 0.2s', opacity: (uploading || checkingLock) ? 0.7 : 1 }} disabled={uploading || checkingLock}>
                   {uploading ? (
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <div style={{ width: '1rem', height: '1rem', border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />

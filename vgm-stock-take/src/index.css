@@ -8,12 +8,19 @@
   --text-primary: #0f172a;
   --text-secondary: #64748b;
 
-  --primary-color: #1e293b;
-  /* Dark for high contrast */
-  --primary-hover: #334155;
-  --success-color: #10b981;
+  --primary-color: #001e50;
+  /* VW brand navy — unifies header/logo navy and primary action blue */
+  --primary-hover: #002d6b;
+  --success-color: #22c55e;
   --danger-color: #ef4444;
   --warning-color: #f59e0b;
+
+  --success-bg: #dcfce7;
+  --success-text: #166534;
+  --warning-bg: #fef3c7;
+  --warning-text: #92400e;
+  --danger-bg: #fee2e2;
+  --danger-text: #991b1b;
 
   --border-color: rgba(0, 0, 0, 0.05);
   --glass-bg: rgba(255, 255, 255, 0.85);
