@@ -181,7 +181,7 @@ export default function StockTakeListView() {
                   top: '10px',
                   width: '80px',
                   height: '40px',
-                  backgroundImage: 'url("https://upload.wikimedia.org/wikipedia/commons/6/6d/Volkswagen_logo_2019.svg")',
+                  backgroundImage: 'url("/vw-logo.svg")',
                   backgroundSize: 'contain',
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'center',

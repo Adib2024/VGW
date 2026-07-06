@@ -244,7 +244,7 @@ export default function Login() {
             marginBottom: '1rem'
           }}>
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Volkswagen_logo_2019.svg"
+              src="/vw-logo.svg"
               alt="VW Logo"
               className="animate-spin-3d"
               style={{ width: '64px', height: '64px' }}

@@ -235,6 +235,11 @@ p {
   right: -90px;
   /* The total duration is controlled inline (14s-17s) so the 85%-15% gap = ~10 seconds */
   animation: driveParkExitLoop 15s infinite;
+  /* Promote to its own compositor layer so the browser animates `right` without
+     re-running full-page layout on every frame (position values are container-
+     relative percentages, so a pure `transform` rewrite isn't possible here). */
+  will-change: right, opacity;
+  transform: translateZ(0);
 }
 
 .car-icon-anim img {
@@ -296,4 +301,48 @@ tr:hover td {
 .status-dot.yellow {
   background-color: var(--warning-color);
   box-shadow: 0 0 8px var(--warning-color);
+}
+
+/* Interactive element polish (hover/active/focus) */
+/* Uses filter/transform/box-shadow rather than background-color so it still
+   shows up even when a caller overrides backgroundColor via inline style. */
+.ui-button {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.ui-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: var(--shadow-md);
+}
+
+.ui-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+  filter: brightness(0.96);
+  box-shadow: none;
+}
+
+.ui-button:disabled {
+  cursor: not-allowed;
+}
+
+.ui-button:focus-visible,
+.ui-card-interactive:focus-visible,
+.nav-item:focus-visible,
+.menu-item:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.ui-card-interactive {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ui-card-interactive:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-glow);
+}
+
+.ui-card-interactive:active {
+  transform: scale(0.99);
 }

@@ -47,7 +47,7 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   return (
-    <Component className={className} {...(props as any)} style={mergedStyle}>
+    <Component className={`ui-button ${className}`} {...(props as any)} style={mergedStyle}>
       {children}
     </Component>
   );

@@ -33,7 +33,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage, label, sho
         </div>
         {showCar && (
           <div className="car-icon-anim" style={{ bottom: '8px', animationDelay: carDelay, animationDuration: carDuration }}>
-            <img src="https://i.postimg.cc/4NMmDwqL/Golf-RL-Blue.webp" alt="car" style={{ width: '80px', height: 'auto', objectFit: 'contain' }} />
+            <img src="/car-golf.webp" alt="car" decoding="async" style={{ width: '80px', height: 'auto', objectFit: 'contain' }} />
           </div>
         )}
       </div>

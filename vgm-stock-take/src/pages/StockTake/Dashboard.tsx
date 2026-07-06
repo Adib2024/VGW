@@ -128,8 +128,16 @@ export default function StockTakeDashboard() {
           cursor: pointer;
           transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        .dash-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 16px 35px -5px rgba(0,30,80,0.1), 0 6px 10px -2px rgba(0,30,80,0.05) !important;
+        }
         .dash-card:active {
           transform: scale(0.98);
+        }
+        .dash-card:focus-visible {
+          outline: 2px solid var(--primary-color);
+          outline-offset: 2px;
         }
         .dash-card-header {
           display: flex;
