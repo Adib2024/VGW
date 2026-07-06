@@ -5,6 +5,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { Navigation } from '../../components/Navigation';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
 import { Camera, Save, X, Edit2, Battery } from 'lucide-react';
 import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
 
@@ -187,50 +188,50 @@ export default function Tracker() {
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#475569', marginBottom: '0.4rem' }}>Serial Number</label>
               {isManual ? (
-                <input 
-                  type="text" 
-                  value={serialNumber} 
+                <Input
+                  label="Serial Number"
+                  type="text"
+                  value={serialNumber}
                   onChange={e => setSerialNumber(e.target.value)}
-                  style={{ width: '100%', padding: '0.85rem', borderRadius: '8px', border: '2px solid #e2e8f0', fontSize: '1rem', outline: 'none' }}
                   placeholder="Enter SN manually"
                 />
               ) : (
-                <div style={{ 
-                    padding: '1rem', 
-                    backgroundColor: serialNumber ? '#f0fdf4' : '#f8fafc', 
-                    borderRadius: '8px', 
-                    border: serialNumber ? '2px solid #86efac' : '2px dashed #cbd5e1', 
-                    color: serialNumber ? 'var(--success-text)' : '#94a3b8',
-                    fontWeight: serialNumber ? 800 : 500,
-                    fontSize: '1.1rem',
-                    textAlign: 'center',
-                    wordBreak: 'break-all'
-                }}>
-                  {serialNumber || 'Awaiting scan...'}
-                </div>
+                <>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#475569', marginBottom: '0.4rem' }}>Serial Number</label>
+                  <div style={{
+                      padding: '1rem',
+                      backgroundColor: serialNumber ? '#f0fdf4' : '#f8fafc',
+                      borderRadius: '8px',
+                      border: serialNumber ? '2px solid #86efac' : '2px dashed #cbd5e1',
+                      color: serialNumber ? 'var(--success-text)' : '#94a3b8',
+                      fontWeight: serialNumber ? 800 : 500,
+                      fontSize: '1.1rem',
+                      textAlign: 'center',
+                      wordBreak: 'break-all'
+                  }}>
+                    {serialNumber || 'Awaiting scan...'}
+                  </div>
+                </>
               )}
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#475569', marginBottom: '0.4rem' }}>Part Number (Optional)</label>
-              <input 
-                type="text" 
-                value={partNumber} 
+              <Input
+                label="Part Number (Optional)"
+                type="text"
+                value={partNumber}
                 onChange={e => setPartNumber(e.target.value)}
-                style={{ width: '100%', padding: '0.85rem', borderRadius: '8px', border: '2px solid #e2e8f0', fontSize: '1rem', outline: 'none' }}
                 placeholder="e.g. 5G0915105"
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#475569', marginBottom: '0.4rem' }}>Location / Rack</label>
-              <input 
-                type="text" 
-                value={locationId} 
+              <Input
+                label="Location / Rack"
+                type="text"
+                value={locationId}
                 onChange={e => setLocationId(e.target.value)}
-                style={{ width: '100%', padding: '0.85rem', borderRadius: '8px', border: '2px solid #e2e8f0', fontSize: '1rem', outline: 'none' }}
                 placeholder="e.g. Rack 4A"
               />
             </div>

@@ -6,6 +6,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
 import { CheckCircle, Globe, Lock, Download, Share } from 'lucide-react';
 
 export default function Login() {
@@ -259,40 +260,32 @@ export default function Login() {
           <form onSubmit={handleLogin} className="flex-col gap-4" style={{ width: '100%' }}>
 
             {/* User ID */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#333' }}>{t('userId')}</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="text"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e0e0e0', outline: 'none', fontSize: '0.875rem' }}
-                  required
-                />
-                {role && (
-                  <div style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--success-color)', fontSize: '0.75rem', fontWeight: 500 }}>
-                    <CheckCircle size={14} /> {role}
-                  </div>
-                )}
-              </div>
-            </div>
+            <Input
+              label={t('userId')}
+              type="text"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              required
+              rightElement={role && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--success-color)', fontSize: '0.75rem', fontWeight: 500 }}>
+                  <CheckCircle size={14} /> {role}
+                </div>
+              )}
+            />
 
             {/* Password */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#333' }}>{t('password')}</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e0e0e0', outline: 'none', fontSize: '0.875rem' }}
-                  required
-                />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#888' }}>
+            <Input
+              label={t('password')}
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              rightElement={(
+                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', display: 'flex' }}>
                   {showPassword ? <Globe size={16} /> : <Lock size={16} />}
                 </button>
-              </div>
-            </div>
+              )}
+            />
 
             {/* Remember Me */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
