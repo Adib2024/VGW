@@ -251,11 +251,11 @@ export default function Login() {
             {/* Logo badge, overlapping the header/form boundary */}
             <div style={{
               position: 'absolute',
-              bottom: '-40px',
+              bottom: '-48px',
               left: '50%',
               transform: 'translateX(-50%)',
-              width: '80px',
-              height: '80px',
+              width: '96px',
+              height: '96px',
               borderRadius: '50%',
               backgroundColor: 'white',
               display: 'flex',
@@ -267,12 +267,12 @@ export default function Login() {
                 src="/vw-logo.svg"
                 alt="VW Logo"
                 className="animate-logo-intro"
-                style={{ width: '44px', height: '44px' }}
+                style={{ width: '60px', height: '60px' }}
               />
             </div>
           </div>
 
-          <form onSubmit={handleLogin} className="flex-col gap-4" style={{ width: '100%', padding: '3.5rem 2rem 2rem' }}>
+          <form onSubmit={handleLogin} className="flex-col gap-4" style={{ width: '100%', padding: '4rem 2rem 2rem' }}>
 
             {/* User ID */}
             <Input

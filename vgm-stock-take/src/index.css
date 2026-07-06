@@ -197,8 +197,18 @@ p {
   }
 }
 
+@keyframes logoSpin {
+  0% {
+    transform: rotateY(0deg);
+  }
+
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
 .animate-logo-intro {
-  animation: logoIntro 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: logoIntro 0.7s cubic-bezier(0.16, 1, 0.3, 1) both, logoSpin 5s ease-in-out 0.7s infinite;
   transform-style: preserve-3d;
 }
 
