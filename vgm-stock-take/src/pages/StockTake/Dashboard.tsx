@@ -7,6 +7,7 @@ import { Card } from '../../components/ui/Card';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { BottomNav } from '../../components/ui/BottomNav';
 import { Navigation } from '../../components/Navigation';
+import { BackgroundDecor } from '../../components/ui/BackgroundDecor';
 import { supabase, fetchAllRows } from '../../lib/supabase';
 import { RefreshCw } from 'lucide-react';
 
@@ -189,6 +190,7 @@ export default function StockTakeDashboard() {
       `}</style>
 
       <div className="dash-main">
+        <BackgroundDecor />
         <Navigation
           title="VGM CKD"
           titleAccessory={<div className="live-dot" title={t('liveData')} />}

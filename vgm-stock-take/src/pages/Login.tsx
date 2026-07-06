@@ -7,6 +7,7 @@ import { useToast } from '../contexts/ToastContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { BackgroundDecor } from '../components/ui/BackgroundDecor';
 import { CheckCircle, Eye, EyeOff, Lock, User, Download, Share } from 'lucide-react';
 
 export default function Login() {
@@ -179,9 +180,7 @@ export default function Login() {
   return (
     <div className="flex justify-center items-center" style={{ minHeight: '100vh', padding: '1rem', position: 'relative', overflow: 'hidden' }}>
 
-      {/* Background Decor */}
-      <div style={{ position: 'absolute', top: '-12%', right: '-12%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(0,30,80,0.14) 0%, rgba(0,30,80,0) 70%)', borderRadius: '50%', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '-15%', left: '-12%', width: '450px', height: '450px', background: 'radial-gradient(circle, rgba(0,30,80,0.1) 0%, rgba(0,30,80,0) 70%)', borderRadius: '50%', pointerEvents: 'none' }} />
+      <BackgroundDecor />
 
       {/* PWA Install Button (Always visible during dev if not installed) */}
       {!isStandalone && (

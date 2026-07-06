@@ -4,6 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigation } from '../components/Navigation';
 import { Card } from '../components/ui/Card';
+import { BackgroundDecor } from '../components/ui/BackgroundDecor';
 import { Package, Battery, ShieldCheck } from 'lucide-react';
 
 export default function Hub() {
@@ -28,6 +29,7 @@ export default function Hub() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', userSelect: 'none', WebkitUserSelect: 'none' }}>
       <Navigation title={t('hub')} showBack={false} />
+      <BackgroundDecor />
       
       <style>{`
         .hub-main {
@@ -67,15 +69,15 @@ export default function Hub() {
           flex-direction: row !important;
           align-items: center !important;
           text-align: left !important;
-          padding: 1rem 1.25rem !important;
+          padding: 1.25rem 1.5rem !important;
           background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%) !important;
           backdrop-filter: blur(10px);
           border: 1px solid rgba(255,255,255,0.8);
           gap: 1.25rem;
         }
         .hub-icon-wrapper {
-          width: 48px;
-          height: 48px;
+          width: 56px;
+          height: 56px;
           border-radius: var(--radius-card);
           display: flex;
           align-items: center;
