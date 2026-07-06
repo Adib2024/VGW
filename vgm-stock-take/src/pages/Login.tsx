@@ -266,7 +266,7 @@ export default function Login() {
                 src="/vw-logo.svg"
                 alt="VW Logo"
                 className="animate-logo-intro"
-                style={{ width: '60px', height: '60px' }}
+                style={{ width: '84px', height: '84px' }}
               />
             </div>
           </div>
