@@ -22,7 +22,7 @@ export const Input: React.FC<InputProps> = ({ label, error, icon, rightElement, 
           className={className}
           style={{
             width: '100%',
-            padding: icon ? '0.75rem 1rem 0.75rem 2.5rem' : rightElement ? '0.75rem 2.5rem 0.75rem 1rem' : '0.75rem 1rem',
+            padding: `0.75rem ${rightElement ? '2.5rem' : '1rem'} 0.75rem ${icon ? '2.5rem' : '1rem'}`,
             backgroundColor: props.disabled ? 'var(--background-color)' : 'var(--surface-highlight)',
             border: `1px solid ${error ? 'var(--danger-color)' : props.disabled ? 'var(--border-color)' : 'transparent'}`,
             borderRadius: 'var(--radius-md)',

@@ -7,7 +7,7 @@ import { useToast } from '../contexts/ToastContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { CheckCircle, Globe, Lock, Download, Share } from 'lucide-react';
+import { CheckCircle, Eye, EyeOff, Lock, User, Download, Share } from 'lucide-react';
 
 export default function Login() {
   const [userId, setUserId] = useState('');
@@ -180,8 +180,8 @@ export default function Login() {
     <div className="flex justify-center items-center" style={{ minHeight: '100vh', padding: '1rem', position: 'relative', overflow: 'hidden' }}>
 
       {/* Background Decor */}
-      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '800px', height: '800px', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '50%', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '1200px', height: '1200px', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '-12%', right: '-12%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(0,30,80,0.14) 0%, rgba(0,30,80,0) 70%)', borderRadius: '50%', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '-15%', left: '-12%', width: '450px', height: '450px', background: 'radial-gradient(circle, rgba(0,30,80,0.1) 0%, rgba(0,30,80,0) 70%)', borderRadius: '50%', pointerEvents: 'none' }} />
 
       {/* PWA Install Button (Always visible during dev if not installed) */}
       {!isStandalone && (
@@ -234,29 +234,45 @@ export default function Login() {
 
       <div style={{ width: '100%', maxWidth: '400px', zIndex: 10, padding: '0 1rem' }}>
 
-        <Card className="w-full" style={{ padding: '2.5rem 2rem', borderRadius: 'var(--radius-card)', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#ffffff', boxShadow: '0 8px 30px rgba(0,0,0,0.05)' }}>
+        <Card className="w-full" style={{ padding: 0, overflow: 'hidden', borderRadius: 'var(--radius-card)', backgroundColor: '#ffffff', boxShadow: '0 20px 50px rgba(0,30,80,0.18)' }}>
 
-          {/* Logo in rounded box */}
+          {/* Header band */}
           <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginBottom: '1rem'
+            background: 'linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%)',
+            padding: '2rem 2rem 3rem',
+            textAlign: 'center',
+            position: 'relative'
           }}>
-            <img
-              src="/vw-logo.svg"
-              alt="VW Logo"
-              className="animate-spin-3d"
-              style={{ width: '64px', height: '64px' }}
-            />
+            <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.02em' }}>VGM CKD</h2>
+            <p style={{ margin: '0.25rem 0 0', color: 'rgba(255,255,255,0.75)', fontSize: '0.8rem', fontWeight: 500 }}>
+              CKD Logistic Department
+            </p>
+
+            {/* Logo badge, overlapping the header/form boundary */}
+            <div style={{
+              position: 'absolute',
+              bottom: '-40px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              backgroundColor: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 8px 20px rgba(0,30,80,0.3)'
+            }}>
+              <img
+                src="/vw-logo.svg"
+                alt="VW Logo"
+                className="animate-logo-intro"
+                style={{ width: '44px', height: '44px' }}
+              />
+            </div>
           </div>
 
-          <h2 style={{ textAlign: 'center', margin: '0', color: 'var(--primary-color)', fontSize: '1.25rem', fontWeight: 700 }}>VGM CKD</h2>
-          <p style={{ textAlign: 'center', color: '#666', fontSize: '0.75rem', marginBottom: '2rem' }}>
-            CKD Logistic Department
-          </p>
-
-          <form onSubmit={handleLogin} className="flex-col gap-4" style={{ width: '100%' }}>
+          <form onSubmit={handleLogin} className="flex-col gap-4" style={{ width: '100%', padding: '3.5rem 2rem 2rem' }}>
 
             {/* User ID */}
             <Input
@@ -265,6 +281,7 @@ export default function Login() {
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
               required
+              icon={<User size={16} />}
               rightElement={role && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--success-color)', fontSize: '0.75rem', fontWeight: 500 }}>
                   <CheckCircle size={14} /> {role}
@@ -279,9 +296,10 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              icon={<Lock size={16} />}
               rightElement={(
                 <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', display: 'flex' }}>
-                  {showPassword ? <Globe size={16} /> : <Lock size={16} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               )}
             />
@@ -294,7 +312,7 @@ export default function Login() {
             <Button
               type="submit"
               fullWidth
-              style={{ marginTop: '1rem', backgroundColor: 'var(--primary-color)', borderRadius: 'var(--radius-md)', padding: '0.75rem' }}
+              style={{ marginTop: '1rem', background: 'linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%)', borderRadius: 'var(--radius-md)', padding: '0.875rem', boxShadow: '0 8px 20px rgba(0,30,80,0.25)' }}
               disabled={loading}
             >
               {loading ? '...' : t('login')}
