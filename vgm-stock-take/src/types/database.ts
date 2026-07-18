@@ -1,10 +1,3 @@
-export interface User {
-  id: string;
-  password?: string;
-  role: string;
-  name: string;
-}
-
 export interface Part {
   id: string | number;
   status: 'Not Counted' | 'Counted' | 'Verified';

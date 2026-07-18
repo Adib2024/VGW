@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import { useAuth, Role } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { BackgroundDecor } from '../components/ui/BackgroundDecor';
-import { CheckCircle, Eye, EyeOff, Lock, User, Download, Share } from 'lucide-react';
+import { Eye, EyeOff, Lock, User, Download, Share } from 'lucide-react';
 
 export default function Login() {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<Role>(null);
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -95,33 +93,6 @@ export default function Login() {
     }
   }, []);
 
-  useEffect(() => {
-    const lookupRole = async () => {
-      if (userId.trim().length >= 2) {
-        try {
-          const { data } = await supabase
-            .from('users')
-            .select('role, name')
-            .ilike('id', userId.trim())
-            .single();
-
-          if (data) {
-            setRole(data.role as Role);
-          } else {
-            setRole(null);
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      } else {
-        setRole(null);
-      }
-    };
-
-    const debounceTimeout = setTimeout(lookupRole, 500);
-    return () => clearTimeout(debounceTimeout);
-  }, [userId]);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId || !password) {
@@ -131,22 +102,10 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const { data: isValid, error: verifyError } = await supabase
-        .rpc('verify_password', { p_user_id: userId, p_password: password });
+      const result = await login(userId, password);
 
-      if (verifyError || !isValid) {
-        addToast('Invalid credentials. Please try again.', 'error');
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, name, role')
-        .eq('id', userId)
-        .single();
-
-      if (error || !data) {
-        addToast('Invalid credentials. Please try again.', 'error');
+      if (!result.success) {
+        addToast(result.error || 'Invalid credentials. Please try again.', 'error');
         return;
       }
 
@@ -156,18 +115,7 @@ export default function Login() {
         localStorage.removeItem('vgm_remembered_user');
       }
 
-      await login({ id: data.id, name: data.name, role: data.role as Role });
-
-      // Navigate based on role
-      if (data.role === 'Admin' || data.role === 'Verifier') {
-        navigate('/hub');
-      } else if (data.role === 'Counter B17' || data.role === 'Counter B22') {
-        navigate('/stock-take');
-      } else if (data.role === 'Operator Batt') {
-        navigate('/battery');
-      } else if (data.role === 'QA Inspector') {
-        navigate('/qa');
-      }
+      // Navigation happens via the effect above once `user` updates.
     } catch (err: any) {
       addToast(err.message || 'Login failed. Please try again.', 'error');
     } finally {
@@ -281,11 +229,6 @@ export default function Login() {
               onChange={(e) => setUserId(e.target.value)}
               required
               icon={<User size={16} />}
-              rightElement={role && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--success-color)', fontSize: '0.75rem', fontWeight: 500 }}>
-                  <CheckCircle size={14} /> {role}
-                </div>
-              )}
             />
 
             {/* Password */}

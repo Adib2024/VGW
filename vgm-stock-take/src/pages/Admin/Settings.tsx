@@ -58,7 +58,7 @@ export default function AdminSettings() {
     
     setCheckingLock(true);
     try {
-      const { error } = await supabase.rpc('create_dynamic_table', { query: `DROP TABLE IF EXISTS "${selectedZone}";` });
+      const { error } = await supabase.rpc('admin_drop_zone_table', { p_table_name: selectedZone });
       if (error) throw error;
       
       if (isMounted.current) {
@@ -142,31 +142,22 @@ export default function AdminSettings() {
         });
         addLog(`Sanitized columns: ${sanitizedHeaders.join(', ')}`);
         
-        // 1. Generate DDL for dynamic schema
-        addLog(`Generating DDL for table '${targetTable}'...`);
-        const columnDefinitions = sanitizedHeaders.filter(col => col !== 'status').map(col => `"${col}" TEXT`).join(', ');
-        
-        const ddlString = `
-          CREATE TABLE IF NOT EXISTS "${targetTable}" (
-            id BIGSERIAL PRIMARY KEY,
-            batch_id TEXT,
-            status TEXT DEFAULT 'Not Counted'${columnDefinitions ? ',\n            ' + columnDefinitions : ''}
-          );
-          
-          ALTER TABLE "${targetTable}" ENABLE ROW LEVEL SECURITY;
-          DROP POLICY IF EXISTS "Enable read access for all users" ON "${targetTable}";
-          CREATE POLICY "Enable read access for all users" ON "${targetTable}" FOR SELECT USING (true);
-          DROP POLICY IF EXISTS "Enable insert for all users" ON "${targetTable}";
-          CREATE POLICY "Enable insert for all users" ON "${targetTable}" FOR INSERT WITH CHECK (true);
-          DROP POLICY IF EXISTS "Enable update for all users" ON "${targetTable}";
-          CREATE POLICY "Enable update for all users" ON "${targetTable}" FOR UPDATE USING (true);
-        `;
+        // 1. Build the dynamic column list (fixed columns id/batch_id/status are
+        // added server-side by the RPC - the sanitized CSV headers just need
+        // to be re-validated there too, not trusted from this client sanitizer).
+        addLog(`Generating schema for table '${targetTable}'...`);
+        const dynamicColumns = sanitizedHeaders.filter(col => col !== 'status');
 
-        // 2. Execute DDL via RPC
+        // 2. Execute schema creation via RPC. The RPC itself checks the
+        // caller is an Admin and applies fixed, safe RLS policies - it never
+        // accepts raw SQL from the client.
         addLog(`Executing dynamic schema generation via RPC...`);
-        const { error: rpcError } = await supabase.rpc('create_dynamic_table', { query: ddlString });
+        const { error: rpcError } = await supabase.rpc('admin_create_zone_table', {
+          p_table_name: targetTable,
+          p_columns: dynamicColumns,
+        });
         if (rpcError) {
-          throw new Error(`RPC Execution Failed (Did you run the setup_rpc.sql?): ${rpcError.message}`);
+          throw new Error(`RPC Execution Failed (did you run sql/001_auth_migration.sql?): ${rpcError.message}`);
         }
         addLog(`Successfully verified/created table schema '${targetTable}'. Waiting for schema cache to reload...`);
         

@@ -5,6 +5,13 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { ToastContainer } from './components/ui/ToastContainer';
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
+import { ForcedPasswordChange } from './components/ForcedPasswordChange';
+
+const authLoadingFallback = (
+  <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#0f172a' }}>
+    <div style={{ color: '#3b82f6', fontSize: '1.25rem', fontWeight: 'bold' }}>Loading VGM CKD...</div>
+  </div>
+);
 
 const Login = lazy(() => import('./pages/Login'));
 const Hub = lazy(() => import('./pages/Hub'));
@@ -16,31 +23,38 @@ const UserProgress = lazy(() => import('./pages/Reports/UserProgress'));
 const BatteryTracker = lazy(() => import('./pages/Battery/Tracker'));
 
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: string[] }) => {
-  const { user } = useAuth();
-  
+  const { user, loading } = useAuth();
+
+  // Session check is async (a real Supabase Auth session, not synchronous
+  // localStorage) - render nothing yet rather than flash-redirecting to
+  // login before we actually know whether a session exists.
+  if (loading) {
+    return authLoadingFallback;
+  }
+
   if (!user) {
     return <Navigate to="/" replace />;
   }
-  
+
+  // Applies regardless of which route was requested, so it can't be
+  // bypassed by navigating directly to a URL other than "/".
+  if (user.mustChangePassword) {
+    return <ForcedPasswordChange />;
+  }
+
   if (allowedRoles && !allowedRoles.includes(user.role as string)) {
     // If not allowed, redirect to their default home
     if (user.role === 'Admin' || user.role === 'Verifier') return <Navigate to="/hub" replace />;
     if (user.role === 'Counter B17' || user.role === 'Counter B22') return <Navigate to="/stock-take" replace />;
     return <Navigate to="/" replace />;
   }
-  
+
   return <>{children}</>;
 };
 
 function AppRoutes() {
-  const loadingFallback = (
-    <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#0f172a' }}>
-      <div style={{ color: '#3b82f6', fontSize: '1.25rem', fontWeight: 'bold' }}>Loading VGM CKD...</div>
-    </div>
-  );
-
   return (
-    <Suspense fallback={loadingFallback}>
+    <Suspense fallback={authLoadingFallback}>
       <Routes>
       <Route path="/" element={<Login />} />
       <Route 
