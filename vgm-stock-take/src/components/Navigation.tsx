@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { ChevronLeft, LogOut, Lock, Eye, EyeOff, Settings, UserCog } from 'lucide-react';
+import { ChevronLeft, LogOut, Lock, Eye, EyeOff, UserCog } from 'lucide-react';
 import { ConfirmDialog } from './ui/ConfirmDialog';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
@@ -200,14 +200,9 @@ export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, s
               </div>
 
               {user?.role === 'Admin' && (
-                <>
-                  <button onClick={() => { setShowMenu(false); navigate('/admin/settings'); }} className="menu-item">
-                    <Settings size={16} /> Admin Settings
-                  </button>
-                  <button onClick={() => { setShowMenu(false); navigate('/admin/users'); }} className="menu-item">
-                    <UserCog size={16} /> User Management
-                  </button>
-                </>
+                <button onClick={() => { setShowMenu(false); navigate('/admin/users'); }} className="menu-item">
+                  <UserCog size={16} /> User Management
+                </button>
               )}
 
               {extraMenuItems && extraMenuItems(() => setShowMenu(false))}

@@ -1,11 +1,13 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { LayoutDashboard, Users, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, Users, AlertTriangle, Settings } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const { t } = useLanguage();
 
   // Helper to determine if a tab is active
@@ -104,14 +106,23 @@ export const BottomNav: React.FC = () => {
           <span>{t('userProgress') || 'Progress'}</span>
         </button>
         
-        <button 
-          className={`nav-item ${isActive('/stock-take/list', 'table=check_part') ? 'active' : ''}`} 
+        <button
+          className={`nav-item ${isActive('/stock-take/list', 'table=check_part') ? 'active' : ''}`}
           onClick={() => handleNavClick('/stock-take/list?table=check_part')}
         >
           <AlertTriangle size={24} strokeWidth={isActive('/stock-take/list', 'table=check_part') ? 2.5 : 2} />
           <span>Check Part</span>
         </button>
-        
+
+        {user?.role === 'Admin' && (
+          <button
+            className={`nav-item ${isActive('/admin/settings') ? 'active' : ''}`}
+            onClick={() => handleNavClick('/admin/settings')}
+          >
+            <Settings size={24} strokeWidth={isActive('/admin/settings') ? 2.5 : 2} />
+            <span>Admin</span>
+          </button>
+        )}
       </div>
     </>
   );
