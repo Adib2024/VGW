@@ -1,13 +1,11 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { LayoutDashboard, Users, AlertTriangle, Settings, UserCog } from 'lucide-react';
+import { LayoutDashboard, Users, AlertTriangle } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
   const { t } = useLanguage();
 
   // Helper to determine if a tab is active
@@ -114,25 +112,6 @@ export const BottomNav: React.FC = () => {
           <span>Check Part</span>
         </button>
         
-        {user?.role === 'Admin' && (
-          <button
-            className={`nav-item ${isActive('/admin/settings') ? 'active' : ''}`}
-            onClick={() => handleNavClick('/admin/settings')}
-          >
-            <Settings size={24} strokeWidth={isActive('/admin/settings') ? 2.5 : 2} />
-            <span>Admin</span>
-          </button>
-        )}
-
-        {user?.role === 'Admin' && (
-          <button
-            className={`nav-item ${isActive('/admin/users') ? 'active' : ''}`}
-            onClick={() => handleNavClick('/admin/users')}
-          >
-            <UserCog size={24} strokeWidth={isActive('/admin/users') ? 2.5 : 2} />
-            <span>Users</span>
-          </button>
-        )}
       </div>
     </>
   );

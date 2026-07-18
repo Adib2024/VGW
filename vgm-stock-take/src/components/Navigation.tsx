@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { ChevronLeft, LogOut, Lock, Eye, EyeOff } from 'lucide-react';
+import { ChevronLeft, LogOut, Lock, Eye, EyeOff, Settings, UserCog } from 'lucide-react';
 import { ConfirmDialog } from './ui/ConfirmDialog';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
@@ -198,6 +198,17 @@ export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, s
                 <div style={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 700 }}>{user?.name || user?.id}</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--primary-color)', fontWeight: 800, marginTop: '2px', textTransform: 'uppercase' }}>{user?.role}</div>
               </div>
+
+              {user?.role === 'Admin' && (
+                <>
+                  <button onClick={() => { setShowMenu(false); navigate('/admin/settings'); }} className="menu-item">
+                    <Settings size={16} /> Admin Settings
+                  </button>
+                  <button onClick={() => { setShowMenu(false); navigate('/admin/users'); }} className="menu-item">
+                    <UserCog size={16} /> User Management
+                  </button>
+                </>
+              )}
 
               {extraMenuItems && extraMenuItems(() => setShowMenu(false))}
 
