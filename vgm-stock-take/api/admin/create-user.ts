@@ -1,11 +1,19 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireAdmin } from '../_lib/adminAuth';
-import { generateTempPassword } from '../_lib/tempPassword.js';
+import { generateTempPassword } from '../_lib/tempPassword';
 import { toEmail, VALID_ROLES } from '../_lib/constants';
 
 const ID_PATTERN = /^[A-Za-z0-9_-]{2,32}$/;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  try {
+    await handleCreateUser(req, res);
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Unexpected server error.' });
+  }
+}
+
+async function handleCreateUser(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;

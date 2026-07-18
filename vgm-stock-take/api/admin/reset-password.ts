@@ -1,8 +1,16 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireAdmin } from '../_lib/adminAuth';
-import { generateTempPassword } from '../_lib/tempPassword.js';
+import { generateTempPassword } from '../_lib/tempPassword';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  try {
+    await handleResetPassword(req, res);
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Unexpected server error.' });
+  }
+}
+
+async function handleResetPassword(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;

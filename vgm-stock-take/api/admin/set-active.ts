@@ -6,6 +6,14 @@ import { requireAdmin } from '../_lib/adminAuth';
 const INDEFINITE_BAN = '876000h'; // 100 years
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  try {
+    await handleSetActive(req, res);
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Unexpected server error.' });
+  }
+}
+
+async function handleSetActive(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
