@@ -9,6 +9,7 @@ interface User {
   role: Role;
   email: string;
   mustChangePassword: boolean;
+  isActive: boolean;
 }
 
 interface LoginResult {
@@ -22,6 +23,7 @@ interface AuthContextType {
   login: (id: string, password: string) => Promise<LoginResult>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  changePassword: (newPassword: string) => Promise<LoginResult>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,7 +55,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const { data, error } = await supabase
       .from('users')
-      .select('id, name, role, email, must_change_password')
+      .select('id, name, role, email, must_change_password, is_active')
       .eq('auth_id', authUser.id)
       .single();
 
@@ -65,7 +67,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       role: data.role as Role,
       email: data.email,
       mustChangePassword: data.must_change_password,
+      isActive: data.is_active,
     };
+  };
+
+  // Deactivated accounts are primarily blocked at the Supabase Auth level
+  // (banned_until, set by api/admin/set-active.ts), which rejects sign-in
+  // and token-refresh outright. This is a defense-in-depth check for an
+  // edge case: a session already open when an admin deactivates the
+  // account mid-shift, caught on the next profile fetch.
+  const rejectIfInactive = async (profile: User | null): Promise<boolean> => {
+    if (profile && !profile.isActive) {
+      await supabase.auth.signOut();
+      return true;
+    }
+    return false;
   };
 
   useEffect(() => {
@@ -73,8 +89,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     (async () => {
       const profile = await fetchProfile();
+      const rejected = await rejectIfInactive(profile);
       if (mounted) {
-        setUser(profile);
+        setUser(rejected ? null : profile);
         setLoading(false);
       }
     })();
@@ -91,7 +108,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // ForcedPasswordChange, right after updateUser triggers USER_UPDATED).
       setTimeout(async () => {
         const profile = await fetchProfile();
-        if (mounted) setUser(profile);
+        const rejected = await rejectIfInactive(profile);
+        if (mounted) setUser(rejected ? null : profile);
       }, 0);
     });
 
@@ -115,6 +133,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!profile) {
       await supabase.auth.signOut();
       return { success: false, error: 'Could not load your profile. Contact an admin.' };
+    }
+
+    if (!profile.isActive) {
+      await supabase.auth.signOut();
+      return { success: false, error: 'This account has been deactivated. Contact an admin.' };
     }
 
     setUser(profile);
@@ -153,7 +176,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const refreshUser = async () => {
     const profile = await fetchProfile();
-    setUser(profile);
+    const rejected = await rejectIfInactive(profile);
+    setUser(rejected ? null : profile);
+  };
+
+  const changePassword = async (newPassword: string): Promise<LoginResult> => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) return { success: false, error: error.message };
+    return { success: true };
   };
 
   useEffect(() => {
@@ -208,7 +238,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, changePassword }}>
       {children}
     </AuthContext.Provider>
   );

@@ -19,6 +19,7 @@ const StockTakeDashboard = lazy(() => import('./pages/StockTake/Dashboard'));
 const StockTakeListView = lazy(() => import('./pages/StockTake/ListView'));
 const StockTakeCounting = lazy(() => import('./pages/StockTake/Counting'));
 const AdminSettings = lazy(() => import('./pages/Admin/Settings'));
+const AdminUsers = lazy(() => import('./pages/Admin/Users'));
 const UserProgress = lazy(() => import('./pages/Reports/UserProgress'));
 const BatteryTracker = lazy(() => import('./pages/Battery/Tracker'));
 
@@ -89,13 +90,21 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
-      <Route 
-        path="/admin/settings" 
+      <Route
+        path="/admin/settings"
         element={
           <ProtectedRoute allowedRoles={['Admin']}>
             <AdminSettings />
           </ProtectedRoute>
-        } 
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute allowedRoles={['Admin']}>
+            <AdminUsers />
+          </ProtectedRoute>
+        }
       />
       <Route 
         path="/reports/progress" 

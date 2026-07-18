@@ -23,7 +23,7 @@
 // ============================================================
 
 import { createClient } from '@supabase/supabase-js';
-import { randomBytes } from 'crypto';
+import { generateTempPassword } from '../api/_lib/tempPassword.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -39,16 +39,6 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 });
 
 const EMAIL_DOMAIN = 'vgm-ckd.internal';
-const UNAMBIGUOUS_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-
-function generateTempPassword(length = 14) {
-  const bytes = randomBytes(length);
-  let out = '';
-  for (let i = 0; i < length; i++) {
-    out += UNAMBIGUOUS_CHARS[bytes[i] % UNAMBIGUOUS_CHARS.length];
-  }
-  return out;
-}
 
 async function main() {
   const { data: users, error } = await supabase
