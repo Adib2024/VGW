@@ -13,7 +13,14 @@ dist-ssr
 *.local
 
 # Secrets - never commit env files or migration script output
-.env
+# NOTE: .env itself is intentionally NOT ignored here - the Vercel
+# deployment for this project builds directly from the committed .env
+# (no separate environment variables are configured in Vercel's own
+# dashboard yet), so untracking it breaks every production deploy.
+# Only VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY live in it, both public,
+# embedded-in-client-bundle values by design - not secrets. Re-add .env
+# to this list only after Vercel's dashboard env vars are configured
+# directly, so the build no longer depends on this file.
 .env.*
 !.env.example
 scripts/output/
