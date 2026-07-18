@@ -79,13 +79,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     })();
 
-    const { data: subscription } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
         if (mounted) setUser(null);
         return;
       }
-      const profile = await fetchProfile();
-      if (mounted) setUser(profile);
+      // Deferred to a new task: calling other supabase-js auth methods
+      // (fetchProfile -> getSession) synchronously inside this callback
+      // can deadlock the client's internal session lock, hanging any
+      // auth-dependent call made right after (e.g. supabase.rpc(...) in
+      // ForcedPasswordChange, right after updateUser triggers USER_UPDATED).
+      setTimeout(async () => {
+        const profile = await fetchProfile();
+        if (mounted) setUser(profile);
+      }, 0);
     });
 
     return () => {
