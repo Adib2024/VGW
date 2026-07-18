@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireAdmin } from '../_lib/adminAuth';
-import { generateTempPassword } from '../_lib/tempPassword';
-import { toEmail, VALID_ROLES } from '../_lib/constants';
+import { requireAdmin } from '../_lib/adminAuth.js';
+import { generateTempPassword } from '../_lib/tempPassword.js';
+import { toEmail, VALID_ROLES } from '../_lib/constants.js';
 
 const ID_PATTERN = /^[A-Za-z0-9_-]{2,32}$/;
 

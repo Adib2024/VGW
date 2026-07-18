@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireAdmin } from '../_lib/adminAuth';
-import { generateTempPassword } from '../_lib/tempPassword';
+import { requireAdmin } from '../_lib/adminAuth.js';
+import { generateTempPassword } from '../_lib/tempPassword.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {

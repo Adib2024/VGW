@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireAdmin } from '../_lib/adminAuth';
+import { requireAdmin } from '../_lib/adminAuth.js';
 
 // Supabase's ban mechanism has no literal "forever" - a duration far beyond
 // any realistic account lifetime is the standard way to express it.

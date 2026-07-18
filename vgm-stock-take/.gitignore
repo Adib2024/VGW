@@ -35,3 +35,5 @@ scripts/output/
 *.njsproj
 *.sln
 *.sw?
+.vercel
+.env.local
