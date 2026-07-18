@@ -19,16 +19,18 @@ export const ForcedPasswordChange: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
 
     if (newPassword.length < 8) {
-      addToast('Password must be at least 8 characters', 'error');
+      setErrorMsg('Password must be at least 8 characters');
       return;
     }
     if (newPassword !== confirmPassword) {
-      addToast('Passwords do not match', 'error');
+      setErrorMsg('Passwords do not match');
       return;
     }
 
@@ -43,7 +45,9 @@ export const ForcedPasswordChange: React.FC = () => {
       addToast('Password updated', 'success');
       await refreshUser();
     } catch (err: any) {
-      addToast(err.message || 'Failed to update password. Please try again.', 'error');
+      // Shown inline (not just a toast) - this screen has no other content,
+      // so a failure here otherwise looks like the app silently hung.
+      setErrorMsg(err.message || 'Failed to update password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -86,6 +90,20 @@ export const ForcedPasswordChange: React.FC = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="flex-col gap-4" style={{ width: '100%', padding: '3.5rem 2rem 2rem' }}>
+            {errorMsg && (
+              <div style={{
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: '#fef2f2',
+                color: 'var(--danger-text)',
+                border: '1px solid #fecaca',
+                fontSize: '0.85rem',
+                fontWeight: 500
+              }}>
+                {errorMsg}
+              </div>
+            )}
+
             <Input
               label="New Password"
               type={showPassword ? 'text' : 'password'}
