@@ -12,7 +12,11 @@ interface NavigationProps {
   title: string;
   titleAccessory?: React.ReactNode;
   showBack?: boolean;
-  backTo?: string;
+  // A fixed path, or -1 to return to whatever page the user actually came
+  // from (browser-history back) - use -1 for pages reachable from more than
+  // one place (e.g. via the profile menu), where there's no single correct
+  // fixed destination.
+  backTo?: string | -1;
   extraMenuItems?: (closeMenu: () => void) => React.ReactNode;
 }
 
@@ -32,7 +36,11 @@ export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, s
   const [changingPassword, setChangingPassword] = React.useState(false);
 
   const handleBack = () => {
-    navigate(backTo, { replace: true });
+    if (backTo === -1) {
+      navigate(-1);
+    } else {
+      navigate(backTo, { replace: true });
+    }
   };
 
   const confirmLogout = async () => {

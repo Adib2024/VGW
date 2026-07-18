@@ -143,7 +143,7 @@ export default function AdminUsers() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <BackgroundDecor />
-      <Navigation title="User Management" backTo="/admin/settings" />
+      <Navigation title="User Management" backTo={-1} />
 
       <main style={{ flex: 1, padding: '2rem 1rem 6rem', display: 'flex', justifyContent: 'center' }}>
         <div style={{ width: '100%', maxWidth: '800px' }}>
