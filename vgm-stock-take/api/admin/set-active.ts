@@ -24,7 +24,7 @@ async function handleSetActive(req: VercelRequest, res: VercelResponse) {
     res.status(auth.status).json({ error: auth.error });
     return;
   }
-  const { serviceClient } = auth;
+  const serviceClient = auth.serviceClient!;
 
   const { id, active } = (req.body ?? {}) as { id?: string; active?: boolean };
   if (!id || typeof active !== 'boolean') {

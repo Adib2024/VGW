@@ -24,7 +24,7 @@ async function handleCreateUser(req: VercelRequest, res: VercelResponse) {
     res.status(auth.status).json({ error: auth.error });
     return;
   }
-  const { serviceClient } = auth;
+  const serviceClient = auth.serviceClient!;
 
   const { id, name, role } = (req.body ?? {}) as { id?: string; name?: string; role?: string };
   const trimmedId = id?.trim() ?? '';

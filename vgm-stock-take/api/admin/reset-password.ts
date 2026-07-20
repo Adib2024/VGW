@@ -21,7 +21,7 @@ async function handleResetPassword(req: VercelRequest, res: VercelResponse) {
     res.status(auth.status).json({ error: auth.error });
     return;
   }
-  const { serviceClient } = auth;
+  const serviceClient = auth.serviceClient!;
 
   const { id } = (req.body ?? {}) as { id?: string };
   if (!id) {
