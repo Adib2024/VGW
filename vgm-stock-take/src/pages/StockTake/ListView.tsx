@@ -9,15 +9,20 @@ import { ProgressBar } from '../../components/ui/ProgressBar';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Pagination } from '../../components/ui/Pagination';
-import { supabase, fetchAllRows } from '../../lib/supabase';
+import { fetchAllRows } from '../../lib/supabase';
+import { useRealtimeTables } from '../../hooks/useRealtimeTables';
 import { Search, PackageSearch } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import { BottomNav } from '../../components/ui/BottomNav';
 import { getStatusColor } from '../../lib/statusColor';
+
+const ALL_ZONE_TABLES = ['b17', 'b22', 'loma', 'b22_seq', 'check_part'];
 
 export default function StockTakeListView() {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { addToast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tableParam = searchParams.get('table');
@@ -53,22 +58,11 @@ export default function StockTakeListView() {
   useEffect(() => {
     isMounted.current = true;
     fetchParts();
-
-    const tablesToWatch = tableParam ? [tableParam] : ['b17', 'b22', 'loma', 'b22_seq', 'check_part'];
-    const channels = tablesToWatch.map(table =>
-      supabase
-        .channel(`${table}-list`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: table }, () => {
-          if (isMounted.current) fetchParts();
-        })
-        .subscribe()
-    );
-
-    return () => {
-      isMounted.current = false;
-      channels.forEach(ch => supabase.removeChannel(ch));
-    };
+    return () => { isMounted.current = false; };
   }, [tableParam, selectedBatch]);
+
+  const tablesToWatch = tableParam ? [tableParam] : ALL_ZONE_TABLES;
+  useRealtimeTables(tablesToWatch, () => fetchParts());
 
   const fetchParts = async () => {
     try {
@@ -105,8 +99,11 @@ export default function StockTakeListView() {
         setStats({ total, completed, percentage });
       }
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching parts:', err);
+      // Otherwise a real fetch failure renders identically to "no parts
+      // uploaded yet" - the empty state, with nothing telling the user why.
+      addToast(err?.message || 'Failed to load parts.', 'error');
     } finally {
       if (isMounted.current) setLoading(false);
     }

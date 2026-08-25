@@ -24,8 +24,11 @@ export async function fetchAllRows(table: string, orderColumn = ''): Promise<any
     const { data, error } = await query.range(from, from + step - 1);
 
     if (error) {
-      console.error(`Error fetching from ${table}:`, error);
-      break;
+      // Must not swallow this - callers treat the resolved array as ground
+      // truth. Silently returning whatever was fetched so far (or []) makes
+      // a real fetch failure indistinguishable from "this table is
+      // genuinely empty" (e.g. renders as a false 0/0, 0% on the Dashboard).
+      throw new Error(`Failed to fetch "${table}": ${error.message}`);
     }
 
     if (data && data.length > 0) {

@@ -8,8 +8,11 @@ import { ProgressBar } from '../../components/ui/ProgressBar';
 import { BottomNav } from '../../components/ui/BottomNav';
 import { Navigation } from '../../components/Navigation';
 import { BackgroundDecor } from '../../components/ui/BackgroundDecor';
-import { supabase, fetchAllRows } from '../../lib/supabase';
+import { fetchAllRows } from '../../lib/supabase';
+import { useRealtimeTables } from '../../hooks/useRealtimeTables';
 import { RefreshCw } from 'lucide-react';
+
+const ZONE_TABLES = ['b17', 'b22', 'loma', 'b22_seq'];
 
 interface ZoneStats {
   total: number;
@@ -35,31 +38,20 @@ export default function StockTakeDashboard() {
   useEffect(() => {
     isMounted.current = true;
     fetchStats();
-    const tables = ['b17', 'b22', 'loma', 'b22_seq'];
-    const channels = tables.map(table =>
-      supabase.channel(`${table}-changes`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: table }, () => {
-          if (isMounted.current) fetchStats(false);
-        })
-        .subscribe()
-    );
-    return () => { 
-      isMounted.current = false;
-      channels.forEach(ch => supabase.removeChannel(ch)); 
-    };
+    return () => { isMounted.current = false; };
   }, []);
+
+  useRealtimeTables(ZONE_TABLES, () => fetchStats(false));
 
   const fetchStats = async (isManualRefresh: boolean = false) => {
     if (isManualRefresh && isMounted.current) setIsRefreshing(true);
     try {
-      const tables = ['b17', 'b22', 'loma', 'b22_seq'];
-      
-      const promises = tables.map(table => fetchAllRows(table));
+      const promises = ZONE_TABLES.map(table => fetchAllRows(table));
       const results = await Promise.all(promises);
-      
+
       const newStats: Record<string, ZoneStats> = {};
       results.forEach((res, index) => {
-        const table = tables[index];
+        const table = ZONE_TABLES[index];
         const data = res || [];
 
         const currentData = data;
@@ -68,14 +60,17 @@ export default function StockTakeDashboard() {
         const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
         newStats[table] = { total, completed, percentage };
       });
-      
+
       if (isMounted.current) setStats(newStats);
 
       if (isManualRefresh) {
         addToast(t('dataRefreshed'), 'success');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching stats:', err);
+      // Otherwise a real fetch failure looks identical to "genuinely 0
+      // progress" - the numbers on screen would just silently be wrong.
+      addToast(err?.message || 'Failed to load progress data.', 'error');
     } finally {
       if (isManualRefresh && isMounted.current) {
         // Add a small delay so the user can see the spin animation even if fetch is very fast
