@@ -6,7 +6,6 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { BackgroundDecor } from '../../components/ui/BackgroundDecor';
 import { supabase } from '../../lib/supabase';
 import { Upload, AlertTriangle, CheckCircle } from 'lucide-react';
-import * as XLSX from 'xlsx';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { BottomNav } from '../../components/ui/BottomNav';
 
@@ -89,9 +88,17 @@ export default function AdminSettings() {
     setMessage({ type: '', text: '' }); // Clear message when changing zone
   };
 
+  const MAX_UPLOAD_BYTES = 15 * 1024 * 1024; // 15MB - generous for a parts-list spreadsheet, blocks pathological files
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setMessage({ type: 'error', text: `File is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum is 15MB.` });
+      e.target.value = '';
+      return;
+    }
 
     setUploading(true);
     setMessage({ type: '', text: '' });
@@ -113,6 +120,7 @@ export default function AdminSettings() {
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
+        const XLSX = await import('xlsx');
         const bstr = evt.target?.result;
         const wb = XLSX.read(bstr, { type: 'binary' });
         const wsname = wb.SheetNames[0];

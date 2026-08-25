@@ -8,7 +8,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { BackgroundDecor } from '../../components/ui/BackgroundDecor';
 import { Camera, Save, X, Edit2, Battery } from 'lucide-react';
-import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
+import type { Html5QrcodeScanner } from 'html5-qrcode';
 
 export default function Tracker() {
   const { user } = useAuth();
@@ -21,8 +21,9 @@ export default function Tracker() {
   const [isManual, setIsManual] = useState(false);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
-  const startScanner = () => {
+  const startScanner = async () => {
     setScanning(true);
+    const { Html5QrcodeScanner, Html5QrcodeScanType } = await import('html5-qrcode');
     setTimeout(() => {
       scannerRef.current = new Html5QrcodeScanner(
         "reader",
@@ -39,7 +40,7 @@ export default function Tracker() {
       
       scannerRef.current.render(
         (decodedText) => {
-          setSerialNumber(decodedText);
+          setSerialNumber(decodedText.trim());
           setScanning(false);
           if (scannerRef.current) {
             scannerRef.current.clear();
@@ -69,17 +70,26 @@ export default function Tracker() {
   }, []);
 
   const handleSave = async () => {
-    if (!serialNumber) {
+    const trimmedSerial = serialNumber.trim();
+    if (!trimmedSerial) {
       addToast('Please scan or enter a serial number', 'error');
       return;
     }
-    
-    // Check if exists
-    const { data: existing } = await supabase
+
+    // Check if exists. PGRST116 = no matching row, the expected/normal case
+    // for a brand-new serial - any other error means we don't actually know
+    // whether a row exists, so we must not fall through to insert (that risks
+    // creating a duplicate row for a battery that already has one).
+    const { data: existing, error: lookupError } = await supabase
       .from('battery_tracking')
       .select('id')
-      .eq('battery_serial_number', serialNumber)
+      .eq('battery_serial_number', trimmedSerial)
       .single();
+
+    if (lookupError && lookupError.code !== 'PGRST116') {
+      addToast('Could not verify existing record. Please try again.', 'error');
+      return;
+    }
 
     if (existing) {
       // Update
@@ -92,8 +102,8 @@ export default function Tracker() {
           scanned_by: user?.id,
           created_at: new Date().toISOString() // update timestamp to track latest scan
         })
-        .eq('battery_serial_number', serialNumber);
-        
+        .eq('battery_serial_number', trimmedSerial);
+
       if (error) {
         addToast('Error updating battery record', 'error');
       } else {
@@ -105,13 +115,13 @@ export default function Tracker() {
       const { error } = await supabase
         .from('battery_tracking')
         .insert({
-          battery_serial_number: serialNumber,
+          battery_serial_number: trimmedSerial,
           part_number: partNumber,
           location_id: locationId,
           status,
           scanned_by: user?.id
         });
-        
+
       if (error) {
         addToast('Error saving battery', 'error');
       } else {

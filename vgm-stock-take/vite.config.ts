@@ -28,7 +28,36 @@ export default defineConfig({
       devOptions: {
         enabled: true,
         type: 'module',
-      }
+      },
+      workbox: {
+        // xlsx (Admin upload) and html5-qrcode (Battery scanner) are large
+        // and role-gated - most users (Counters) can never reach either
+        // route. Precaching them unconditionally at install time would cost
+        // every user that download regardless of role; cache them on first
+        // actual use instead.
+        globIgnores: ['**/xlsx-vendor-*.js', '**/html5-qrcode-vendor-*.js'],
+        runtimeCaching: [
+          {
+            urlPattern: /\/assets\/(xlsx|html5-qrcode)-vendor-.*\.js$/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'heavy-vendor-chunks' },
+          },
+        ],
+      },
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        // html5-qrcode's dynamic import otherwise gets an unhelpful generic
+        // "index-[hash].js" name (Rollup couldn't derive one from the
+        // package), making it impossible to target safely in globIgnores
+        // above without risking excluding the real main entry chunk too.
+        manualChunks(id) {
+          if (id.includes('node_modules/xlsx')) return 'xlsx-vendor';
+          if (id.includes('node_modules/html5-qrcode')) return 'html5-qrcode-vendor';
+        },
+      },
+    },
+  },
 })
