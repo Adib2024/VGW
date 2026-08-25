@@ -64,6 +64,21 @@ export const GlobalErrorBoundary = ({ children }: { children: React.ReactNode })
   return (
     <ErrorBoundary
       FallbackComponent={ErrorFallback}
+      onError={(error: unknown, info: { componentStack?: string | null }) => {
+        // Structured on purpose: swapping this console.error for a real
+        // monitoring service later (Sentry.captureException, etc.) is then a
+        // one-line change instead of a rewrite. Before this, a render-time
+        // crash was visible only on the user's own screen - not even logged
+        // to the browser console.
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error({
+          scope: 'GlobalErrorBoundary',
+          message: err.message,
+          stack: err.stack,
+          componentStack: info?.componentStack,
+          timestamp: new Date().toISOString(),
+        });
+      }}
       onReset={() => {
         // Reset the state of your app so the error doesn't happen again
         window.location.href = '/';

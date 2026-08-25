@@ -102,6 +102,7 @@ export default function AdminUsers() {
   };
 
   const handleResetPassword = async (id: string) => {
+    if (processingId) return; // guard against a rapid double-click firing this twice
     setConfirmTarget(null);
     setProcessingId(id);
     try {
@@ -116,6 +117,7 @@ export default function AdminUsers() {
   };
 
   const handleSetActive = async (id: string, active: boolean) => {
+    if (processingId) return; // guard against a rapid double-click firing this twice
     setConfirmTarget(null);
     setProcessingId(id);
     try {
@@ -314,6 +316,7 @@ export default function AdminUsers() {
         confirmLabel={confirmTarget?.action === 'reset' ? 'Reset Password' : 'Deactivate'}
         cancelLabel="Cancel"
         variant="danger"
+        loading={!!confirmTarget && processingId === confirmTarget.id}
         onConfirm={() => {
           if (!confirmTarget) return;
           if (confirmTarget.action === 'reset') handleResetPassword(confirmTarget.id);

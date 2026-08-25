@@ -8,6 +8,7 @@ interface ConfirmDialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: 'primary' | 'danger';
+  loading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -19,6 +20,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
   variant = 'danger',
+  loading = false,
   onConfirm,
   onCancel,
 }) => {
@@ -34,11 +36,11 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           {message}
         </p>
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-          <Button variant="secondary" onClick={onCancel} style={{ flex: 1, backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>
+          <Button variant="secondary" onClick={onCancel} disabled={loading} style={{ flex: 1, backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>
             {cancelLabel}
           </Button>
-          <Button variant={variant} onClick={onConfirm} style={{ flex: 1 }}>
-            {confirmLabel}
+          <Button variant={variant} onClick={onConfirm} disabled={loading} style={{ flex: 1 }}>
+            {loading ? '...' : confirmLabel}
           </Button>
         </div>
       </div>
