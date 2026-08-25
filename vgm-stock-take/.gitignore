@@ -25,6 +25,11 @@ dist-ssr
 !.env.example
 scripts/output/
 
+# Working spreadsheet exports - real inventory data with employee names,
+# never meant to be committed. Found live in git history (removed once) as
+# "src/data/Copy of VGM 2026 - *.csv"; ignore the whole folder going forward.
+src/data/*.csv
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
