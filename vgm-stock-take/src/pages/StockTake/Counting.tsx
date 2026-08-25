@@ -128,23 +128,34 @@ export default function StockTakeCounting() {
 
       const boxTotal = calculateTotal(counterKeys);
 
-      if (user?.role?.startsWith('Counter B17') || user?.role?.startsWith('Counter B22') || user?.role === 'Admin') {
-        counterKeys.forEach(k => {
-          updates[k] = formData[k] !== '' ? parseInt(formData[k]) : null;
+      // Only write a key if this session actually touched it. formData only gets a
+      // key for fields that were non-null at fetch time or that the user typed into -
+      // a box another counter just filled in between this client's fetch and save
+      // stays absent from formData (undefined), so it must never be written here or
+      // it silently reverts to null and erases what the other counter just saved.
+      const buildFieldUpdates = (keys: string[]) => {
+        keys.forEach(k => {
+          const current = formData[k];
+          if (current === undefined) return; // never touched this session - leave alone
+          if (current === '') {
+            // explicitly cleared - only meaningful (and only reachable, since a
+            // still-empty box is locked for non-Admins) if there was a value to clear
+            if (part[k] !== null && part[k] !== undefined) updates[k] = null;
+            return;
+          }
+          updates[k] = parseInt(current);
         });
+      };
+
+      if (user?.role?.startsWith('Counter B17') || user?.role?.startsWith('Counter B22') || user?.role === 'Admin') {
+        buildFieldUpdates(counterKeys);
         if (boxTotal > 0 && (part.status === 'Not Counted' || part.status === 'Verified')) {
           newStatus = 'Counted';
         }
       }
 
       if (user?.role === 'Verifier' || user?.role === 'Admin') {
-        verifierKeys.forEach(k => {
-          if (formData[k] !== '') {
-            updates[k] = parseInt(formData[k]);
-          } else {
-            updates[k] = null;
-          }
-        });
+        buildFieldUpdates(verifierKeys);
         // Saving a recount does NOT automatically verify
       }
 
@@ -359,8 +370,8 @@ export default function StockTakeCounting() {
                 {part.status === 'Verified' ? t('verified') : part.status === 'Counted' ? t('counted') : t('notCounted')}
               </div>
               {!isEditing && canEditRecount() && part.status === 'Counted' && (
-                  <Button onClick={handleVerify} style={{ padding: '0.25rem 1rem', backgroundColor: 'var(--success-color)', fontSize: '0.75rem', marginLeft: 'auto' }}>
-                    {t('verifyNow')}
+                  <Button onClick={handleVerify} disabled={saving} style={{ padding: '0.25rem 1rem', backgroundColor: 'var(--success-color)', fontSize: '0.75rem', marginLeft: 'auto' }}>
+                    {saving ? '...' : t('verifyNow')}
                   </Button>
               )}
             </div>
