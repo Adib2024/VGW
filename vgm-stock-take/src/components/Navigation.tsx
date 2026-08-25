@@ -135,7 +135,15 @@ export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, s
         {/* Left: Brand & Title */}
         <div className="global-nav-title">
           {showBack && (
-            <button onClick={handleBack} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0, display: 'flex', color: 'var(--primary-color)', marginRight: '0.25rem', flexShrink: 0 }}>
+            <button
+              onClick={handleBack}
+              aria-label="Back"
+              style={{
+                border: 'none', background: 'none', cursor: 'pointer',
+                width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--primary-color)', marginLeft: '-10px', marginRight: '-6px', flexShrink: 0
+              }}
+            >
               <ChevronLeft size={24} />
             </button>
           )}

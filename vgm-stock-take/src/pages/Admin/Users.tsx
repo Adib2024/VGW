@@ -213,7 +213,7 @@ export default function AdminUsers() {
                         variant="secondary"
                         disabled={processingId === u.id}
                         onClick={() => setConfirmTarget({ id: u.id, name: u.name, action: 'reset' })}
-                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem' }}
+                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', minHeight: '44px' }}
                       >
                         <KeyRound size={14} /> Reset
                       </Button>
@@ -222,7 +222,7 @@ export default function AdminUsers() {
                           variant="danger"
                           disabled={processingId === u.id || u.id === currentUser?.id}
                           onClick={() => setConfirmTarget({ id: u.id, name: u.name, action: 'deactivate' })}
-                          style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem' }}
+                          style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', minHeight: '44px' }}
                           title={u.id === currentUser?.id ? "You can't deactivate your own account" : undefined}
                         >
                           <Ban size={14} /> Deactivate
@@ -231,7 +231,7 @@ export default function AdminUsers() {
                         <Button
                           disabled={processingId === u.id}
                           onClick={() => handleSetActive(u.id, true)}
-                          style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', backgroundColor: 'var(--success-color)', color: 'white' }}
+                          style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', minHeight: '44px', backgroundColor: 'var(--success-color)', color: 'white' }}
                         >
                           <CheckCircle2 size={14} /> Reactivate
                         </Button>
