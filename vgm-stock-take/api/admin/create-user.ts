@@ -1,9 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireAdmin } from '../_lib/adminAuth.js';
 import { generateTempPassword } from '../_lib/tempPassword.js';
-import { toEmail, VALID_ROLES } from '../_lib/constants.js';
-
-const ID_PATTERN = /^[A-Za-z0-9_-]{2,32}$/;
+import { toEmail, VALID_ROLES, ID_PATTERN, NAME_DISALLOWED_CHARS } from '../_lib/constants.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
@@ -38,6 +36,10 @@ async function handleCreateUser(req: VercelRequest, res: VercelResponse) {
     res.status(400).json({ error: 'Name is required (max 100 characters).' });
     return;
   }
+  if (NAME_DISALLOWED_CHARS.test(trimmedName)) {
+    res.status(400).json({ error: 'Name cannot contain a "|" character.' });
+    return;
+  }
   if (!role || !VALID_ROLES.includes(role as any)) {
     res.status(400).json({ error: 'Invalid role.' });
     return;
@@ -64,7 +66,15 @@ async function handleCreateUser(req: VercelRequest, res: VercelResponse) {
   });
 
   if (createError || !created.user) {
-    res.status(500).json({ error: createError?.message || 'Failed to create auth user.' });
+    // A raced double-submit can slip past the pre-check above and collide on
+    // the deterministic email - report it the same way the pre-check would,
+    // rather than leaking the raw Auth-SDK message.
+    if (createError?.message?.toLowerCase().includes('already been registered')) {
+      res.status(409).json({ error: `User ID "${trimmedId}" already exists.` });
+      return;
+    }
+    console.error('create-user: auth.admin.createUser failed:', createError);
+    res.status(500).json({ error: 'Failed to create account. Please try again.' });
     return;
   }
 
@@ -80,8 +90,20 @@ async function handleCreateUser(req: VercelRequest, res: VercelResponse) {
 
   if (insertError) {
     // Avoid an orphaned auth user with no matching profile row.
-    await serviceClient.auth.admin.deleteUser(created.user.id);
-    res.status(500).json({ error: `Failed to create profile: ${insertError.message}` });
+    const { error: rollbackError } = await serviceClient.auth.admin.deleteUser(created.user.id);
+    if (rollbackError) {
+      console.error(`create-user: rollback FAILED for orphaned auth user ${created.user.id} (id "${trimmedId}"):`, rollbackError);
+    }
+
+    // A raced double-submit hitting the unique constraint after both requests
+    // passed the pre-check gets the same clean 409 the pre-check gives,
+    // instead of a raw Postgres constraint-violation message.
+    if (insertError.code === '23505') {
+      res.status(409).json({ error: `User ID "${trimmedId}" already exists.` });
+      return;
+    }
+    console.error('create-user: profile insert failed:', insertError);
+    res.status(500).json({ error: 'Failed to create profile. Please try again.' });
     return;
   }
 

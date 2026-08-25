@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireAdmin } from '../_lib/adminAuth.js';
+import { ID_PATTERN } from '../_lib/constants.js';
 
 // Supabase's ban mechanism has no literal "forever" - a duration far beyond
 // any realistic account lifetime is the standard way to express it.
@@ -27,8 +28,8 @@ async function handleSetActive(req: VercelRequest, res: VercelResponse) {
   const serviceClient = auth.serviceClient!;
 
   const { id, active } = (req.body ?? {}) as { id?: string; active?: boolean };
-  if (!id || typeof active !== 'boolean') {
-    res.status(400).json({ error: 'Missing id or active.' });
+  if (typeof id !== 'string' || !ID_PATTERN.test(id) || typeof active !== 'boolean') {
+    res.status(400).json({ error: 'Invalid or missing id/active.' });
     return;
   }
 
@@ -53,7 +54,8 @@ async function handleSetActive(req: VercelRequest, res: VercelResponse) {
   });
 
   if (banError) {
-    res.status(500).json({ error: banError.message });
+    console.error(`set-active: updateUserById failed for "${id}":`, banError);
+    res.status(500).json({ error: 'Failed to update account status. Please try again.' });
     return;
   }
 

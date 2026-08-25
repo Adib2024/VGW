@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireAdmin } from '../_lib/adminAuth.js';
 import { generateTempPassword } from '../_lib/tempPassword.js';
+import { ID_PATTERN } from '../_lib/constants.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
@@ -24,8 +25,8 @@ async function handleResetPassword(req: VercelRequest, res: VercelResponse) {
   const serviceClient = auth.serviceClient!;
 
   const { id } = (req.body ?? {}) as { id?: string };
-  if (!id) {
-    res.status(400).json({ error: 'Missing id.' });
+  if (typeof id !== 'string' || !ID_PATTERN.test(id)) {
+    res.status(400).json({ error: 'Invalid or missing id.' });
     return;
   }
 
@@ -47,7 +48,8 @@ async function handleResetPassword(req: VercelRequest, res: VercelResponse) {
   });
 
   if (updateError) {
-    res.status(500).json({ error: updateError.message });
+    console.error(`reset-password: updateUserById failed for "${id}":`, updateError);
+    res.status(500).json({ error: 'Failed to reset password. Please try again.' });
     return;
   }
 
