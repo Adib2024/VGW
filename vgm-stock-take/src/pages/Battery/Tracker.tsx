@@ -3,9 +3,6 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { Navigation } from '../../components/Navigation';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
 import { BackgroundDecor } from '../../components/ui/BackgroundDecor';
 import { Camera, Save, X, Edit2, Battery } from 'lucide-react';
 import type { Html5QrcodeScanner } from 'html5-qrcode';
@@ -27,9 +24,9 @@ export default function Tracker() {
     setTimeout(() => {
       scannerRef.current = new Html5QrcodeScanner(
         "reader",
-        { 
-          fps: 10, 
-          qrbox: {width: 250, height: 150}, 
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 150 },
           supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
           videoConstraints: {
             facingMode: "environment"
@@ -37,7 +34,7 @@ export default function Tracker() {
         },
         false
       );
-      
+
       scannerRef.current.render(
         (decodedText) => {
           setSerialNumber(decodedText.trim());
@@ -141,140 +138,173 @@ export default function Tracker() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
+      <style>{`
+        .bt-panel {
+          position: relative;
+          background: var(--surface-color);
+          border-radius: var(--radius-panel);
+          box-shadow: 0 10px 30px -8px rgba(5,150,105,0.16), 0 2px 8px -2px rgba(5,150,105,0.06);
+          overflow: hidden;
+        }
+        .bt-panel::before, .bt-panel::after { content: ''; position: absolute; width: 14px; height: 14px; opacity: 0.55; }
+        .bt-panel::before { top: 10px; left: 10px; border-top: 2px solid var(--success-color); border-left: 2px solid var(--success-color); border-radius: 3px 0 0 0; }
+        .bt-panel::after { bottom: 10px; right: 10px; border-bottom: 2px solid var(--success-color); border-right: 2px solid var(--success-color); border-radius: 0 0 3px 0; }
+
+        .bt-module-id { display: flex; align-items: center; gap: 0.9rem; padding: 1.4rem 1.5rem; }
+        .bt-module-icon {
+          width: 46px; height: 46px; border-radius: var(--radius-card); flex-shrink: 0;
+          background: rgba(5,150,105,0.1); box-shadow: inset 0 0 0 1.5px var(--success-color);
+          display: flex; align-items: center; justify-content: center; color: var(--success-color);
+        }
+        .bt-module-id h1 { font-size: 1.1rem; font-weight: 700; color: var(--primary-color); margin: 0; }
+        .bt-module-id .bt-sub { font-size: 0.78rem; color: var(--text-secondary); font-weight: 500; margin-top: 0.15rem; }
+
+        .bt-scan-zone {
+          margin: 0 1.5rem 1.5rem;
+          height: 220px; border-radius: var(--radius-lg);
+          background:
+            radial-gradient(420px 220px at 50% 0%, rgba(5,150,105,0.18) 0%, transparent 65%),
+            linear-gradient(155deg, #0b1220 0%, #06090f 100%);
+          display: flex; flex-direction: column; align-items: center; justify-content: center;
+          color: #fff; cursor: pointer; position: relative; overflow: hidden; text-align: center;
+        }
+        .bt-scan-zone::before {
+          content: ''; position: absolute; inset: 14px; border-radius: var(--radius-card);
+          border: 2px dashed rgba(52, 211, 153, 0.35); pointer-events: none;
+        }
+        .bt-scan-zone h3 { font-size: 1.05rem; font-weight: 700; margin: 0.9rem 0 0; }
+        .bt-scan-zone p { margin-top: 0.4rem; font-size: 0.82rem; color: rgba(255,255,255,0.55); }
+        .bt-scan-live { position: relative; width: 100%; height: 100%; }
+        .bt-scan-stop {
+          position: absolute; top: 10px; right: 10px; z-index: 10; width: 34px; height: 34px;
+          border-radius: 50%; border: none; background: var(--danger-color); color: #fff;
+          display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+
+        .bt-form-head { display: flex; justify-content: space-between; align-items: center; padding: 1.4rem 1.5rem 1.1rem; border-top: 1px solid var(--surface-highlight); }
+        .bt-form-head h2 { font-size: 1rem; font-weight: 800; color: var(--text-primary); margin: 0; }
+        .bt-manual-toggle {
+          display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.75rem; border-radius: var(--radius-full);
+          border: 1px solid var(--border-color); background: var(--surface-color); font-size: 0.75rem; font-weight: 700;
+          color: var(--text-secondary); cursor: pointer;
+        }
+
+        .bt-field { padding: 0 1.5rem; margin-bottom: 1.1rem; }
+        .bt-field label { display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.5rem; }
+        .bt-field input, .bt-field select {
+          width: 100%; padding: 0.8rem 1rem; border-radius: var(--radius-md); border: 1px solid transparent;
+          background: var(--surface-highlight); font-size: 0.95rem; font-family: inherit; color: var(--text-primary); outline: none;
+          transition: border-color 0.2s, background 0.2s;
+        }
+        .bt-field input:focus, .bt-field select:focus { border-color: var(--success-color); background: var(--surface-color); }
+
+        .bt-serial-readout {
+          padding: 1rem; border-radius: var(--radius-md); text-align: center; font-weight: 800; font-size: 1.05rem;
+          word-break: break-all; font-variant-numeric: tabular-nums;
+          background: rgba(5,150,105,0.1); border: 2px solid var(--success-color); color: var(--success-text);
+        }
+        .bt-serial-readout.empty { background: var(--surface-highlight); border: 2px dashed var(--border-color); color: var(--text-secondary); font-weight: 500; border-color: #cbd5e1; }
+
+        .bt-save-btn {
+          margin: 0.5rem 1.5rem 1.5rem; padding: 1rem; border: none; border-radius: var(--radius-md);
+          background: linear-gradient(135deg, var(--success-color) 0%, #047857 100%);
+          color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer;
+          display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+          box-shadow: 0 10px 22px rgba(5,150,105,0.28);
+        }
+        .bt-save-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+      `}</style>
+
       <BackgroundDecor />
       <Navigation title="Battery Scanner" showBack={true} backTo="/hub" />
 
-      <div style={{ padding: '1rem', maxWidth: '600px', margin: '0 auto' }}>
-
-        {/* Header Icon */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem', marginTop: '0.5rem' }}>
-           <div style={{ width: '60px', height: '60px', borderRadius: 'var(--radius-lg)', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)' }}>
-             <Battery size={32} />
-           </div>
-        </div>
-
-        {/* Camera Viewfinder */}
-        <Card style={{ marginBottom: '1.5rem', overflow: 'hidden', padding: scanning ? '0' : '1rem' }}>
-          {scanning ? (
-            <div style={{ position: 'relative' }}>
-              <div id="reader" style={{ width: '100%', minHeight: '300px' }}></div>
-              <Button 
-                variant="danger" 
-                onClick={stopScanner}
-                style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10, padding: '0.5rem' }}
-              >
-                <X size={20} />
-              </Button>
+      <main style={{ maxWidth: '480px', margin: '0 auto', padding: '1.5rem 1.25rem 3rem' }}>
+        <div className="bt-panel">
+          <div className="bt-module-id">
+            <div className="bt-module-icon"><Battery size={22} /></div>
+            <div>
+              <h1>Battery Tracking</h1>
+              <div className="bt-sub">Scan or enter a serial to log a record</div>
             </div>
-          ) : (
-            <div 
-              style={{ 
-                height: '220px', 
-                display: 'flex', 
-                flexDirection: 'column',
-                justifyContent: 'center', 
-                alignItems: 'center',
-                backgroundColor: '#0f172a',
-                color: 'white',
-                cursor: 'pointer',
-                borderRadius: 'var(--radius-card)'
-              }}
-              onClick={startScanner}
-            >
-              <Camera size={56} color="#38bdf8" style={{ marginBottom: '1rem' }} />
-              <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.25rem' }}>Tap to Scan Barcode</h3>
-              <p style={{ margin: '0.5rem 0 0 0', opacity: 0.7, fontSize: '0.9rem' }}>Align barcode within the laser frame</p>
-            </div>
-          )}
-        </Card>
+          </div>
 
-        {/* Battery Details Form */}
-        <Card style={{ padding: '1.5rem', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem' }}>
-            <h3 style={{ margin: 0, color: '#0f172a', fontSize: '1.2rem', fontWeight: 800 }}>Battery Record</h3>
-            <Button variant="secondary" onClick={() => setIsManual(!isManual)} style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}>
-              <Edit2 size={14} style={{ marginRight: '0.35rem' }} />
+          <div className="bt-scan-zone" onClick={!scanning ? startScanner : undefined}>
+            {scanning ? (
+              <div className="bt-scan-live">
+                <div id="reader" style={{ width: '100%', minHeight: '220px' }}></div>
+                <button className="bt-scan-stop" onClick={(e) => { e.stopPropagation(); stopScanner(); }} aria-label="Stop scanning">
+                  <X size={18} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <Camera size={44} color="#34d399" style={{ filter: 'drop-shadow(0 0 10px rgba(52,211,153,0.4))' }} />
+                <h3>Tap to Scan Barcode</h3>
+                <p>Align the barcode within the frame</p>
+              </>
+            )}
+          </div>
+
+          <div className="bt-form-head">
+            <h2>Battery Record</h2>
+            <button className="bt-manual-toggle" onClick={() => setIsManual(!isManual)}>
+              <Edit2 size={12} />
               {isManual ? 'Cancel Manual' : 'Manual Entry'}
-            </Button>
+            </button>
           </div>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div>
-              {isManual ? (
-                <Input
-                  label="Serial Number"
-                  type="text"
-                  value={serialNumber}
-                  onChange={e => setSerialNumber(e.target.value)}
-                  placeholder="Enter SN manually"
-                />
-              ) : (
-                <>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#475569', marginBottom: '0.4rem' }}>Serial Number</label>
-                  <div style={{
-                      padding: '1rem',
-                      backgroundColor: serialNumber ? '#f0fdf4' : '#f8fafc',
-                      borderRadius: 'var(--radius-md)',
-                      border: serialNumber ? '2px solid #86efac' : '2px dashed #cbd5e1',
-                      color: serialNumber ? 'var(--success-text)' : '#64748b',
-                      fontWeight: serialNumber ? 800 : 500,
-                      fontSize: '1.1rem',
-                      textAlign: 'center',
-                      wordBreak: 'break-all'
-                  }}>
-                    {serialNumber || 'Awaiting scan...'}
-                  </div>
-                </>
-              )}
-            </div>
 
-            <div>
-              <Input
-                label="Part Number (Optional)"
+          <div className="bt-field">
+            <label>Serial Number</label>
+            {isManual ? (
+              <input
                 type="text"
-                value={partNumber}
-                onChange={e => setPartNumber(e.target.value)}
-                placeholder="e.g. 5G0915105"
+                value={serialNumber}
+                onChange={e => setSerialNumber(e.target.value)}
+                placeholder="Enter SN manually"
               />
-            </div>
-
-            <div>
-              <Input
-                label="Location / Rack"
-                type="text"
-                value={locationId}
-                onChange={e => setLocationId(e.target.value)}
-                placeholder="e.g. Rack 4A"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="battery-status" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#475569', marginBottom: '0.4rem' }}>Status</label>
-              <select
-                id="battery-status"
-                value={status}
-                onChange={e => setStatus(e.target.value)}
-                style={{ width: '100%', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '2px solid #e2e8f0', fontSize: '1rem', backgroundColor: 'white', outline: 'none', cursor: 'pointer' }}
-              >
-                <option value="Scanned">Scanned (Awaiting Action)</option>
-                <option value="Charged">Charged</option>
-                <option value="Deployed">Deployed</option>
-                <option value="Faulty">Faulty / Return</option>
-              </select>
-            </div>
-
-            <Button 
-              variant="primary" 
-              onClick={handleSave} 
-              style={{ width: '100%', padding: '1.2rem', marginTop: '0.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', fontWeight: 700 }}
-              disabled={!serialNumber}
-            >
-              <Save size={24} />
-              Save Battery Record
-            </Button>
+            ) : (
+              <div className={`bt-serial-readout ${serialNumber ? '' : 'empty'}`}>
+                {serialNumber || 'Awaiting scan...'}
+              </div>
+            )}
           </div>
-        </Card>
-      </div>
+
+          <div className="bt-field">
+            <label>Part Number <span style={{ textTransform: 'none', fontWeight: 500 }}>(optional)</span></label>
+            <input
+              type="text"
+              value={partNumber}
+              onChange={e => setPartNumber(e.target.value)}
+              placeholder="e.g. 5G0915105"
+            />
+          </div>
+
+          <div className="bt-field">
+            <label>Location / Rack</label>
+            <input
+              type="text"
+              value={locationId}
+              onChange={e => setLocationId(e.target.value)}
+              placeholder="e.g. Rack 4A"
+            />
+          </div>
+
+          <div className="bt-field">
+            <label htmlFor="battery-status">Status</label>
+            <select id="battery-status" value={status} onChange={e => setStatus(e.target.value)}>
+              <option value="Scanned">Scanned (Awaiting Action)</option>
+              <option value="Charged">Charged</option>
+              <option value="Deployed">Deployed</option>
+              <option value="Faulty">Faulty / Return</option>
+            </select>
+          </div>
+
+          <button className="bt-save-btn" onClick={handleSave} disabled={!serialNumber}>
+            <Save size={20} />
+            Save Battery Record
+          </button>
+        </div>
+      </main>
     </div>
   );
 }
