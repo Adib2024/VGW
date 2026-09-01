@@ -82,7 +82,7 @@ export default function Hub() {
           if (cancelled) return;
           const rows = results.flat();
           const total = rows.length;
-          const completed = rows.filter((r: any) => r.status === 'Counted' || r.status === 'Verified').length;
+          const completed = rows.filter((r: any) => r.status === 'Verified').length;
           setStockTakePercent(total === 0 ? 0 : Math.round((completed / total) * 100));
         })
         .catch(err => console.error('Hub: failed to load Stock Take progress:', err));

@@ -72,7 +72,7 @@ export default function StockTakeDashboard() {
 
         const currentData = data;
         const total = currentData.length;
-        const completed = currentData.filter((r: any) => r.status === 'Counted' || r.status === 'Verified').length;
+        const completed = currentData.filter((r: any) => r.status === 'Verified').length;
         const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
         newStats[table] = { total, completed, percentage };
       });
