@@ -148,7 +148,7 @@ export default function Hub() {
           z-index: 1;
           max-width: 1080px;
           margin: 0 auto;
-          padding: clamp(1.75rem, 5vw, 2.75rem) 1.5rem clamp(2.75rem, 7vw, 4rem);
+          padding: clamp(1.75rem, 5vw, 2.75rem) 1.5rem clamp(1.75rem, 5vw, 2.5rem);
           display: flex;
           align-items: flex-end;
           justify-content: space-between;
@@ -176,12 +176,12 @@ export default function Hub() {
           flex: 1;
           max-width: 1080px;
           width: 100%;
-          margin: -2.25rem auto 0;
-          padding: 0 1.5rem clamp(2.5rem, 7vw, 4rem);
+          margin: 0 auto;
+          padding: clamp(1.75rem, 5vw, 2.5rem) 1.5rem clamp(2.5rem, 7vw, 4rem);
         }
         .hub-section-label {
           font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
-          color: var(--text-secondary); margin: 0 0 1rem; padding-left: 0.15rem;
+          color: var(--text-secondary); margin: 0 0 1.1rem; padding-left: 0.15rem;
         }
         .hub-grid {
           display: grid;
