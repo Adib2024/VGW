@@ -25,13 +25,15 @@ interface ZoneDef {
   accent: string;
   accentSoft: string;
   heroDot: string;
+  carDelay: string;
+  carDuration: string;
 }
 
 const ZONES: ZoneDef[] = [
-  { key: 'b17', title: 'LOCATION B17', heroLabel: 'B17', accent: '#2563eb', accentSoft: 'rgba(37,99,235,0.1)', heroDot: '#60a5fa' },
-  { key: 'b22', title: 'LOCATION B22', heroLabel: 'B22', accent: '#e11d48', accentSoft: 'rgba(225,29,72,0.1)', heroDot: '#fb7185' },
-  { key: 'loma', title: 'LOMA', heroLabel: 'Loma', accent: '#059669', accentSoft: 'rgba(5,150,105,0.1)', heroDot: '#34d399' },
-  { key: 'b22_seq', title: 'B22 SEQ', heroLabel: 'B22 seq', accent: '#d97706', accentSoft: 'rgba(217,119,6,0.1)', heroDot: '#fbbf24' },
+  { key: 'b17', title: 'LOCATION B17', heroLabel: 'B17', accent: '#2563eb', accentSoft: 'rgba(37,99,235,0.1)', heroDot: '#60a5fa', carDelay: '0s', carDuration: '15s' },
+  { key: 'b22', title: 'LOCATION B22', heroLabel: 'B22', accent: '#e11d48', accentSoft: 'rgba(225,29,72,0.1)', heroDot: '#fb7185', carDelay: '1.5s', carDuration: '16.5s' },
+  { key: 'loma', title: 'LOMA', heroLabel: 'Loma', accent: '#059669', accentSoft: 'rgba(5,150,105,0.1)', heroDot: '#34d399', carDelay: '3.2s', carDuration: '14.5s' },
+  { key: 'b22_seq', title: 'B22 SEQ', heroLabel: 'B22 seq', accent: '#d97706', accentSoft: 'rgba(217,119,6,0.1)', heroDot: '#fbbf24', carDelay: '4.8s', carDuration: '17s' },
 ];
 
 export default function StockTakeDashboard() {
@@ -238,18 +240,12 @@ export default function StockTakeDashboard() {
         .zone-progress-row { display: flex; justify-content: space-between; align-items: baseline; }
         .zone-progress-row .zone-progress-label { font-size: 0.68rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
         .zone-progress-row .pct { font-size: 0.95rem; font-weight: 700; color: var(--primary-color); font-variant-numeric: tabular-nums; }
-        .zone-bar-track { position: relative; height: 34px; }
+        .zone-bar-track { position: relative; height: 50px; overflow: hidden; }
         .zone-bar-base { position: absolute; bottom: 4px; width: 100%; height: 7px; border-radius: var(--radius-full); background: rgba(var(--primary-color-rgb), 0.08); overflow: hidden; }
         .zone-bar-fill { height: 100%; border-radius: var(--radius-full); background: var(--zc); transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-        .zone-car {
-          position: absolute; bottom: 7px; width: 44px; height: auto;
-          left: 0; transform: translateX(-50%);
-          transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-          filter: drop-shadow(0 3px 4px rgba(0,0,0,0.18));
-        }
 
         @media (prefers-reduced-motion: reduce) {
-          .zone-tile, .zone-bar-fill, .zone-car { transition: none !important; }
+          .zone-tile, .zone-bar-fill { transition: none !important; }
         }
       `}</style>
 
@@ -317,7 +313,9 @@ export default function StockTakeDashboard() {
                     </div>
                     <div className="zone-bar-track">
                       <div className="zone-bar-base"><div className="zone-bar-fill" style={{ width: `${s.percentage}%` }} /></div>
-                      <img className="zone-car" style={{ left: `${s.percentage}%` }} src="/car-golf.webp" alt="" decoding="async" />
+                      <div className="car-icon-anim" style={{ bottom: '8px', animationDelay: zone.carDelay, animationDuration: zone.carDuration }}>
+                        <img src="/car-golf.webp" alt="car" decoding="async" style={{ width: '80px', height: 'auto', objectFit: 'contain' }} />
+                      </div>
                     </div>
                   </div>
                 </button>
