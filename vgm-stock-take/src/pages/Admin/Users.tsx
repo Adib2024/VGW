@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Navigation } from '../../components/Navigation';
-import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
@@ -144,28 +143,75 @@ export default function AdminUsers() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <style>{`
+        .au-panel {
+          position: relative;
+          background: var(--surface-color);
+          border-radius: var(--radius-panel);
+          box-shadow: 0 10px 30px -8px rgba(var(--primary-color-rgb), 0.12), 0 2px 8px -2px rgba(var(--primary-color-rgb), 0.05);
+          overflow: hidden;
+        }
+        .au-panel::before, .au-panel::after { content: ''; position: absolute; width: 14px; height: 14px; opacity: 0.5; }
+        .au-panel::before { top: 10px; left: 10px; border-top: 2px solid var(--primary-color); border-left: 2px solid var(--primary-color); border-radius: 3px 0 0 0; }
+        .au-panel::after { bottom: 10px; right: 10px; border-bottom: 2px solid var(--primary-color); border-right: 2px solid var(--primary-color); border-radius: 0 0 3px 0; }
+
+        .au-top { padding: 1.5rem 1.6rem 1.25rem; display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: center; justify-content: space-between; }
+        .au-id { display: flex; align-items: center; gap: 0.9rem; }
+        .au-id-icon {
+          width: 46px; height: 46px; border-radius: var(--radius-card); flex-shrink: 0;
+          background: rgba(var(--primary-color-rgb), 0.08); box-shadow: inset 0 0 0 1.5px var(--primary-color);
+          display: flex; align-items: center; justify-content: center; color: var(--primary-color);
+        }
+        .au-id h1 { font-size: 1.1rem; font-weight: 700; color: var(--primary-color); margin: 0; }
+        .au-id .au-sub { font-size: 0.78rem; color: var(--text-secondary); font-weight: 500; margin-top: 0.15rem; }
+
+        .au-search { padding: 0 1.6rem 1.4rem; }
+
+        .au-roster { border-top: 1px solid var(--surface-highlight); }
+        .au-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.6rem; border-bottom: 1px solid #f8fafc; flex-wrap: wrap; }
+        .au-row:last-child { border-bottom: none; }
+        .au-row.inactive { background: rgba(254, 242, 242, 0.4); }
+        .au-row-id { display: flex; align-items: center; gap: 1rem; min-width: 0; flex: 1 1 260px; }
+        .au-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; flex-shrink: 0; }
+        .au-row.inactive .au-avatar { background: #94a3b8; }
+        .au-row-name { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .au-row-name .n { font-weight: 700; color: var(--text-primary); }
+        .au-row-name .id { font-size: 0.75rem; color: #94a3b8; }
+        .au-row-role { font-size: 0.78rem; color: var(--primary-color); font-weight: 700; margin-top: 0.15rem; }
+        .au-tag { font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.18rem 0.55rem; border-radius: var(--radius-full); }
+        .au-tag.bad { background: var(--danger-bg); color: var(--danger-text); }
+        .au-tag.warn { background: var(--warning-bg); color: var(--warning-text); }
+
+        .au-row-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+        .au-act-btn { display: flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.85rem; border-radius: var(--radius-md); font-size: 0.8rem; font-weight: 700; cursor: pointer; border: 1px solid transparent; min-height: 44px; font-family: inherit; }
+        .au-act-btn.ghost { background: var(--surface-color); border-color: var(--border-color); border-color: #e2e8f0; color: var(--text-primary); }
+        .au-act-btn.danger { background: var(--danger-bg); color: var(--danger-text); }
+        .au-act-btn.ok { background: var(--success-color); color: #fff; }
+        .au-act-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .au-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+        .au-modal { background: var(--surface-color); padding: 2rem; border-radius: var(--radius-panel); max-width: 420px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
+      `}</style>
       <BackgroundDecor />
       <Navigation title="User Management" backTo={-1} />
 
-      <main style={{ flex: 1, padding: '2rem 1rem 6rem', display: 'flex', justifyContent: 'center' }}>
+      <main style={{ flex: 1, padding: '1.5rem 1rem 6rem', display: 'flex', justifyContent: 'center' }}>
         <div style={{ width: '100%', maxWidth: '800px' }}>
-          <Card style={{ padding: '2rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%)', borderRadius: '50%', color: 'white', boxShadow: '0 10px 15px -3px rgba(0,30,80,0.3)', flexShrink: 0 }}>
-                  <UsersIcon size={24} />
-                </div>
+          <div className="au-panel">
+            <div className="au-top">
+              <div className="au-id">
+                <div className="au-id-icon"><UsersIcon size={22} /></div>
                 <div>
-                  <h2 style={{ margin: 0 }}>User Management</h2>
-                  <p style={{ margin: 0, fontSize: '0.875rem' }}>Create operator accounts, reset passwords, deactivate resigned staff.</p>
+                  <h1>Operator Roster</h1>
+                  <div className="au-sub">Create accounts, reset passwords, deactivate resigned staff</div>
                 </div>
               </div>
-              <Button onClick={() => setShowAddModal(true)} style={{ backgroundColor: 'var(--primary-color)', color: 'white', flexShrink: 0 }}>
+              <Button onClick={() => setShowAddModal(true)}>
                 <UserPlus size={16} /> Add Operator
               </Button>
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
+            <div className="au-search">
               <Input
                 placeholder="Search by ID, name, or role..."
                 value={search}
@@ -174,81 +220,70 @@ export default function AdminUsers() {
               />
             </div>
 
-            {loading ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {[1, 2, 3, 4].map(i => <Skeleton key={i} height="3.5rem" />)}
-              </div>
-            ) : filteredUsers.length === 0 ? (
-              <EmptyState icon={<UsersIcon size={40} strokeWidth={1.5} />} message={search ? 'No users match your search.' : 'No users found.'} />
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {filteredUsers.map((u) => (
-                  <div key={u.id} style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem',
-                    padding: '1rem 1.25rem', borderRadius: 'var(--radius-card)',
-                    backgroundColor: u.is_active ? 'rgba(248, 250, 252, 0.8)' : 'rgba(254, 242, 242, 0.6)',
-                    border: `1px solid ${u.is_active ? 'rgba(226, 232, 240, 0.8)' : 'rgba(254, 202, 202, 0.8)'}`,
-                    flexWrap: 'wrap'
-                  }}>
-                    <div style={{ minWidth: 0, flex: '1 1 200px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <span style={{ fontWeight: 700, color: '#0f172a' }}>{u.name}</span>
-                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>({u.id})</span>
-                        {!u.is_active && (
-                          <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--danger-color)', textTransform: 'uppercase', backgroundColor: '#fee2e2', padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-full)' }}>
-                            Deactivated
-                          </span>
-                        )}
-                        {u.is_active && u.must_change_password && (
-                          <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#b45309', textTransform: 'uppercase', backgroundColor: '#fef3c7', padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-full)' }}>
-                            Pending first login
-                          </span>
-                        )}
+            <div className="au-roster">
+              {loading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0 1.6rem 1.6rem' }}>
+                  {[1, 2, 3, 4].map(i => <Skeleton key={i} height="3.5rem" />)}
+                </div>
+              ) : filteredUsers.length === 0 ? (
+                <div style={{ padding: '0 1.6rem 1.6rem' }}>
+                  <EmptyState icon={<UsersIcon size={40} strokeWidth={1.5} />} message={search ? 'No users match your search.' : 'No users found.'} />
+                </div>
+              ) : (
+                filteredUsers.map((u) => (
+                  <div key={u.id} className={`au-row ${u.is_active ? '' : 'inactive'}`}>
+                    <div className="au-row-id">
+                      <div className="au-avatar">{u.name?.charAt(0).toUpperCase() || u.id.charAt(0).toUpperCase()}</div>
+                      <div>
+                        <div className="au-row-name">
+                          <span className="n">{u.name}</span>
+                          <span className="id">({u.id})</span>
+                          {!u.is_active && <span className="au-tag bad">Deactivated</span>}
+                          {u.is_active && u.must_change_password && <span className="au-tag warn">Pending first login</span>}
+                        </div>
+                        <div className="au-row-role">{u.role}</div>
                       </div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--primary-color)', fontWeight: 600, marginTop: '0.15rem' }}>{u.role}</div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-                      <Button
-                        variant="secondary"
+                    <div className="au-row-actions">
+                      <button
+                        className="au-act-btn ghost"
                         disabled={processingId === u.id}
                         onClick={() => setConfirmTarget({ id: u.id, name: u.name, action: 'reset' })}
-                        style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', minHeight: '44px' }}
                       >
                         <KeyRound size={14} /> Reset
-                      </Button>
+                      </button>
                       {u.is_active ? (
-                        <Button
-                          variant="danger"
+                        <button
+                          className="au-act-btn danger"
                           disabled={processingId === u.id || u.id === currentUser?.id}
                           onClick={() => setConfirmTarget({ id: u.id, name: u.name, action: 'deactivate' })}
-                          style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', minHeight: '44px' }}
                           title={u.id === currentUser?.id ? "You can't deactivate your own account" : undefined}
                         >
                           <Ban size={14} /> Deactivate
-                        </Button>
+                        </button>
                       ) : (
-                        <Button
+                        <button
+                          className="au-act-btn ok"
                           disabled={processingId === u.id}
                           onClick={() => handleSetActive(u.id, true)}
-                          style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', minHeight: '44px', backgroundColor: 'var(--success-color)', color: 'white' }}
                         >
                           <CheckCircle2 size={14} /> Reactivate
-                        </Button>
+                        </button>
                       )}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </Card>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </main>
 
       {/* Add Operator modal */}
       {showAddModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div style={{ backgroundColor: '#fff', padding: '2rem', borderRadius: 'var(--radius-lg)', maxWidth: '420px', width: '100%', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+        <div className="au-modal-overlay">
+          <div className="au-modal">
             <h3 style={{ margin: '0 0 1.25rem 0', color: 'var(--primary-color)', fontSize: '1.25rem', fontWeight: 800 }}>Add Operator</h3>
             <form onSubmit={handleAddUser} className="flex-col gap-4">
               {addError && (
@@ -283,8 +318,8 @@ export default function AdminUsers() {
 
       {/* One-time temp password display */}
       {tempPasswordResult && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div style={{ backgroundColor: '#fff', padding: '2rem', borderRadius: 'var(--radius-lg)', maxWidth: '420px', width: '100%', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', textAlign: 'center' }}>
+        <div className="au-modal-overlay">
+          <div className="au-modal" style={{ textAlign: 'center' }}>
             <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--primary-color)', fontSize: '1.25rem', fontWeight: 800 }}>
               {tempPasswordResult.name}'s Temporary Password
             </h3>
