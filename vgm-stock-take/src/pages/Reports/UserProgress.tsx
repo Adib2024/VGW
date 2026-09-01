@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Navigation } from '../../components/Navigation';
-
-import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { supabase, fetchAllRows } from '../../lib/supabase';
-import { Download, User as UserIcon, PackageSearch } from 'lucide-react';
+import { Download, PackageSearch } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { BottomNav } from '../../components/ui/BottomNav';
@@ -45,7 +43,7 @@ export default function UserProgress() {
             setLoginDevice(data[0].device_type || '-');
           }
         });
-        
+
       supabase.from('audit_logs')
         .select('created_at, device_type')
         .eq('user_id', user.id)
@@ -77,14 +75,14 @@ export default function UserProgress() {
     try {
       const tables = ['b17', 'b22', 'b22_seq', 'loma', 'check_part'];
       let allParts: any[] = [];
-      
+
       for (const t of tables) {
         const tableData = await fetchAllRows(t);
         if (tableData && tableData.length > 0) {
           allParts = [...allParts, ...tableData.map(d => ({ ...d, _table: t }))];
         }
       }
-      
+
       // Sort by status instead since last_updated does not exist
       if (isMounted.current) {
         setParts(allParts.sort((a, b) => {
@@ -131,221 +129,238 @@ export default function UserProgress() {
     setPage(1);
   }, [statusFilter, locationFilter]);
 
+  const notCountedCount = parts.filter(p => p.status === 'Not Counted').length;
+  const countedCount = parts.filter(p => p.status === 'Counted').length;
+  const verifiedCount = parts.filter(p => p.status === 'Verified').length;
+  const verifiedPercentage = parts.length ? Math.round((verifiedCount / parts.length) * 100) : 0;
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <style>{`
+        .up-panel {
+          position: relative;
+          background: var(--surface-color);
+          border-radius: var(--radius-panel);
+          box-shadow: 0 10px 30px -8px rgba(var(--primary-color-rgb), 0.12), 0 2px 8px -2px rgba(var(--primary-color-rgb), 0.05);
+          overflow: hidden;
+        }
+        .up-panel::before, .up-panel::after { content: ''; position: absolute; width: 14px; height: 14px; opacity: 0.5; }
+        .up-panel::before { top: 10px; left: 10px; border-top: 2px solid var(--primary-color); border-left: 2px solid var(--primary-color); border-radius: 3px 0 0 0; }
+        .up-panel::after { bottom: 10px; right: 10px; border-bottom: 2px solid var(--primary-color); border-right: 2px solid var(--primary-color); border-radius: 0 0 3px 0; }
+
+        .up-identity { display: flex; align-items: center; gap: 1.1rem; padding: 1.4rem 1.6rem; flex-wrap: wrap; }
+        .up-avatar {
+          width: 52px; height: 52px; border-radius: 50%; background: var(--primary-color); color: #fff;
+          display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; flex-shrink: 0;
+        }
+        .up-identity-name { font-size: 1.05rem; font-weight: 700; color: var(--primary-color); }
+        .up-identity-role { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); margin-top: 0.15rem; }
+        .up-sessions { display: flex; gap: 2rem; margin-left: auto; flex-wrap: wrap; }
+        .up-session .l { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-secondary); }
+        .up-session .v { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-top: 0.25rem; font-variant-numeric: tabular-nums; }
+        .up-session .via { font-size: 0.7rem; color: var(--text-secondary); font-weight: 500; margin-top: 0.1rem; }
+
+        .up-report-head { padding: 1.5rem 1.6rem 1.25rem; border-top: 1px solid var(--surface-highlight); }
+        .up-eyebrow { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); margin-bottom: 0.35rem; }
+        .up-report-title { font-size: 1.3rem; font-weight: 800; color: var(--primary-color); letter-spacing: -0.01em; }
+
+        .up-stat-row { display: flex; gap: 0.75rem; padding: 0 1.6rem 1.4rem; flex-wrap: wrap; }
+        .up-stat-chip { flex: 1 1 140px; border-radius: var(--radius-lg); padding: 1rem 1.1rem; }
+        .up-stat-chip .up-n { font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+        .up-stat-chip .up-l { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.4rem; }
+        .up-stat-chip.bad { background: var(--danger-bg); } .up-stat-chip.bad .up-n, .up-stat-chip.bad .up-l { color: var(--danger-text); }
+        .up-stat-chip.warn { background: var(--warning-bg); } .up-stat-chip.warn .up-n, .up-stat-chip.warn .up-l { color: var(--warning-text); }
+        .up-stat-chip.ok { background: var(--success-bg); } .up-stat-chip.ok .up-n, .up-stat-chip.ok .up-l { color: var(--success-text); }
+
+        .up-totals { padding: 0 1.6rem 1.5rem; }
+        .up-totals-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.3rem; }
+        .up-totals-figure { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+        .up-totals-sub { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; font-variant-numeric: tabular-nums; }
+        .up-totals-bar { height: 10px; border-radius: var(--radius-full); background: rgba(var(--primary-color-rgb), 0.08); overflow: hidden; }
+        .up-totals-fill { height: 100%; border-radius: var(--radius-full); background: var(--success-color); transition: width 0.5s ease-in-out; }
+
+        .up-filters { border-top: 1px solid var(--surface-highlight); padding: 1.1rem 1.6rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .up-filters .field { display: flex; flex-direction: column; gap: 0.4rem; flex: 1 1 200px; }
+        .up-filters label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+        .up-filters select {
+          padding: 0.65rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);
+          background: var(--surface-color); font-size: 0.85rem; font-weight: 600; color: var(--text-primary);
+          font-family: inherit; cursor: pointer; outline: none;
+        }
+
+        .up-ledger-title { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); padding: 1.4rem 1.6rem 0.9rem; }
+        .up-table { width: 100%; font-size: 0.875rem; min-width: 600px; border-collapse: collapse; }
+        .up-table thead th { text-align: left; padding: 0.8rem 1.6rem; font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); border-bottom: 1px solid var(--surface-highlight); }
+        .up-table tbody tr { border-bottom: 1px solid #f8fafc; }
+        .up-table tbody tr:last-child { border-bottom: none; }
+        .up-table td { padding: 0.85rem 1.6rem; color: var(--text-primary); font-weight: 500; }
+        .up-table td.up-mat { font-weight: 700; position: relative; }
+        .up-table td.up-mat::before { content: ''; position: absolute; left: 0; top: 0.35rem; bottom: 0.35rem; width: 4px; border-radius: 0 4px 4px 0; background: var(--row-accent); }
+        .up-zone-tag { font-size: 0.62rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-left: 0.4rem; }
+        .up-status-pill { display: inline-flex; padding: 0.26rem 0.65rem; border-radius: var(--radius-full); font-size: 0.7rem; font-weight: 700; }
+
+        .up-mobile-card { background: var(--surface-color); border-radius: var(--radius-card); padding: 1.25rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 6px solid var(--row-accent); }
+        .up-foot-note { text-align: center; padding: 1.4rem; font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
+      `}</style>
+
       <Navigation title={t('userProgressReport') || 'User Progress Report'} backTo="/stock-take" />
-      
-      <main className="container flex-col gap-6" style={{ flex: 1, padding: '2rem 1rem 6rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+
+      <main className="container flex-col" style={{ flex: 1, padding: '1.5rem 1rem 6rem', maxWidth: '1080px', margin: '0 auto', width: '100%', gap: '1.25rem', display: 'flex' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button onClick={handleDownloadCSV}>
             <Download size={18} /> {t('downloadCsv') || 'Download CSV'}
           </Button>
         </div>
 
-        {/* User Summary Card */}
-        <Card style={{ marginBottom: '1.5rem', padding: '0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--surface-color)', borderTopLeftRadius: 'var(--radius-card)', borderTopRightRadius: 'var(--radius-card)' }}>
-            <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--primary-color)' }}>{t('userSummary') || 'User Summary'}</h2>
-            <div style={{ backgroundColor: 'var(--primary-color)', color: 'white', padding: '0.5rem', borderRadius: 'var(--radius-md)' }}>
-              <UserIcon size={20} />
+        <div className="up-panel">
+          <div className="up-identity">
+            <div className="up-avatar">{user?.name?.charAt(0).toUpperCase() || user?.id?.charAt(0).toUpperCase() || 'U'}</div>
+            <div>
+              <div className="up-identity-name">{user?.name || '-'}</div>
+              <div className="up-identity-role">{user?.role || '-'}</div>
             </div>
-          </div>
-          <div style={{ padding: '1.5rem', backgroundColor: '#fff', borderBottomLeftRadius: 'var(--radius-card)', borderBottomRightRadius: 'var(--radius-card)' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
-                <span style={{ color: '#64748b', fontWeight: 500 }}>{t('name') || 'Name'}:</span>
-                <span style={{ fontWeight: 700, color: '#0f172a' }}>{user?.name || '-'}</span>
+            <div className="up-sessions">
+              <div className="up-session">
+                <div className="l">{t('lastLogin') || 'Last Login'}</div>
+                <div className="v">{lastLogin}</div>
+                {loginDevice !== '-' && <div className="via">via {loginDevice}</div>}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
-                <span style={{ color: '#64748b', fontWeight: 500 }}>{t('role')}:</span>
-                <span style={{ fontWeight: 700, color: '#0f172a' }}>{user?.role || '-'}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
-                <span style={{ color: '#64748b', fontWeight: 500 }}>{t('lastLogin') || 'Last Login'}:</span>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                  <span style={{ fontWeight: 700, color: '#0f172a' }}>{lastLogin}</span>
-                  {loginDevice !== '-' && <span style={{ fontSize: '0.75rem', color: '#64748b' }}>via {loginDevice}</span>}
-                </div>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748b', fontWeight: 500 }}>{t('lastLogout') || 'Last Logout'}:</span>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                  <span style={{ fontWeight: 700, color: '#0f172a' }}>{lastLogout}</span>
-                  {logoutDevice !== '-' && <span style={{ fontSize: '0.75rem', color: '#64748b' }}>via {logoutDevice}</span>}
-                </div>
+              <div className="up-session">
+                <div className="l">{t('lastLogout') || 'Last Logout'}</div>
+                <div className="v">{lastLogout}</div>
+                {logoutDevice !== '-' && <div className="via">via {logoutDevice}</div>}
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card>
-          <div ref={reportRef} style={{ padding: '1rem', backgroundColor: 'var(--surface-color)', color: 'var(--text-primary)' }}>
-            <h2 style={{ textAlign: 'center', marginBottom: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
-              VGM CKD - Progress Summary
-            </h2>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '2rem' }}>
-              <div style={{ backgroundColor: 'var(--surface-highlight)', padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-                <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--danger-color)' }}>
-                  {parts.filter(p => p.status === 'Not Counted').length}
-                </div>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t('notCounted')}</div>
-              </div>
-              <div style={{ backgroundColor: 'var(--surface-highlight)', padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-                <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--warning-color)' }}>
-                  {parts.filter(p => p.status === 'Counted').length}
-                </div>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t('counted')}</div>
-              </div>
-              <div style={{ backgroundColor: 'var(--surface-highlight)', padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-                <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--success-color)' }}>
-                  {parts.filter(p => p.status === 'Verified').length}
-                </div>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t('verified')}</div>
-              </div>
-            </div>
+        <div className="up-panel" ref={reportRef}>
+          <div className="up-report-head">
+            <div className="up-eyebrow">VGM CKD &middot; Progress Summary</div>
+            <div className="up-report-title">{t('allLocations') || 'All Locations'} &middot; {parts.length.toLocaleString()} {t('items')}</div>
+          </div>
 
-            {/* Overall Progress Bar */}
-            <div style={{ marginBottom: '2.5rem', backgroundColor: '#f1f5f9', borderRadius: 'var(--radius-full)', height: '12px', width: '100%', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-              <div style={{ 
-                height: '100%', 
-                backgroundColor: 'var(--success-color)',
-                width: `${parts.length ? (parts.filter(p => p.status === 'Verified').length / parts.length) * 100 : 0}%`,
-                transition: 'width 0.5s ease-in-out'
-              }} />
-            </div>
-            <div style={{ textAlign: 'center', marginTop: '-2rem', marginBottom: '3rem', fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
-              <div style={{ fontSize: '1.25rem', color: '#0f172a', marginBottom: '0.5rem', fontWeight: 900 }}>Total Parts: {parts.length}</div>
-              {parts.filter(p => p.status === 'Verified').length} {t('verified').toLowerCase()} ({parts.length ? Math.round((parts.filter(p => p.status === 'Verified').length / parts.length) * 100) : 0}%)
-            </div>
+          <div className="up-stat-row">
+            <div className="up-stat-chip bad"><div className="up-n">{notCountedCount.toLocaleString()}</div><div className="up-l">{t('notCounted')}</div></div>
+            <div className="up-stat-chip warn"><div className="up-n">{countedCount.toLocaleString()}</div><div className="up-l">{t('counted')}</div></div>
+            <div className="up-stat-chip ok"><div className="up-n">{verifiedCount.toLocaleString()}</div><div className="up-l">{t('verified')}</div></div>
+          </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#f8fafc', borderRadius: 'var(--radius-card)', border: '1px solid #e2e8f0' }}>
-              <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label htmlFor="progress-status-filter" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>{t('filterByStatus') || 'Filter by Status'}</label>
-                <select
-                  id="progress-status-filter"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #cbd5e1', outline: 'none' }}
-                >
-                  <option value="all">{t('allStatuses') || 'All Statuses'}</option>
-                  <option value="Not Counted">{t('notCounted')}</option>
-                  <option value="Counted">{t('counted')}</option>
-                  <option value="Verified">{t('verified')}</option>
-                </select>
-              </div>
-              <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label htmlFor="progress-location-filter" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#475569' }}>{t('filterByLocation') || 'Filter by Location'}</label>
-                <select
-                  id="progress-location-filter"
-                  value={locationFilter}
-                  onChange={(e) => setLocationFilter(e.target.value)}
-                  style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #cbd5e1', outline: 'none' }}
-                >
-                  <option value="all">{t('allLocations') || 'All Locations'}</option>
-                  {uniqueLocations.map(loc => (
-                    <option key={loc} value={loc}>{loc}</option>
-                  ))}
-                </select>
-              </div>
+          <div className="up-totals">
+            <div className="up-totals-row">
+              <span className="up-totals-figure">{verifiedPercentage}%</span>
+              <span className="up-totals-sub">{verifiedCount.toLocaleString()} / {parts.length.toLocaleString()} {t('verified').toLowerCase()}</span>
             </div>
+            <div className="up-totals-bar"><div className="up-totals-fill" style={{ width: `${verifiedPercentage}%` }} /></div>
+          </div>
 
-            <h3 style={{ marginBottom: '1rem' }}>{t('recentActivity')}</h3>
-            {loading ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {[0, 1, 2, 3].map(i => (
-                  <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1.25rem', backgroundColor: '#fff', borderRadius: 'var(--radius-card)', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-                    <Skeleton width="40%" height="1.1rem" />
-                    <Skeleton width="65%" height="0.875rem" />
-                    <Skeleton width="50%" height="0.875rem" />
-                  </div>
+          <div className="up-filters">
+            <div className="field">
+              <label htmlFor="progress-status-filter">{t('filterByStatus') || 'Filter by Status'}</label>
+              <select id="progress-status-filter" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                <option value="all">{t('allStatuses') || 'All Statuses'}</option>
+                <option value="Not Counted">{t('notCounted')}</option>
+                <option value="Counted">{t('counted')}</option>
+                <option value="Verified">{t('verified')}</option>
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="progress-location-filter">{t('filterByLocation') || 'Filter by Location'}</label>
+              <select id="progress-location-filter" value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}>
+                <option value="all">{t('allLocations') || 'All Locations'}</option>
+                {uniqueLocations.map(loc => (
+                  <option key={loc} value={loc}>{loc}</option>
                 ))}
-              </div>
-            ) : (
-              <div>
-                {isMobile ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {paginatedParts.map((p, index) => (
-                      <div key={`${p.id}-${index}`} style={{ backgroundColor: '#fff', borderRadius: 'var(--radius-card)', padding: '1.25rem', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', borderLeft: `6px solid ${getStatusColor(p.status)}` }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                          <span style={{ fontWeight: 900, fontSize: '1.1rem', color: '#0f172a' }}>{p.material || p.part_no || '-'}</span>
-                          <span style={{ padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-xs)', backgroundColor: getStatusBadgeColors(p.status).bg, color: getStatusBadgeColors(p.status).text, fontSize: '0.75rem', fontWeight: 700 }}>
-                            {p.status}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid #f8fafc', paddingBottom: '0.5rem' }}>
-                            <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0 }}>{t('location') || 'Location'} / {t('zone') || 'Zone'}</span>
-                            <span style={{ fontWeight: 700, color: '#334155', fontSize: '0.875rem', textAlign: 'right' }}>{p.location || p.rack_number || p.storage_bin || '-'} ({p._table})</span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid #f8fafc', paddingBottom: '0.5rem' }}>
-                            <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0 }}>{t('verifiedBy') || 'Verified By'}</span>
-                            <span style={{ fontWeight: 700, color: '#334155', fontSize: '0.875rem', textAlign: 'right' }}>{p.verify_by || '-'}</span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', paddingBottom: '0.5rem' }}>
-                            <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0 }}>Batch ID</span>
-                            <span style={{ fontWeight: 700, color: '#334155', fontSize: '0.875rem', textAlign: 'right' }}>{p.batch_id ? new Date(p.batch_id).toLocaleString() : '-'}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    {filteredParts.length === 0 && (
-                      <EmptyState icon={<PackageSearch size={40} strokeWidth={1.5} />} message={t('noParts') || 'No activity found.'} />
-                    )}
-                    <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-                  </div>
-                ) : (
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', fontSize: '0.875rem', minWidth: '600px', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '2px solid var(--border-color)', backgroundColor: 'var(--surface-highlight)' }}>
-                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>{t('material') || 'Material'}</th>
-                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>{t('location') || 'Location'} / {t('zone') || 'Zone'}</th>
-                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>{t('status') || 'Status'}</th>
-                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>{t('verifiedBy') || 'Verified By'}</th>
-                          <th style={{ padding: '0.75rem', textAlign: 'left' }}>Batch ID (Date)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paginatedParts.map((p, index) => (
-                          <tr key={`${p.id}-${index}`} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                            <td style={{ padding: '0.75rem', fontWeight: 600 }}>{p.material || p.part_no || '-'}</td>
-                            <td style={{ padding: '0.75rem' }}>{p.location || p.rack_number || p.storage_bin || '-'} <span style={{fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase'}}>({p._table})</span></td>
-                            <td style={{ padding: '0.75rem' }}>
-                              <span style={{
-                                padding: '0.25rem 0.5rem',
-                                borderRadius: 'var(--radius-xs)',
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                                backgroundColor: getStatusBadgeColors(p.status).bg,
-                                color: getStatusBadgeColors(p.status).text
-                              }}>
-                                {p.status}
-                              </span>
-                            </td>
-                            <td style={{ padding: '0.75rem' }}>{p.verify_by || '-'}</td>
-                            <td style={{ padding: '0.75rem', color: 'var(--text-secondary)' }}>
-                              {p.batch_id ? new Date(p.batch_id).toLocaleString() : '-'}
-                            </td>
-                          </tr>
-                        ))}
-                        {filteredParts.length === 0 && (
-                          <tr>
-                            <td colSpan={5}>
-                              <EmptyState icon={<PackageSearch size={40} strokeWidth={1.5} />} message={t('noParts') || 'No activity found.'} />
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                    <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-                  </div>
-                )}
-              </div>
-            )}
-              {t('showingLatestUpdates') || 'Showing latest updates. Generated on'} {new Date().toLocaleString()}.
+              </select>
+            </div>
           </div>
-        </Card>
+        </div>
+
+        <div className="up-panel">
+          <div className="up-ledger-title">{t('recentActivity')}</div>
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0 1.6rem 1.6rem' }}>
+              {[0, 1, 2, 3].map(i => (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1.25rem', backgroundColor: '#fff', borderRadius: 'var(--radius-card)', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+                  <Skeleton width="40%" height="1.1rem" />
+                  <Skeleton width="65%" height="0.875rem" />
+                  <Skeleton width="50%" height="0.875rem" />
+                </div>
+              ))}
+            </div>
+          ) : isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0 1.1rem 1.1rem' }}>
+              {paginatedParts.map((p, index) => {
+                const badge = getStatusBadgeColors(p.status);
+                return (
+                <div key={`${p.id}-${index}`} className="up-mobile-card" style={{ ['--row-accent' as any]: getStatusColor(p.status) }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <span style={{ fontWeight: 900, fontSize: '1.1rem', color: 'var(--text-primary)' }}>{p.material || p.part_no || '-'}</span>
+                    <span className="up-status-pill" style={{ backgroundColor: badge.bg, color: badge.text }}>{p.status}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid #f8fafc', paddingBottom: '0.5rem' }}>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0 }}>{t('location') || 'Location'} / {t('zone') || 'Zone'}</span>
+                      <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.875rem', textAlign: 'right' }}>{p.location || p.rack_number || p.storage_bin || '-'} ({p._table})</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid #f8fafc', paddingBottom: '0.5rem' }}>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0 }}>{t('verifiedBy') || 'Verified By'}</span>
+                      <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.875rem', textAlign: 'right' }}>{p.verify_by || '-'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0 }}>Batch ID</span>
+                      <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.875rem', textAlign: 'right' }}>{p.batch_id ? new Date(p.batch_id).toLocaleString() : '-'}</span>
+                    </div>
+                  </div>
+                </div>
+                );
+              })}
+              {filteredParts.length === 0 && (
+                <EmptyState icon={<PackageSearch size={40} strokeWidth={1.5} />} message={t('noParts') || 'No activity found.'} />
+              )}
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto', paddingBottom: '1rem' }}>
+              <table className="up-table">
+                <thead>
+                  <tr>
+                    <th>{t('material') || 'Material'}</th>
+                    <th>{t('location') || 'Location'} / {t('zone') || 'Zone'}</th>
+                    <th>{t('status') || 'Status'}</th>
+                    <th>{t('verifiedBy') || 'Verified By'}</th>
+                    <th>Batch ID (Date)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedParts.map((p, index) => {
+                    const badge = getStatusBadgeColors(p.status);
+                    return (
+                    <tr key={`${p.id}-${index}`}>
+                      <td className="up-mat" style={{ ['--row-accent' as any]: getStatusColor(p.status) }}>
+                        {p.material || p.part_no || '-'}<span className="up-zone-tag">{p._table}</span>
+                      </td>
+                      <td>{p.location || p.rack_number || p.storage_bin || '-'}</td>
+                      <td><span className="up-status-pill" style={{ backgroundColor: badge.bg, color: badge.text }}>{p.status}</span></td>
+                      <td>{p.verify_by || '-'}</td>
+                      <td style={{ color: 'var(--text-secondary)' }}>{p.batch_id ? new Date(p.batch_id).toLocaleString() : '-'}</td>
+                    </tr>
+                    );
+                  })}
+                  {filteredParts.length === 0 && (
+                    <tr>
+                      <td colSpan={5}>
+                        <EmptyState icon={<PackageSearch size={40} strokeWidth={1.5} />} message={t('noParts') || 'No activity found.'} />
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
+          )}
+          <div className="up-foot-note">{t('showingLatestUpdates') || 'Showing latest updates. Generated on'} {new Date().toLocaleString()}.</div>
+        </div>
       </main>
       <BottomNav />
     </div>
