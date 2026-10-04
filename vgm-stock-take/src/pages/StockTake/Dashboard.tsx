@@ -6,7 +6,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { BottomNav } from '../../components/ui/BottomNav';
 import { Navigation } from '../../components/Navigation';
 import { CarTrack } from '../../components/ui/CarTrack';
-import { fetchAllRows } from '../../lib/supabase';
+import { fetchRowsIfTableExists } from '../../lib/supabase';
 import { useRealtimeTables } from '../../hooks/useRealtimeTables';
 import { ZONE_ORDER, ZONE_THEME } from '../../lib/zoneTheme';
 import { RefreshCw, AlertTriangle, ChevronRight } from 'lucide-react';
@@ -18,6 +18,7 @@ interface ZoneStats {
   completed: number;
   counted: number;
   percentage: number;
+  missing?: boolean;
 }
 
 const EMPTY_STATS: ZoneStats = { total: 0, completed: 0, counted: 0, percentage: 0 };
@@ -47,7 +48,9 @@ export default function StockTakeDashboard() {
   const fetchStats = async (isManualRefresh: boolean = false) => {
     if (isManualRefresh && isMounted.current) setIsRefreshing(true);
     try {
-      const promises = ZONE_TABLES.map(table => fetchAllRows(table));
+      // A zone whose table doesn't exist yet resolves to null instead of
+      // failing the whole dashboard.
+      const promises = ZONE_TABLES.map(table => fetchRowsIfTableExists(table));
       const results = await Promise.all(promises);
 
       const newStats: Record<string, ZoneStats> = {};
@@ -58,13 +61,13 @@ export default function StockTakeDashboard() {
         const completed = data.filter((r: any) => r.status === 'Verified').length;
         const counted = data.filter((r: any) => r.status === 'Counted').length;
         const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
-        newStats[table] = { total, completed, counted, percentage };
+        newStats[table] = { total, completed, counted, percentage, missing: res === null };
       });
 
       if (isMounted.current) setStats(newStats);
 
       // check_part may not exist until an admin uploads it - treat as none flagged.
-      fetchAllRows('check_part')
+      fetchRowsIfTableExists('check_part')
         .then(rows => { if (isMounted.current) setCheckOpen((rows || []).filter((r: any) => r.status !== 'Verified').length); })
         .catch(() => { if (isMounted.current) setCheckOpen(0); });
 
@@ -192,7 +195,9 @@ export default function StockTakeDashboard() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.375rem' }}>
                     <div className="zone-pct mono">{s.percentage}<span style={{ fontSize: '0.6em', color: 'var(--text-secondary)' }}>%</span></div>
-                    <span className={`ds-chip ${done ? 'done' : ''}`}>{done ? t('ready') : t('pending')}</span>
+                    {s.missing
+                      ? <span className="ds-chip st-nc">No data</span>
+                      : <span className={`ds-chip ${done ? 'done' : ''}`}>{done ? t('ready') : t('pending')}</span>}
                   </div>
                   <CarTrack percentage={s.percentage} color={zone.accent} carDelay={zone.carDelay} carDuration={zone.carDuration} carWidth={64} height={8} />
                   <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>

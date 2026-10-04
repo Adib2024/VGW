@@ -7,7 +7,7 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Pagination } from '../../components/ui/Pagination';
 import { CarTrack } from '../../components/ui/CarTrack';
-import { fetchAllRows } from '../../lib/supabase';
+import { fetchRowsIfTableExists } from '../../lib/supabase';
 import { useRealtimeTables } from '../../hooks/useRealtimeTables';
 import { ZONE_THEME, NEUTRAL_ZONE_THEME } from '../../lib/zoneTheme';
 import { Search, PackageSearch } from 'lucide-react';
@@ -36,6 +36,7 @@ export default function StockTakeListView() {
   const [locationFilter, setLocationFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [zoneMissing, setZoneMissing] = useState(false);
   const [stats, setStats] = useState({ total: 0, completed: 0, percentage: 0 });
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 50;
@@ -58,8 +59,9 @@ export default function StockTakeListView() {
   const fetchParts = async () => {
     try {
       const tablesToFetch = tableParam ? [tableParam] : ['b17', 'b22', 'loma', 'b22_seq', 'check_part'];
-      const promises = tablesToFetch.map(table => fetchAllRows(table));
+      const promises = tablesToFetch.map(table => fetchRowsIfTableExists(table));
       const results = await Promise.all(promises);
+      if (isMounted.current) setZoneMissing(!!tableParam && results[0] === null);
 
       let combinedParts: any[] = [];
       results.forEach((res, index) => {
@@ -300,7 +302,12 @@ export default function StockTakeListView() {
             ))}
           </div>
         ) : filteredParts.length === 0 ? (
-          <div className="ds-card"><EmptyState icon={<PackageSearch size={36} strokeWidth={1.5} />} message={t('noParts')} /></div>
+          <div className="ds-card">
+            <EmptyState
+              icon={<PackageSearch size={36} strokeWidth={1.5} />}
+              message={zoneMissing ? `No parts uploaded for ${zoneTheme.title} yet. An admin can upload them in Admin → Parts upload.` : t('noParts')}
+            />
+          </div>
         ) : (
           <>
             <div className="lv-list">

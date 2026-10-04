@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigation } from '../components/Navigation';
-import { fetchAllRows, supabase } from '../lib/supabase';
+import { fetchRowsIfTableExists, supabase } from '../lib/supabase';
 import { ZONE_ORDER } from '../lib/zoneTheme';
 import { Package, Battery, ShieldCheck, ChevronRight, Users, Upload, LineChart } from 'lucide-react';
 
@@ -76,16 +76,16 @@ export default function Hub() {
     const visibleKeys = new Set(MODULES.filter(m => user?.role && m.roles.includes(user.role)).map(m => m.key));
 
     if (visibleKeys.has('stockTake')) {
-      Promise.all(ZONE_ORDER.map(t => fetchAllRows(t)))
+      Promise.all(ZONE_ORDER.map(t => fetchRowsIfTableExists(t)))
         .then(results => {
           if (cancelled) return;
-          const rows = results.flat();
+          const rows = results.flatMap(r => r || []);
           setStock({ total: rows.length, completed: rows.filter((r: any) => r.status === 'Verified').length });
         })
         .catch(err => console.error('Hub: failed to load Stock Take progress:', err));
 
       // check_part may not exist yet (no upload) - that's simply "nothing flagged".
-      fetchAllRows('check_part')
+      fetchRowsIfTableExists('check_part')
         .then(rows => { if (!cancelled) setCheckOpen((rows || []).filter((r: any) => r.status !== 'Verified').length); })
         .catch(() => { if (!cancelled) setCheckOpen(0); });
     }

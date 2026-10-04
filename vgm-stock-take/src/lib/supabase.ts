@@ -28,7 +28,11 @@ export async function fetchAllRows(table: string, orderColumn = ''): Promise<any
       // truth. Silently returning whatever was fetched so far (or []) makes
       // a real fetch failure indistinguishable from "this table is
       // genuinely empty" (e.g. renders as a false 0/0, 0% on the Dashboard).
-      throw new Error(`Failed to fetch "${table}": ${error.message}`);
+      const err = new Error(`Failed to fetch "${table}": ${error.message}`) as Error & { missingTable?: boolean };
+      // PGRST205 = table doesn't exist (zone never uploaded, or cleared via
+      // Admin "Unlock & clear") - a normal state, not a failure.
+      err.missingTable = error.code === 'PGRST205';
+      throw err;
     }
 
     if (data && data.length > 0) {
@@ -41,4 +45,16 @@ export async function fetchAllRows(table: string, orderColumn = ''): Promise<any
   }
 
   return allData;
+}
+
+// Like fetchAllRows, but resolves to null when the table doesn't exist yet,
+// so one un-uploaded zone doesn't blank out every other zone on screen.
+// Any other error still throws.
+export async function fetchRowsIfTableExists(table: string): Promise<any[] | null> {
+  try {
+    return await fetchAllRows(table);
+  } catch (err: any) {
+    if (err?.missingTable) return null;
+    throw err;
+  }
 }

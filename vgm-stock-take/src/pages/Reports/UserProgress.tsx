@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Navigation } from '../../components/Navigation';
-import { supabase, fetchAllRows } from '../../lib/supabase';
+import { supabase, fetchRowsIfTableExists } from '../../lib/supabase';
 import { Download, PackageSearch } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -69,7 +69,7 @@ export default function UserProgress() {
       let allParts: any[] = [];
 
       for (const t of tables) {
-        const tableData = await fetchAllRows(t);
+        const tableData = await fetchRowsIfTableExists(t); // null = zone not uploaded yet
         if (tableData && tableData.length > 0) {
           allParts = [...allParts, ...tableData.map(d => ({ ...d, _table: t }))];
         }
