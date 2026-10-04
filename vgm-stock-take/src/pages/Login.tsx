@@ -122,11 +122,16 @@ export default function Login() {
   return (
     <div className="login-root">
       <style>{`
+        /* Pinned to the visible screen (inset: 0) rather than sized with
+           vh/dvh units, which some mobile browsers measure as taller than
+           what's on screen - that mismatch is what caused a small scroll. */
         .login-root {
-          min-height: 100dvh;
+          position: fixed;
+          inset: 0;
           background: var(--primary-color);
-          position: relative;
           overflow-x: hidden;
+          overflow-y: auto;
+          overscroll-behavior: none;
           display: flex;
           justify-content: center;
         }
@@ -143,7 +148,7 @@ export default function Login() {
           position: relative;
           width: 100%;
           max-width: 460px;
-          height: 100dvh;
+          height: 100%;
           min-height: 560px;
           display: flex;
           flex-direction: column;
