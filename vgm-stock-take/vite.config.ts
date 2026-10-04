@@ -8,13 +8,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'app-icon.svg', 'vw-logo.svg', 'car-golf.webp', 'fonts/inter-latin-variable.woff2'],
+      includeAssets: ['favicon.svg', 'app-icon.svg', 'vw-logo.svg', 'car-golf.webp', 'fonts/archivo-latin-variable.woff2', 'fonts/jetbrains-mono-latin-variable.woff2'],
       manifest: {
         name: 'VGM CKD',
         short_name: 'VGM CKD',
         description: 'VGM CKD App for efficient warehouse auditing',
-        theme_color: '#001e50',
-        background_color: '#f0f9ff',
+        theme_color: '#0B1B3A',
+        background_color: '#0B1B3A',
         display: 'standalone',
         icons: [
           {

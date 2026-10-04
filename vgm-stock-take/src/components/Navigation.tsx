@@ -16,9 +16,13 @@ interface NavigationProps {
   // fixed destination.
   backTo?: string | -1;
   extraMenuItems?: (closeMenu: () => void) => React.ReactNode;
+  // 'dark' blends the bar into a navy hero directly beneath it (Hub).
+  variant?: 'light' | 'dark';
+  // Show the VGM brand mark in place of the back button.
+  brand?: boolean;
 }
 
-export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, showBack = true, backTo = '/stock-take', extraMenuItems }) => {
+export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, showBack = true, backTo = '/stock-take', extraMenuItems, variant = 'light', brand = false }) => {
   const navigate = useNavigate();
   const { t, language, setLanguage } = useLanguage();
   const { user, logout } = useAuth();
@@ -26,6 +30,16 @@ export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, s
   const [showMenu, setShowMenu] = React.useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
   const [showChangePassword, setShowChangePassword] = React.useState(false);
+  const menuRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!showMenu) return;
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowMenu(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [showMenu]);
 
   const handleBack = () => {
     if (backTo === -1) {
@@ -40,166 +54,174 @@ export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, s
     navigate('/');
   };
 
+  const dark = variant === 'dark';
+  const initial = user?.name?.charAt(0).toUpperCase() || user?.id?.charAt(0).toUpperCase() || 'U';
+
   return (
     <>
       <style>{`
-        .global-nav-header {
+        .gnav {
           position: sticky;
           top: 0;
           z-index: 50;
-          background: rgba(255, 255, 255, 0.85);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border-bottom: 1px solid rgba(0,0,0,0.05);
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 1rem 1.25rem;
-          margin-bottom: 1.5rem;
+          background: rgba(238, 236, 230, 0.92);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          padding-top: env(safe-area-inset-top);
         }
-        .global-nav-title {
-          font-size: 1.15rem;
-          font-weight: 800;
-          color: var(--primary-color);
-          margin: 0;
-          letter-spacing: -0.02em;
+        .gnav.dark { background: var(--primary-color); }
+        .gnav-inner {
+          max-width: 1080px;
+          margin: 0 auto;
+          height: 68px;
+          padding: 0 1rem;
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.75rem;
+        }
+        .gnav-title {
           flex: 1;
           min-width: 0;
+          display: flex;
+          align-items: center;
+          gap: 0.625rem;
           user-select: none;
           -webkit-user-select: none;
         }
+        .gnav-title h1 {
+          margin: 0;
+          font-size: 1.25rem;
+          font-weight: 800;
+          letter-spacing: -0.01em;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .gnav.dark .gnav-title h1 { color: #fff; }
+        .gnav-mark {
+          width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+          background: var(--signal-color); color: var(--primary-color);
+          display: flex; align-items: center; justify-content: center;
+          font-weight: 900; font-stretch: 70%; font-size: 0.8125rem; letter-spacing: 0.02em;
+        }
+        .gnav-avatar {
+          width: 44px; height: 44px; border-radius: 50%; border: 0; flex-shrink: 0;
+          background: var(--primary-color); color: #fff;
+          font-family: inherit; font-weight: 800; font-size: 0.9375rem; cursor: pointer;
+        }
+        .gnav.dark .gnav-avatar { background: rgba(255,255,255,0.1); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.25); }
         .profile-menu {
           position: absolute;
-          top: 100%;
+          top: calc(100% + 0.5rem);
           right: 0;
-          margin-top: 0.5rem;
-          background: white;
+          background: var(--surface-color);
           border-radius: var(--radius-lg);
-          box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-          border: 1px solid #f1f5f9;
+          box-shadow: 0 1px 0 var(--border-color), 0 24px 48px -16px rgba(11,27,58,0.35);
           padding: 0.5rem;
-          min-width: 200px;
+          min-width: 240px;
           display: flex;
           flex-direction: column;
-          gap: 0.25rem;
+          gap: 0.125rem;
           z-index: 60;
-          animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          animation: ds-rise 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+        .menu-head { padding: 0.625rem 0.75rem 0.75rem; border-bottom: 1px solid var(--surface-highlight); margin-bottom: 0.25rem; }
         .menu-item {
           display: flex;
           align-items: center;
           gap: 0.75rem;
-          padding: 0.75rem;
+          min-height: 44px;
+          padding: 0 0.75rem;
           border-radius: var(--radius-md);
           border: none;
           background: none;
           width: 100%;
           text-align: left;
-          font-size: 0.85rem;
-          font-weight: 600;
-          color: #334155;
+          font-family: inherit;
+          font-size: 0.875rem;
+          font-weight: 700;
+          color: var(--text-primary);
           cursor: pointer;
         }
-        .menu-item:hover {
-          background: #f8fafc;
+        .menu-item:hover { background: var(--surface-sunken); }
+        .menu-item.danger { color: var(--danger-color); }
+        .menu-item.danger:hover { background: var(--danger-bg); }
+        .menu-lang { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 0.375rem 0.25rem; }
+        .menu-lang button {
+          height: 36px; border-radius: var(--radius-full); border: 1.5px solid var(--border-color);
+          background: var(--surface-color); font-family: inherit; font-size: 0.75rem; font-weight: 800;
+          color: var(--text-secondary); cursor: pointer;
         }
-        .menu-item.danger {
-          color: var(--danger-color);
-        }
-        .menu-item.danger:hover {
-          background: #fef2f2;
-        }
-        @media (min-width: 768px) {
-          .global-nav-header {
-            padding: 1.5rem 2rem;
-            margin-bottom: 2.5rem;
-            border-bottom: 1px solid rgba(0,0,0,0.02);
-            background: rgba(248, 250, 252, 0.9);
-          }
-          .global-nav-title {
-            font-size: 1.5rem;
-            user-select: none;
-            -webkit-user-select: none;
-          }
-        }
+        .menu-lang button.on { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
       `}</style>
-      
-      <div className="global-nav-header">
-        {/* Left: Brand & Title */}
-        <div className="global-nav-title">
-          {showBack && (
-            <button
-              onClick={handleBack}
-              aria-label="Back"
-              style={{
-                border: 'none', background: 'none', cursor: 'pointer',
-                width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'var(--primary-color)', marginLeft: '-10px', marginRight: '-6px', flexShrink: 0
-              }}
-            >
-              <ChevronLeft size={24} />
+
+      <header className={`gnav${dark ? ' dark' : ''}`}>
+        <div className="gnav-inner">
+          {brand ? (
+            <div className="gnav-mark" aria-hidden="true">VGM</div>
+          ) : showBack && (
+            <button onClick={handleBack} aria-label={t('back')} className={`ds-iconbtn${dark ? ' on-dark' : ''}`}>
+              <ChevronLeft size={22} strokeWidth={2.2} />
             </button>
           )}
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-            {title}
-          </span>
-          {titleAccessory}
-        </div>
 
-        {/* Right: Profile Toggle & Language Indicator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', position: 'relative' }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
-            ({language})
-          </span>
-          <button 
-            onClick={() => setShowMenu(!showMenu)}
-            style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'var(--primary-color)', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', boxShadow: '0 4px 10px rgba(0,30,80,0.2)' }}
-          >
-            {user?.name?.charAt(0).toUpperCase() || user?.id?.charAt(0).toUpperCase() || 'U'}
-          </button>
-          
-          {showMenu && (
-            <div className="profile-menu">
-              <div style={{ padding: '0.5rem 0.75rem', borderBottom: '1px solid #f1f5f9', marginBottom: '0.25rem' }}>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>{t('loggedInAs')}</div>
-                <div style={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 700 }}>{user?.name || user?.id}</div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--primary-color)', fontWeight: 800, marginTop: '2px', textTransform: 'uppercase' }}>{user?.role}</div>
-              </div>
+          <div className="gnav-title">
+            <h1>{title}</h1>
+            {titleAccessory}
+          </div>
 
-              {user?.role === 'Admin' && (
-                <button onClick={() => { setShowMenu(false); navigate('/admin/users'); }} className="menu-item">
-                  <UserCog size={16} /> User Management
+          <div ref={menuRef} style={{ position: 'relative' }}>
+            <button
+              className="gnav-avatar"
+              onClick={() => setShowMenu(!showMenu)}
+              aria-label="Account menu"
+              aria-expanded={showMenu}
+            >
+              {initial}
+            </button>
+
+            {showMenu && (
+              <div className="profile-menu">
+                <div className="menu-head">
+                  <div className="eyebrow">{t('loggedInAs')}</div>
+                  <div style={{ fontSize: '0.9375rem', fontWeight: 800, marginTop: '0.25rem' }}>{user?.name || user?.id}</div>
+                  <div style={{ marginTop: '0.375rem' }}><span className="ds-chip">{user?.role}</span></div>
+                </div>
+
+                {user?.role === 'Admin' && (
+                  <button onClick={() => { setShowMenu(false); navigate('/admin/users'); }} className="menu-item">
+                    <UserCog size={18} /> User Management
+                  </button>
+                )}
+
+                {extraMenuItems && extraMenuItems(() => setShowMenu(false))}
+
+                <button onClick={() => { setShowMenu(false); setShowChangePassword(true); }} className="menu-item">
+                  <Lock size={18} /> Change Password
                 </button>
-              )}
 
-              {extraMenuItems && extraMenuItems(() => setShowMenu(false))}
+                <div className="menu-lang" role="group" aria-label="Language">
+                  {(['EN', 'BM', 'DE'] as const).map(code => (
+                    <button
+                      key={code}
+                      type="button"
+                      className={language === code ? 'on' : ''}
+                      aria-pressed={language === code}
+                      onClick={() => { setLanguage(code); setShowMenu(false); }}
+                    >
+                      {code}
+                    </button>
+                  ))}
+                </div>
 
-              <button onClick={() => { setShowMenu(false); setShowChangePassword(true); }} className="menu-item">
-                <Lock size={16} /> Change Password
-              </button>
-
-              <div style={{ padding: '0 0.75rem', margin: '0.5rem 0' }}>
-                <select value={language} onChange={(e) => { setLanguage(e.target.value as any); setShowMenu(false); }} style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#334155', fontSize: '0.85rem', fontWeight: 600, outline: 'none', cursor: 'pointer' }}>
-                  <option value="EN">English</option>
-                  <option value="BM">Bahasa Melayu</option>
-                  <option value="DE">Deutsch</option>
-                </select>
+                <button onClick={() => { setShowMenu(false); setShowLogoutConfirm(true); }} className="menu-item danger">
+                  <LogOut size={18} /> {t('logout')}
+                </button>
               </div>
-              
-              <button onClick={() => { setShowMenu(false); setShowLogoutConfirm(true); }} className="menu-item danger">
-                <LogOut size={16} /> {t('logout')}
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      </header>
 
       <ConfirmDialog
         open={showLogoutConfirm}

@@ -3,11 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { BackgroundDecor } from '../components/ui/BackgroundDecor';
-import { Eye, EyeOff, Lock, User, Download, Share } from 'lucide-react';
+import { Eye, EyeOff, Download, Share, ArrowRight } from 'lucide-react';
 
 export default function Login() {
   const [userId, setUserId] = useState('');
@@ -56,7 +52,7 @@ export default function Login() {
       addToast('Install prompt is not ready or unsupported by your browser.', 'error');
       return;
     }
-    
+
     try {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -123,187 +119,177 @@ export default function Login() {
     }
   };
 
-
-
   return (
-    <div className="flex justify-center items-center" style={{ minHeight: '100vh', padding: '1rem', position: 'relative', overflow: 'hidden' }}>
+    <div className="login-root">
+      <style>{`
+        .login-root {
+          min-height: 100vh;
+          min-height: 100dvh;
+          background: var(--primary-color);
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          justify-content: center;
+        }
+        .login-ghost {
+          position: absolute; right: -40px; top: 140px;
+          font-size: 230px; font-weight: 900; font-stretch: 70%; line-height: 0.8;
+          color: transparent; -webkit-text-stroke: 1.5px rgba(255,255,255,0.08);
+          pointer-events: none; user-select: none;
+        }
+        .login-col {
+          position: relative;
+          width: 100%;
+          max-width: 460px;
+          display: flex;
+          flex-direction: column;
+          padding-top: env(safe-area-inset-top);
+        }
+        .login-top { padding: 24px 24px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .login-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 800; font-size: 1.0625rem; letter-spacing: 0.02em; }
+        .login-mark {
+          width: 40px; height: 40px; border-radius: 10px; background: var(--signal-color); color: var(--primary-color);
+          display: flex; align-items: center; justify-content: center; font-weight: 900; font-stretch: 70%; font-size: 0.9375rem;
+        }
+        .login-lang { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,0.08); }
+        .login-lang button {
+          height: 34px; min-width: 42px; border: 0; border-radius: 999px; background: transparent;
+          color: var(--text-on-dark); font-family: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer;
+        }
+        .login-lang button.on { background: #fff; color: var(--primary-color); font-weight: 800; }
+        .login-hero { padding: clamp(28px, 7vh, 56px) 24px 32px; }
+        .login-hero h1 {
+          margin: 12px 0 0; color: #fff; font-size: clamp(3.25rem, 15vw, 4.25rem); line-height: 0.88;
+          font-weight: 900; font-stretch: 72%; text-transform: uppercase;
+        }
+        .login-hero p { margin: 18px 0 0; color: var(--text-on-dark); font-size: 0.9375rem; max-width: 300px; }
+        .login-sheet {
+          margin-top: auto;
+          background: #fff;
+          border-radius: 28px 28px 0 0;
+          padding: 28px 24px calc(24px + env(safe-area-inset-bottom));
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        @media (min-width: 600px) {
+          .login-col { justify-content: center; }
+          .login-sheet { margin: 0 16px 32px; border-radius: 28px; }
+        }
+        .login-check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+        .login-check input { width: 20px; height: 20px; margin: 0; accent-color: var(--primary-color); }
+      `}</style>
 
-      <BackgroundDecor />
+      <div className="login-ghost" aria-hidden="true">CKD</div>
 
-      {/* PWA Install Button (Always visible during dev if not installed) */}
-      {!isStandalone && (
-        <div style={{ position: 'absolute', top: '1.5rem', left: '1.5rem', zIndex: 20 }}>
-          <button 
-            onClick={handleInstallClick}
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '0.4rem',
-              padding: '0.4rem 0.8rem', 
-              borderRadius: 'var(--radius-full)', 
-              border: '1px solid rgba(0,30,80,0.2)', 
-              backgroundColor: 'rgba(255,255,255,0.9)',
-              backdropFilter: 'blur(10px)',
-              color: 'var(--primary-color)',
-              fontWeight: 600,
-              fontSize: '0.75rem',
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <Download size={14} /> Install App
-          </button>
-        </div>
-      )}
-
-      {/* Language Toggle */}
-      <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 20 }}>
-        <select
-          value={language}
-          onChange={(e) => setLanguage(e.target.value as any)}
-          style={{
-            padding: '0.25rem 1rem',
-            borderRadius: 'var(--radius-full)',
-            border: '1px solid var(--border-color)',
-            backgroundColor: 'var(--surface-color)',
-            color: 'var(--text-primary)',
-            outline: 'none',
-            cursor: 'pointer',
-            fontSize: '0.875rem'
-          }}
-        >
-          <option value="EN">English</option>
-          <option value="BM">Bahasa Melayu</option>
-          <option value="DE">Deutsch</option>
-        </select>
-      </div>
-
-      <div style={{ width: '100%', maxWidth: '400px', zIndex: 10, padding: '0 1rem' }}>
-
-        <Card className="w-full" style={{ padding: 0, overflow: 'hidden', borderRadius: 'var(--radius-card)', backgroundColor: '#ffffff', boxShadow: '0 20px 50px rgba(0,30,80,0.18)' }}>
-
-          {/* Header band */}
-          <div style={{
-            background: 'linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%)',
-            padding: '2rem 2rem 3rem',
-            textAlign: 'center',
-            position: 'relative'
-          }}>
-            <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.02em' }}>VGM CKD</h2>
-            <p style={{ margin: '0.25rem 0 0', color: 'rgba(255,255,255,0.75)', fontSize: '0.8rem', fontWeight: 500 }}>
-              CKD Logistic Department
-            </p>
-
-            {/* Logo badge, overlapping the header/form boundary */}
-            <div style={{
-              position: 'absolute',
-              bottom: '-48px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '96px',
-              height: '96px',
-              borderRadius: '50%',
-              backgroundColor: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 8px 20px rgba(0,30,80,0.3)'
-            }}>
-              <img
-                src="/vw-logo.svg"
-                alt="VW Logo"
-                className="animate-logo-intro"
-                style={{ width: '84px', height: '84px' }}
-              />
-            </div>
+      <div className="login-col">
+        <div className="login-top">
+          <div className="login-brand">
+            <div className="login-mark" aria-hidden="true">VGM</div>
+            VGM CKD
           </div>
+          <div className="login-lang" role="group" aria-label="Language">
+            {(['EN', 'BM', 'DE'] as const).map(code => (
+              <button key={code} type="button" className={language === code ? 'on' : ''} aria-pressed={language === code} onClick={() => setLanguage(code)}>
+                {code}
+              </button>
+            ))}
+          </div>
+        </div>
 
-          <form onSubmit={handleLogin} className="flex-col gap-4" style={{ width: '100%', padding: '4rem 2rem 2rem' }}>
+        <div className="login-hero">
+          <div className="eyebrow" style={{ color: 'var(--signal-color)' }}>Stock Take 2026</div>
+          <h1>Count.<br />Check.<br />Verify.</h1>
+          <p>CKD Logistic Department — plant inventory for B17, B22, LOMA and B22&nbsp;SEQ.</p>
+        </div>
 
-            {/* User ID */}
-            <Input
-              label={t('userId')}
+        <form onSubmit={handleLogin} className="login-sheet">
+          <h2 style={{ margin: 0, fontSize: '1.625rem' }}>{t('login')}</h2>
+
+          <div>
+            <label htmlFor="login-user" className="ds-label">{t('userId')}</label>
+            <input
+              id="login-user"
+              className="ds-fld mono"
               type="text"
+              autoComplete="username"
+              autoCapitalize="none"
+              placeholder="e.g. OperB17_16"
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
               required
-              icon={<User size={16} />}
             />
+          </div>
 
-            {/* Password */}
-            <Input
-              label={t('password')}
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              icon={<Lock size={16} />}
-              rightElement={(
-                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', display: 'flex' }}>
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              )}
-            />
-
-            {/* Remember Me */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <input type="checkbox" id="remember" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} style={{ cursor: 'pointer' }} />
-              <label htmlFor="remember" style={{ fontSize: '0.75rem', color: '#666', cursor: 'pointer' }}>{t('rememberMe')}</label>
+          <div>
+            <label htmlFor="login-pass" className="ds-label">{t('password')}</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                id="login-pass"
+                className="ds-fld"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                style={{ paddingRight: '3.25rem' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                style={{ position: 'absolute', right: 4, top: 4, width: 44, height: 44, border: 0, background: 'transparent', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
-            <Button
-              type="submit"
-              fullWidth
-              style={{ marginTop: '1rem', background: 'linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%)', borderRadius: 'var(--radius-md)', padding: '0.875rem', boxShadow: '0 8px 20px rgba(0,30,80,0.25)' }}
-              disabled={loading}
-            >
-              {loading ? '...' : t('login')}
-            </Button>
-          </form>
-        </Card>
+          </div>
+
+          <label className="login-check">
+            <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
+            {t('rememberMe')}
+          </label>
+
+          <button type="submit" className="ds-btn signal lg block" disabled={loading}>
+            {loading ? '...' : <>{t('login')} <ArrowRight size={20} strokeWidth={2.5} /></>}
+          </button>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+            <span>Forgot password? Ask your admin.</span>
+            {!isStandalone && (
+              <button
+                type="button"
+                onClick={handleInstallClick}
+                style={{ minHeight: 44, display: 'flex', alignItems: 'center', gap: 6, border: 0, background: 'none', color: 'var(--primary-color)', fontFamily: 'inherit', fontSize: '0.8125rem', fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}
+              >
+                <Download size={16} /> Install app
+              </button>
+            )}
+          </div>
+        </form>
       </div>
 
       {/* iOS Install Prompt Modal */}
       {showIOSPrompt && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'flex-end',
-          zIndex: 9999,
-          padding: '1rem'
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '2rem 1.5rem',
-            borderRadius: 'var(--radius-xl)',
-            boxShadow: '0 -10px 40px rgba(0,0,0,0.2)',
-            textAlign: 'center',
-            width: '100%',
-            maxWidth: '400px',
-            animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
-          }}>
-            <div style={{ width: '40px', height: '4px', backgroundColor: '#e2e8f0', borderRadius: 'var(--radius-xs)', margin: '0 auto 1.5rem auto' }} />
-            <h3 style={{ margin: '0 0 1rem 0', color: 'var(--primary-color)', fontSize: '1.25rem', fontWeight: 800 }}>Install VGM CKD</h3>
-            <p style={{ margin: '0 0 1.5rem 0', color: '#475569', fontSize: '0.9rem', lineHeight: '1.5' }}>
-              Install this application on your home screen for quick and easy access when you're offline.
+        <div className="ds-overlay" style={{ alignItems: 'flex-end' }} role="dialog" aria-modal="true" aria-labelledby="ios-install-title">
+          <div className="ds-modal" style={{ textAlign: 'center' }}>
+            <h3 id="ios-install-title">Install VGM CKD</h3>
+            <p style={{ margin: '0 0 1.25rem', fontSize: '0.9375rem' }}>
+              Add this app to your home screen for quick access, even offline.
             </p>
-            <div style={{ backgroundColor: '#f8fafc', padding: '1rem', borderRadius: 'var(--radius-card)', textAlign: 'left', marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                <span style={{ backgroundColor: 'white', padding: '0.4rem', borderRadius: 'var(--radius-md)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}><Share size={16} color="var(--primary-color)" /></span>
-                <span style={{ fontSize: '0.85rem', color: '#334155', fontWeight: 500 }}>1. Tap the <strong>Share</strong> button at the bottom of Safari.</span>
+            <div style={{ background: 'var(--surface-sunken)', padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'left', marginBottom: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem' }}>
+                <span className="ds-iconbtn" style={{ width: 36, height: 36 }}><Share size={16} /></span>
+                <span>1. Tap <strong>Share</strong> at the bottom of Safari.</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <span style={{ backgroundColor: 'white', padding: '0.4rem', borderRadius: 'var(--radius-md)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}><Download size={16} color="var(--primary-color)" /></span>
-                <span style={{ fontSize: '0.85rem', color: '#334155', fontWeight: 500 }}>2. Tap <strong>Add to Home Screen</strong>.</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem' }}>
+                <span className="ds-iconbtn" style={{ width: 36, height: 36 }}><Download size={16} /></span>
+                <span>2. Tap <strong>Add to Home Screen</strong>.</span>
               </div>
             </div>
-            <Button fullWidth onClick={() => setShowIOSPrompt(false)} style={{ backgroundColor: '#f1f5f9', color: '#0f172a', border: '1px solid #cbd5e1' }}>
+            <button type="button" className="ds-btn ink block" onClick={() => setShowIOSPrompt(false)}>
               Got it
-            </Button>
+            </button>
           </div>
         </div>
       )}

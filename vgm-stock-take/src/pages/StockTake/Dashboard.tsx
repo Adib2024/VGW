@@ -5,20 +5,22 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { BottomNav } from '../../components/ui/BottomNav';
 import { Navigation } from '../../components/Navigation';
-import { BackgroundDecor } from '../../components/ui/BackgroundDecor';
+import { CarTrack } from '../../components/ui/CarTrack';
 import { fetchAllRows } from '../../lib/supabase';
 import { useRealtimeTables } from '../../hooks/useRealtimeTables';
 import { ZONE_ORDER, ZONE_THEME } from '../../lib/zoneTheme';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, AlertTriangle, ChevronRight } from 'lucide-react';
 
 const ZONE_TABLES = ZONE_ORDER;
 
 interface ZoneStats {
   total: number;
   completed: number;
+  counted: number;
   percentage: number;
 }
 
+const EMPTY_STATS: ZoneStats = { total: 0, completed: 0, counted: 0, percentage: 0 };
 const ZONES = ZONE_ORDER.map(key => ZONE_THEME[key]);
 
 export default function StockTakeDashboard() {
@@ -27,12 +29,10 @@ export default function StockTakeDashboard() {
   const { addToast } = useToast();
   const navigate = useNavigate();
 
-  const [stats, setStats] = useState<Record<string, ZoneStats>>({
-    b17: { total: 0, completed: 0, percentage: 0 },
-    b22: { total: 0, completed: 0, percentage: 0 },
-    loma: { total: 0, completed: 0, percentage: 0 },
-    b22_seq: { total: 0, completed: 0, percentage: 0 }
-  });
+  const [stats, setStats] = useState<Record<string, ZoneStats>>(
+    Object.fromEntries(ZONE_TABLES.map(k => [k, EMPTY_STATS]))
+  );
+  const [checkOpen, setCheckOpen] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const isMounted = useRef(true);
 
@@ -42,7 +42,7 @@ export default function StockTakeDashboard() {
     return () => { isMounted.current = false; };
   }, []);
 
-  useRealtimeTables(ZONE_TABLES, () => fetchStats(false));
+  useRealtimeTables([...ZONE_TABLES, 'check_part'], () => fetchStats(false));
 
   const fetchStats = async (isManualRefresh: boolean = false) => {
     if (isManualRefresh && isMounted.current) setIsRefreshing(true);
@@ -54,15 +54,19 @@ export default function StockTakeDashboard() {
       results.forEach((res, index) => {
         const table = ZONE_TABLES[index];
         const data = res || [];
-
-        const currentData = data;
-        const total = currentData.length;
-        const completed = currentData.filter((r: any) => r.status === 'Verified').length;
+        const total = data.length;
+        const completed = data.filter((r: any) => r.status === 'Verified').length;
+        const counted = data.filter((r: any) => r.status === 'Counted').length;
         const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
-        newStats[table] = { total, completed, percentage };
+        newStats[table] = { total, completed, counted, percentage };
       });
 
       if (isMounted.current) setStats(newStats);
+
+      // check_part may not exist until an admin uploads it - treat as none flagged.
+      fetchAllRows('check_part')
+        .then(rows => { if (isMounted.current) setCheckOpen((rows || []).filter((r: any) => r.status !== 'Verified').length); })
+        .catch(() => { if (isMounted.current) setCheckOpen(0); });
 
       if (isManualRefresh) {
         addToast(t('dataRefreshed'), 'success');
@@ -82,232 +86,131 @@ export default function StockTakeDashboard() {
     }
   };
 
-  const handleCardClick = (tableKey: string) => {
-    navigate(`/stock-take/list?table=${tableKey}`);
-  };
-
   const aggregate = useMemo(() => {
     const total = ZONE_TABLES.reduce((sum, key) => sum + stats[key].total, 0);
     const completed = ZONE_TABLES.reduce((sum, key) => sum + stats[key].completed, 0);
+    const counted = ZONE_TABLES.reduce((sum, key) => sum + stats[key].counted, 0);
     const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
-    return { total, completed, percentage };
+    return { total, completed, counted, notCounted: total - completed - counted, percentage };
   }, [stats]);
 
   return (
     <>
       <style>{`
-        .dash-main {
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          font-family: 'Inter', sans-serif;
-          padding-bottom: 5rem;
-        }
-
         .dash-hero {
-          position: relative;
-          margin-top: -1.5rem;
-          background:
-            radial-gradient(900px 420px at 12% -20%, rgba(255,255,255,0.08) 0%, transparent 60%),
-            linear-gradient(155deg, var(--primary-color) 0%, #001330 100%);
+          background: var(--primary-color);
           color: #fff;
-          overflow: hidden;
-        }
-        @media (min-width: 768px) {
-          .dash-hero { margin-top: -2.5rem; }
-        }
-        .dash-hero::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background-image:
-            linear-gradient(rgba(255,255,255,0.055) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.055) 1px, transparent 1px);
-          background-size: 42px 42px;
-          -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 92%);
-          mask-image: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 92%);
-        }
-        .dash-hero-body {
-          position: relative;
-          z-index: 1;
-          max-width: 1080px;
-          margin: 0 auto;
-          padding: clamp(1.75rem, 5vw, 2.25rem) 1.5rem clamp(1.75rem, 5vw, 2rem);
-          display: flex;
-          align-items: flex-end;
-          justify-content: space-between;
-          gap: 2rem;
-          flex-wrap: wrap;
-        }
-        .dash-hero-eyebrow {
-          font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em;
-          color: rgba(255,255,255,0.5); margin-bottom: 0.6rem;
-        }
-        .dash-hero-figure {
-          font-size: clamp(2.4rem, 7vw, 3.4rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1;
-          font-variant-numeric: tabular-nums;
-        }
-        .dash-hero-figure sup { font-size: 0.42em; font-weight: 700; margin-left: 0.15rem; color: rgba(255,255,255,0.55); }
-        .dash-hero-sub {
-          margin-top: 0.6rem; color: rgba(255,255,255,0.62); font-size: 0.92rem; font-weight: 500;
-          font-variant-numeric: tabular-nums;
-        }
-        .dash-hero-zones { display: flex; gap: 1.4rem; text-align: right; flex-wrap: wrap; justify-content: flex-end; }
-        .dash-hz .k { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: rgba(255,255,255,0.45); }
-        .dash-hz .v { font-size: 1.02rem; font-weight: 700; margin-top: 0.3rem; font-variant-numeric: tabular-nums; }
-        .dash-hz .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 0.4rem; vertical-align: middle; }
-
-        .dash-content {
-          position: relative;
-          flex: 1;
-          max-width: 1080px;
-          width: 100%;
-          margin: 0 auto;
-          padding: clamp(1.75rem, 5vw, 2.25rem) 1.5rem clamp(2.5rem, 7vw, 4rem);
-        }
-        .dash-section-label {
-          font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
-          color: var(--text-secondary); margin: 0 0 1.1rem; padding-left: 0.15rem;
-        }
-
-        .dash-grid {
-          display: grid;
-          gap: 1.25rem;
-          grid-template-columns: 1fr;
-        }
-        @media (min-width: 720px) {
-          .dash-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        .zone-tile {
-          position: relative;
-          background: var(--surface-color, #fff);
           border-radius: var(--radius-panel);
-          padding: 1.6rem 1.6rem 1.5rem;
-          box-shadow: 0 10px 30px -8px rgba(var(--primary-color-rgb), 0.14), 0 2px 8px -2px rgba(var(--primary-color-rgb), 0.06);
-          cursor: pointer;
-          border: none;
-          display: flex;
-          flex-direction: column;
-          gap: 1.15rem;
-          text-align: left;
-          width: 100%;
-          transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          padding: 1.375rem 1.25rem 1.25rem;
+          margin-top: 0.25rem;
         }
-        .zone-tile:hover, .zone-tile:focus-visible {
-          transform: translateY(-3px);
-          box-shadow: 0 22px 44px -10px rgba(var(--primary-color-rgb), 0.22), 0 4px 12px -2px rgba(var(--primary-color-rgb), 0.08);
-        }
-        .zone-tile:active { transform: translateY(-1px) scale(0.99); }
-        .zone-tile::before, .zone-tile::after {
-          content: ''; position: absolute; width: 14px; height: 14px; opacity: 0.5;
-        }
-        .zone-tile::before { top: 10px; left: 10px; border-top: 2px solid var(--zc); border-left: 2px solid var(--zc); border-radius: 3px 0 0 0; }
-        .zone-tile::after { bottom: 10px; right: 10px; border-bottom: 2px solid var(--zc); border-right: 2px solid var(--zc); border-radius: 0 0 3px 0; }
-
-        .zone-head { display: flex; gap: 1rem; align-items: center; }
-        .zone-icon {
-          width: 50px; height: 50px; border-radius: var(--radius-card);
-          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-          background: var(--zc-soft); box-shadow: inset 0 0 0 1.5px var(--zc);
-        }
-        .zone-icon img { width: 30px; height: 30px; }
-        .zone-title { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; color: var(--primary-color); margin: 0; }
-        .zone-sub { margin-top: 0.2rem; color: var(--text-secondary); font-size: 0.82rem; font-weight: 500; font-variant-numeric: tabular-nums; }
-        .zone-status {
-          margin-left: auto; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
-          padding: 0.3rem 0.6rem; border-radius: var(--radius-full); white-space: nowrap; flex-shrink: 0;
-        }
-        .zone-status.ready { background: var(--success-bg); color: var(--success-text); }
-        .zone-status.pending { background: var(--surface-highlight); color: var(--text-secondary); }
-
-        .zone-progress { display: flex; flex-direction: column; gap: 0.5rem; margin-top: auto; }
-        .zone-progress-row { display: flex; justify-content: space-between; align-items: baseline; }
-        .zone-progress-row .zone-progress-label { font-size: 0.68rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
-        .zone-progress-row .pct { font-size: 0.95rem; font-weight: 700; color: var(--primary-color); font-variant-numeric: tabular-nums; }
-        .zone-bar-track { position: relative; height: 50px; overflow: hidden; }
-        .zone-bar-base { position: absolute; bottom: 4px; width: 100%; height: 7px; border-radius: var(--radius-full); background: rgba(var(--primary-color-rgb), 0.08); overflow: hidden; }
-        .zone-bar-fill { height: 100%; border-radius: var(--radius-full); background: var(--zc); transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-
-        @media (prefers-reduced-motion: reduce) {
-          .zone-tile, .zone-bar-fill { transition: none !important; }
-        }
+        .dash-hero-fig { font-size: clamp(4rem, 18vw, 5rem); font-weight: 700; line-height: 0.95; letter-spacing: -0.04em; }
+        .dash-split { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-top: 1.125rem; }
+        .dash-split > div { background: rgba(255,255,255,0.06); border-radius: var(--radius-md); padding: 0.625rem 0.75rem; }
+        .dash-split .k { display: flex; align-items: center; gap: 0.375rem; font-size: 0.6875rem; font-weight: 600; color: var(--text-on-dark); }
+        .dash-split .k i { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .dash-split .v { font-size: 1.125rem; font-weight: 700; margin-top: 0.25rem; }
+        .dash-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        @media (min-width: 900px) { .dash-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+        .zone-tile { position: relative; overflow: hidden; padding: 1rem 1rem 0.75rem; display: flex !important; flex-direction: column; gap: 0.5rem; }
+        .zone-tile::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: var(--zc); }
+        .zone-code { font-size: 2.5rem; font-weight: 900; font-stretch: 70%; line-height: 1; color: var(--zc); white-space: nowrap; margin-top: 0.125rem; }
+        .zone-pct { font-size: 1.625rem; font-weight: 700; line-height: 1; }
+        .dash-check { display: flex !important; align-items: center; gap: 0.875rem; padding: 1rem; margin-top: 0.875rem; background: var(--signal-soft); box-shadow: inset 0 0 0 1.5px var(--signal-line); }
       `}</style>
 
-      <div className="dash-main">
-        <BackgroundDecor />
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <Navigation
-          title="VGM CKD"
-          titleAccessory={<div className="live-dot" title={t('liveData')} style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--success-color)', boxShadow: '0 0 8px rgba(34,197,94,0.6)' }} />}
+          title={t('stockTake')}
+          titleAccessory={<span className="ds-chip live" title={t('liveData')}>Live</span>}
           showBack={user?.role === 'Admin' || user?.role === 'Verifier'}
           backTo="/hub"
           extraMenuItems={(closeMenu) => (
             <button onClick={() => { fetchStats(true); closeMenu(); }} className="menu-item">
-              <RefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} /> {t('refresh')}
+              <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} /> {t('refresh')}
             </button>
           )}
         />
 
-        <div className="dash-hero">
-          <div className="dash-hero-body">
-            <div>
-              <div className="dash-hero-eyebrow">{t('stockTake')} &middot; {t('overallProgress')}</div>
-              <div className="dash-hero-figure">{aggregate.percentage}<sup>%</sup></div>
-              <div className="dash-hero-sub">{aggregate.completed.toLocaleString()} / {aggregate.total.toLocaleString()} {t('items')}</div>
+        <main className="ds-page with-nav" style={{ flex: 1 }}>
+          <section className="dash-hero">
+            <div className="eyebrow" style={{ color: 'var(--text-on-dark)' }}>{t('overallProgress')} · {t('verified')}</div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '1rem', marginTop: '0.375rem' }}>
+              <div className="dash-hero-fig mono">
+                {aggregate.percentage}<span style={{ fontSize: '0.45em', color: 'var(--signal-color)' }}>%</span>
+              </div>
+              <div style={{ textAlign: 'right', paddingBottom: '0.5rem' }}>
+                <div className="mono" style={{ fontSize: '1.0625rem', fontWeight: 700 }}>{aggregate.completed.toLocaleString()}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-on-dark)' }}>/ {aggregate.total.toLocaleString()} {t('items').toLowerCase()}</div>
+              </div>
             </div>
-            <div className="dash-hero-zones">
-              {ZONES.map(z => (
-                <div className="dash-hz" key={z.key}>
-                  <div className="k">{z.heroLabel}</div>
-                  <div className="v"><span className="dot" style={{ backgroundColor: z.heroDot }} />{stats[z.key].percentage}%</div>
-                </div>
-              ))}
+            <div className="ds-seg dark" style={{ height: 14, marginTop: '1rem' }}>
+              <span style={{ ['--c' as any]: 'var(--signal-color)', width: `${aggregate.percentage}%` }} />
             </div>
-          </div>
-        </div>
+            <div className="dash-split">
+              <div>
+                <div className="k"><i style={{ border: '1.5px solid var(--text-on-dark)' }} />{t('notCounted')}</div>
+                <div className="v mono">{aggregate.notCounted.toLocaleString()}</div>
+              </div>
+              <div>
+                <div className="k"><i style={{ background: '#FFD15C' }} />{t('counted')}</div>
+                <div className="v mono">{aggregate.counted.toLocaleString()}</div>
+              </div>
+              <div>
+                <div className="k"><i style={{ background: '#3DDC97' }} />{t('verified')}</div>
+                <div className="v mono">{aggregate.completed.toLocaleString()}</div>
+              </div>
+            </div>
+          </section>
 
-        <div className="dash-content">
-          <p className="dash-section-label">{t('zones')}</p>
+          <div className="ds-section-label">
+            <span className="eyebrow">{t('zones')}</span>
+            <span className="hint">Tap a zone to start counting</span>
+          </div>
+
           <div className="dash-grid">
             {ZONES.map((zone) => {
               const s = stats[zone.key];
+              const done = s.total > 0 && s.percentage === 100;
               return (
                 <button
                   key={zone.key}
                   type="button"
-                  className="zone-tile"
-                  style={{ ['--zc' as any]: zone.accent, ['--zc-soft' as any]: zone.accentSoft }}
-                  onClick={() => handleCardClick(zone.key)}
+                  className="ds-card zone-tile"
+                  style={{ ['--zc' as any]: zone.accent }}
+                  onClick={() => navigate(`/stock-take/list?table=${zone.key}`)}
+                  aria-label={`${zone.title}: ${s.percentage}% verified`}
                 >
-                  <div className="zone-head">
-                    <div className="zone-icon">
-                      <img src="/vw-logo.svg" alt="VW" />
-                    </div>
-                    <div>
-                      <h2 className="zone-title">{zone.title}</h2>
-                      <div className="zone-sub">{s.completed} / {s.total} {t('items')}</div>
-                    </div>
-                    <span className={`zone-status ${s.percentage === 100 ? 'ready' : 'pending'}`}>
-                      {s.percentage === 100 ? t('ready') : t('pending')}
-                    </span>
+                  <div>
+                    <div className="eyebrow" style={{ fontSize: '0.625rem' }}>{zone.kind}</div>
+                    <div className="zone-code">{zone.code}</div>
                   </div>
-                  <div className="zone-progress">
-                    <div className="zone-progress-row">
-                      <span className="zone-progress-label">{t('progress')}</span>
-                      <span className="pct">{s.percentage}%</span>
-                    </div>
-                    <div className="zone-bar-track">
-                      <div className="zone-bar-base"><div className="zone-bar-fill" style={{ width: `${s.percentage}%` }} /></div>
-                      <div className="car-icon-anim" style={{ bottom: '8px', animationDelay: zone.carDelay, animationDuration: zone.carDuration }}>
-                        <img src="/car-golf.webp" alt="car" decoding="async" style={{ width: '80px', height: 'auto', objectFit: 'contain' }} />
-                      </div>
-                    </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.375rem' }}>
+                    <div className="zone-pct mono">{s.percentage}<span style={{ fontSize: '0.6em', color: 'var(--text-secondary)' }}>%</span></div>
+                    <span className={`ds-chip ${done ? 'done' : ''}`}>{done ? t('ready') : t('pending')}</span>
+                  </div>
+                  <CarTrack percentage={s.percentage} color={zone.accent} carDelay={zone.carDelay} carDuration={zone.carDuration} carWidth={64} height={8} />
+                  <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                    {s.completed.toLocaleString()} / {s.total.toLocaleString()}
                   </div>
                 </button>
               );
             })}
           </div>
-        </div>
+
+          <button type="button" className="ds-card dash-check" onClick={() => navigate('/stock-take/list?table=check_part')}>
+            <span style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--signal-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <AlertTriangle size={22} strokeWidth={2.2} />
+            </span>
+            <span style={{ flex: 1 }}>
+              <span style={{ display: 'block', fontSize: '1rem', fontWeight: 800 }}>Check Part</span>
+              <span style={{ display: 'block', fontSize: '0.8125rem', color: 'var(--warning-text)', marginTop: 2 }}>
+                <span className="mono" style={{ fontWeight: 700 }}>{checkOpen ?? '—'}</span> parts flagged for a second look
+              </span>
+            </span>
+            <ChevronRight size={22} />
+          </button>
+        </main>
 
         <BottomNav />
       </div>

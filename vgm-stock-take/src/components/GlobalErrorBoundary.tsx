@@ -43,7 +43,7 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: any, resetErrorBo
           display: 'flex',
           alignItems: 'center',
           gap: '0.5rem',
-          backgroundColor: '#3b82f6',
+          backgroundColor: 'var(--primary-color)',
           color: 'white',
           border: 'none',
           padding: '0.75rem 1.5rem',

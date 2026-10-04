@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { LayoutDashboard, Users, AlertTriangle, Settings } from 'lucide-react';
+import { LayoutDashboard, LineChart, AlertTriangle, SlidersHorizontal } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ export const BottomNav: React.FC = () => {
     // If currently on dashboard, PUSH to history. If on a tab, REPLACE history.
     // If clicking Dashboard from a tab, POP history so the physical back button returns to Hub.
     const isDashboard = location.pathname === '/stock-take' || location.pathname === '/hub';
-    
+
     if (path === '/stock-take' || path === '/hub') {
        if (!isDashboard && window.history.state && window.history.state.idx > 0) {
          navigate(-1); // Pop the current tab to return to the Dashboard that pushed it
@@ -34,6 +34,15 @@ export const BottomNav: React.FC = () => {
     }
   };
 
+  const items = [
+    { key: 'dash', label: 'Dashboard', path: '/stock-take', icon: LayoutDashboard, active: isActive('/stock-take') || isActive('/hub') || isActive('/stock-take/list') },
+    { key: 'progress', label: t('progress') || 'Progress', path: '/reports/progress', icon: LineChart, active: isActive('/reports/progress') },
+    { key: 'check', label: 'Check Part', path: '/stock-take/list?table=check_part', icon: AlertTriangle, active: isActive('/stock-take/list', 'table=check_part') },
+    ...(user?.role === 'Admin'
+      ? [{ key: 'admin', label: 'Admin', path: '/admin/settings', icon: SlidersHorizontal, active: isActive('/admin/settings') || isActive('/admin/users') }]
+      : []),
+  ];
+
   return (
     <>
       <style>{`
@@ -42,88 +51,64 @@ export const BottomNav: React.FC = () => {
           bottom: 0;
           left: 0;
           right: 0;
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border-top: 1px solid rgba(0,0,0,0.05);
-          display: flex;
-          justify-content: space-around;
-          align-items: center;
-          padding: 0.75rem 1rem;
-          padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
           z-index: 50;
-          box-shadow: 0 -4px 20px rgba(0,0,0,0.03);
+          background: var(--surface-color);
+          border-top: 1px solid var(--border-color);
+          display: grid;
+          padding-bottom: env(safe-area-inset-bottom);
         }
         .nav-item {
+          position: relative;
+          height: var(--bottom-nav-h);
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 0.35rem;
-          color: #64748b;
-          font-size: 0.65rem;
+          justify-content: center;
+          gap: 0.25rem;
+          color: var(--text-secondary);
+          font-family: inherit;
+          font-size: 0.6875rem;
           font-weight: 700;
           background: none;
           border: none;
-          padding: 0.25rem 0.5rem;
           cursor: pointer;
-          transition: color 0.2s;
         }
-        .nav-item.active {
-          color: var(--primary-color);
-        }
-        .nav-item svg {
-          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .nav-item.active svg {
-          transform: scale(1.15);
+        .nav-item.active { color: var(--primary-color); }
+        .nav-item.active::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 30%;
+          right: 30%;
+          height: 3px;
+          border-radius: 0 0 3px 3px;
+          background: var(--signal-color);
         }
         @media (min-width: 768px) {
           .bottom-nav {
-            max-width: 500px;
+            max-width: 520px;
             left: 50%;
             transform: translateX(-50%);
             border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-            border-left: 1px solid rgba(0,0,0,0.05);
-            border-right: 1px solid rgba(0,0,0,0.05);
-            padding: 0.75rem 2rem;
+            border: 1px solid var(--border-color);
+            border-bottom: 0;
+            box-shadow: 0 -12px 30px -18px rgba(11,27,58,0.3);
           }
         }
       `}</style>
-      <div className="bottom-nav">
-        <button 
-          className={`nav-item ${isActive('/stock-take') || isActive('/hub') ? 'active' : ''}`} 
-          onClick={() => handleNavClick('/stock-take')}
-        >
-          <LayoutDashboard size={24} strokeWidth={isActive('/stock-take') || isActive('/hub') ? 2.5 : 2} />
-          <span>Dashboard</span>
-        </button>
-        
-        <button 
-          className={`nav-item ${isActive('/reports/progress') ? 'active' : ''}`} 
-          onClick={() => handleNavClick('/reports/progress')}
-        >
-          <Users size={24} strokeWidth={isActive('/reports/progress') ? 2.5 : 2} />
-          <span>{t('userProgress') || 'Progress'}</span>
-        </button>
-        
-        <button
-          className={`nav-item ${isActive('/stock-take/list', 'table=check_part') ? 'active' : ''}`}
-          onClick={() => handleNavClick('/stock-take/list?table=check_part')}
-        >
-          <AlertTriangle size={24} strokeWidth={isActive('/stock-take/list', 'table=check_part') ? 2.5 : 2} />
-          <span>Check Part</span>
-        </button>
-
-        {user?.role === 'Admin' && (
+      <nav className="bottom-nav" aria-label="Primary" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+        {items.map(({ key, label, path, icon: Icon, active }) => (
           <button
-            className={`nav-item ${isActive('/admin/settings') ? 'active' : ''}`}
-            onClick={() => handleNavClick('/admin/settings')}
+            key={key}
+            className={`nav-item ${active ? 'active' : ''}`}
+            aria-current={active ? 'page' : undefined}
+            onClick={() => handleNavClick(path)}
           >
-            <Settings size={24} strokeWidth={isActive('/admin/settings') ? 2.5 : 2} />
-            <span>Admin</span>
+            <Icon size={24} strokeWidth={active ? 2.4 : 2} />
+            <span>{label}</span>
           </button>
-        )}
-      </div>
+        ))}
+      </nav>
     </>
   );
 };

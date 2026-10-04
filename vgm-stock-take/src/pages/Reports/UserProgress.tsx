@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { Navigation } from '../../components/Navigation';
-import { Button } from '../../components/ui/Button';
 import { supabase, fetchAllRows } from '../../lib/supabase';
 import { Download, PackageSearch } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -9,18 +8,17 @@ import { BottomNav } from '../../components/ui/BottomNav';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Pagination } from '../../components/ui/Pagination';
-import { getStatusColor, getStatusBadgeColors } from '../../lib/statusColor';
+import { getStatusChipClass } from '../../lib/statusColor';
+import { ZONE_THEME } from '../../lib/zoneTheme';
 
 
 export default function UserProgress() {
   const [parts, setParts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [statusFilter, setStatusFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 50;
-  const reportRef = useRef<HTMLDivElement>(null);
   const isMounted = useRef(true);
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -58,12 +56,6 @@ export default function UserProgress() {
         });
     }
   }, [user]);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     isMounted.current = true;
@@ -132,235 +124,144 @@ export default function UserProgress() {
   const notCountedCount = parts.filter(p => p.status === 'Not Counted').length;
   const countedCount = parts.filter(p => p.status === 'Counted').length;
   const verifiedCount = parts.filter(p => p.status === 'Verified').length;
-  const verifiedPercentage = parts.length ? Math.round((verifiedCount / parts.length) * 100) : 0;
+  const share = (n: number) => (parts.length ? (n / parts.length) * 100 : 0);
+  const verifiedPercentage = Math.round(share(verifiedCount));
+  const statusLabel = (s: string) => s === 'Verified' ? t('verified') : s === 'Counted' ? t('counted') : t('notCounted');
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <style>{`
-        .up-panel {
-          position: relative;
-          background: var(--surface-color);
-          border-radius: var(--radius-panel);
-          box-shadow: 0 10px 30px -8px rgba(var(--primary-color-rgb), 0.12), 0 2px 8px -2px rgba(var(--primary-color-rgb), 0.05);
-          overflow: hidden;
-        }
-        .up-panel::before, .up-panel::after { content: ''; position: absolute; width: 14px; height: 14px; opacity: 0.5; }
-        .up-panel::before { top: 10px; left: 10px; border-top: 2px solid var(--primary-color); border-left: 2px solid var(--primary-color); border-radius: 3px 0 0 0; }
-        .up-panel::after { bottom: 10px; right: 10px; border-bottom: 2px solid var(--primary-color); border-right: 2px solid var(--primary-color); border-radius: 0 0 3px 0; }
-
-        .up-identity { display: flex; align-items: center; gap: 1.1rem; padding: 1.4rem 1.6rem; flex-wrap: wrap; }
-        .up-avatar {
-          width: 52px; height: 52px; border-radius: 50%; background: var(--primary-color); color: #fff;
-          display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; flex-shrink: 0;
-        }
-        .up-identity-name { font-size: 1.05rem; font-weight: 700; color: var(--primary-color); }
-        .up-identity-role { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); margin-top: 0.15rem; }
-        .up-sessions { display: flex; gap: 2rem; margin-left: auto; flex-wrap: wrap; }
-        .up-session .l { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-secondary); }
-        .up-session .v { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-top: 0.25rem; font-variant-numeric: tabular-nums; }
-        .up-session .via { font-size: 0.7rem; color: var(--text-secondary); font-weight: 500; margin-top: 0.1rem; }
-
-        .up-report-head { padding: 1.5rem 1.6rem 1.25rem; border-top: 1px solid var(--surface-highlight); }
-        .up-eyebrow { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); margin-bottom: 0.35rem; }
-        .up-report-title { font-size: 1.3rem; font-weight: 800; color: var(--primary-color); letter-spacing: -0.01em; }
-
-        .up-stat-row { display: flex; gap: 0.75rem; padding: 0 1.6rem 1.4rem; flex-wrap: wrap; }
-        .up-stat-chip { flex: 1 1 140px; border-radius: var(--radius-lg); padding: 1rem 1.1rem; }
-        .up-stat-chip .up-n { font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
-        .up-stat-chip .up-l { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.4rem; }
-        .up-stat-chip.bad { background: var(--danger-bg); } .up-stat-chip.bad .up-n, .up-stat-chip.bad .up-l { color: var(--danger-text); }
-        .up-stat-chip.warn { background: var(--warning-bg); } .up-stat-chip.warn .up-n, .up-stat-chip.warn .up-l { color: var(--warning-text); }
-        .up-stat-chip.ok { background: var(--success-bg); } .up-stat-chip.ok .up-n, .up-stat-chip.ok .up-l { color: var(--success-text); }
-
-        .up-totals { padding: 0 1.6rem 1.5rem; }
-        .up-totals-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.3rem; }
-        .up-totals-figure { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; }
-        .up-totals-sub { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; font-variant-numeric: tabular-nums; }
-        .up-totals-bar { height: 10px; border-radius: var(--radius-full); background: rgba(var(--primary-color-rgb), 0.08); overflow: hidden; }
-        .up-totals-fill { height: 100%; border-radius: var(--radius-full); background: var(--success-color); transition: width 0.5s ease-in-out; }
-
-        .up-filters { border-top: 1px solid var(--surface-highlight); padding: 1.1rem 1.6rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
-        .up-filters .field { display: flex; flex-direction: column; gap: 0.4rem; flex: 1 1 200px; }
-        .up-filters label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
-        .up-filters select {
-          padding: 0.65rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);
-          background: var(--surface-color); font-size: 0.85rem; font-weight: 600; color: var(--text-primary);
-          font-family: inherit; cursor: pointer; outline: none;
-        }
-
-        .up-ledger-title { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); padding: 1.4rem 1.6rem 0.9rem; }
-        .up-table { width: 100%; font-size: 0.875rem; min-width: 600px; border-collapse: collapse; }
-        .up-table thead th { text-align: left; padding: 0.8rem 1.6rem; font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); border-bottom: 1px solid var(--surface-highlight); }
-        .up-table tbody tr { border-bottom: 1px solid #f8fafc; }
-        .up-table tbody tr:last-child { border-bottom: none; }
-        .up-table td { padding: 0.85rem 1.6rem; color: var(--text-primary); font-weight: 500; }
-        .up-table td.up-mat { font-weight: 700; position: relative; }
-        .up-table td.up-mat::before { content: ''; position: absolute; left: 0; top: 0.35rem; bottom: 0.35rem; width: 4px; border-radius: 0 4px 4px 0; background: var(--row-accent); }
-        .up-zone-tag { font-size: 0.62rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-left: 0.4rem; }
-        .up-status-pill { display: inline-flex; padding: 0.26rem 0.65rem; border-radius: var(--radius-full); font-size: 0.7rem; font-weight: 700; }
-
-        .up-mobile-card { background: var(--surface-color); border-radius: var(--radius-card); padding: 1.25rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 6px solid var(--row-accent); }
-        .up-foot-note { text-align: center; padding: 1.4rem; font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
+        .up-stack { display: flex; height: 18px; border-radius: 6px; overflow: hidden; gap: 3px; background: var(--surface-highlight); }
+        .up-stack > div { transition: width 0.5s ease; }
+        .up-split { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 1rem; }
+        .up-split > div + div { border-left: 1px solid var(--bg-color); padding-left: 0.75rem; }
+        .up-split .k { display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); }
+        .up-split .k i { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+        .up-split .v { font-size: 1.375rem; font-weight: 700; margin-top: 0.25rem; }
+        .up-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.625rem; margin-top: 1rem; }
+        @media (min-width: 760px) { .up-filters { grid-template-columns: 1fr 1fr auto; align-items: end; } }
+        .up-list { list-style: none; margin: 0; padding: 0.25rem 1rem; }
+        .up-list li { display: grid; grid-template-columns: 6px minmax(0, 1fr); gap: 0.875rem; padding: 0.875rem 0; border-bottom: 1px solid var(--bg-color); }
+        .up-list li:last-child { border-bottom: 0; }
+        .up-list .bar { border-radius: 3px; }
       `}</style>
 
       <Navigation title={t('userProgressReport') || 'User Progress Report'} backTo="/stock-take" />
 
-      <main className="container flex-col" style={{ flex: 1, padding: '1.5rem 1rem 6rem', maxWidth: '1080px', margin: '0 auto', width: '100%', gap: '1.25rem', display: 'flex' }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button onClick={handleDownloadCSV}>
-            <Download size={18} /> {t('downloadCsv') || 'Download CSV'}
-          </Button>
+      <main className="ds-page with-nav" style={{ flex: 1 }}>
+        <div style={{ padding: '0.25rem 0.25rem 0' }}>
+          <div className="eyebrow">{user?.name || '-'} · {user?.role || '-'}</div>
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.625rem', flexWrap: 'wrap' }}>
+            <span className="ds-chip" style={{ background: '#fff', boxShadow: 'inset 0 0 0 1.5px var(--border-color)', color: 'var(--text-primary)', textTransform: 'none', letterSpacing: 0 }}>
+              {t('lastLogin') || 'Last Login'}: <span className="mono">{lastLogin}</span>{loginDevice !== '-' && ` · ${loginDevice}`}
+            </span>
+            <span className="ds-chip" style={{ background: '#fff', boxShadow: 'inset 0 0 0 1.5px var(--border-color)', textTransform: 'none', letterSpacing: 0 }}>
+              {t('lastLogout') || 'Last Logout'}: <span className="mono">{lastLogout}</span>{logoutDevice !== '-' && ` · ${logoutDevice}`}
+            </span>
+          </div>
         </div>
 
-        <div className="up-panel">
-          <div className="up-identity">
-            <div className="up-avatar">{user?.name?.charAt(0).toUpperCase() || user?.id?.charAt(0).toUpperCase() || 'U'}</div>
+        <section className="ds-card" style={{ padding: '1.125rem', marginTop: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '1rem', marginBottom: '0.875rem' }}>
+            <div className="mono" style={{ fontSize: '1.875rem', fontWeight: 700, lineHeight: 1 }}>
+              {verifiedPercentage}<span style={{ fontSize: '0.55em', color: 'var(--text-secondary)' }}>%</span>
+            </div>
+            <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+              <span className="mono" style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{verifiedCount.toLocaleString()}</span> / {parts.length.toLocaleString()} {t('verified').toLowerCase()}
+            </div>
+          </div>
+          <div className="up-stack" role="img" aria-label={`${t('notCounted')} ${notCountedCount}, ${t('counted')} ${countedCount}, ${t('verified')} ${verifiedCount}`}>
+            <div style={{ width: `${share(notCountedCount)}%`, background: '#C9C5B9' }} />
+            <div style={{ width: `${share(countedCount)}%`, background: 'var(--warning-color)' }} />
+            <div style={{ width: `${share(verifiedCount)}%`, background: 'var(--success-color)' }} />
+          </div>
+          <div className="up-split">
             <div>
-              <div className="up-identity-name">{user?.name || '-'}</div>
-              <div className="up-identity-role">{user?.role || '-'}</div>
+              <div className="k"><i style={{ background: '#C9C5B9' }} />{t('notCounted')}</div>
+              <div className="v mono">{notCountedCount.toLocaleString()}</div>
             </div>
-            <div className="up-sessions">
-              <div className="up-session">
-                <div className="l">{t('lastLogin') || 'Last Login'}</div>
-                <div className="v">{lastLogin}</div>
-                {loginDevice !== '-' && <div className="via">via {loginDevice}</div>}
-              </div>
-              <div className="up-session">
-                <div className="l">{t('lastLogout') || 'Last Logout'}</div>
-                <div className="v">{lastLogout}</div>
-                {logoutDevice !== '-' && <div className="via">via {logoutDevice}</div>}
-              </div>
+            <div>
+              <div className="k"><i style={{ background: 'var(--warning-color)' }} />{t('counted')}</div>
+              <div className="v mono">{countedCount.toLocaleString()}</div>
+            </div>
+            <div>
+              <div className="k"><i style={{ background: 'var(--success-color)' }} />{t('verified')}</div>
+              <div className="v mono">{verifiedCount.toLocaleString()}</div>
             </div>
           </div>
+        </section>
+
+        <section className="up-filters">
+          <div>
+            <label htmlFor="progress-status-filter" className="ds-label">{t('status')}</label>
+            <select id="progress-status-filter" className="ds-fld" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <option value="all">{t('allStatuses') || 'All Statuses'}</option>
+              <option value="Not Counted">{t('notCounted')}</option>
+              <option value="Counted">{t('counted')}</option>
+              <option value="Verified">{t('verified')}</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="progress-location-filter" className="ds-label">{t('location')}</label>
+            <select id="progress-location-filter" className="ds-fld" value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}>
+              <option value="all">{t('allLocations') || 'All Locations'}</option>
+              {uniqueLocations.map(loc => (
+                <option key={loc} value={loc}>{loc}</option>
+              ))}
+            </select>
+          </div>
+          <button type="button" className="ds-btn outline" onClick={handleDownloadCSV} style={{ gridColumn: '1 / -1' }}>
+            <Download size={18} /> {t('downloadCsv') || 'Download CSV'}
+          </button>
+        </section>
+
+        <div className="ds-section-label">
+          <h2 style={{ margin: 0, fontSize: '1.0625rem' }}>{t('recentActivity')}</h2>
+          <span className="hint"><span className="mono">{filteredParts.length.toLocaleString()}</span> {t('items').toLowerCase()}</span>
         </div>
 
-        <div className="up-panel" ref={reportRef}>
-          <div className="up-report-head">
-            <div className="up-eyebrow">VGM CKD &middot; Progress Summary</div>
-            <div className="up-report-title">{t('allLocations') || 'All Locations'} &middot; {parts.length.toLocaleString()} {t('items')}</div>
-          </div>
-
-          <div className="up-stat-row">
-            <div className="up-stat-chip bad"><div className="up-n">{notCountedCount.toLocaleString()}</div><div className="up-l">{t('notCounted')}</div></div>
-            <div className="up-stat-chip warn"><div className="up-n">{countedCount.toLocaleString()}</div><div className="up-l">{t('counted')}</div></div>
-            <div className="up-stat-chip ok"><div className="up-n">{verifiedCount.toLocaleString()}</div><div className="up-l">{t('verified')}</div></div>
-          </div>
-
-          <div className="up-totals">
-            <div className="up-totals-row">
-              <span className="up-totals-figure">{verifiedPercentage}%</span>
-              <span className="up-totals-sub">{verifiedCount.toLocaleString()} / {parts.length.toLocaleString()} {t('verified').toLowerCase()}</span>
-            </div>
-            <div className="up-totals-bar"><div className="up-totals-fill" style={{ width: `${verifiedPercentage}%` }} /></div>
-          </div>
-
-          <div className="up-filters">
-            <div className="field">
-              <label htmlFor="progress-status-filter">{t('filterByStatus') || 'Filter by Status'}</label>
-              <select id="progress-status-filter" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                <option value="all">{t('allStatuses') || 'All Statuses'}</option>
-                <option value="Not Counted">{t('notCounted')}</option>
-                <option value="Counted">{t('counted')}</option>
-                <option value="Verified">{t('verified')}</option>
-              </select>
-            </div>
-            <div className="field">
-              <label htmlFor="progress-location-filter">{t('filterByLocation') || 'Filter by Location'}</label>
-              <select id="progress-location-filter" value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}>
-                <option value="all">{t('allLocations') || 'All Locations'}</option>
-                {uniqueLocations.map(loc => (
-                  <option key={loc} value={loc}>{loc}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div className="up-panel">
-          <div className="up-ledger-title">{t('recentActivity')}</div>
+        <section className="ds-card">
           {loading ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0 1.6rem 1.6rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem' }}>
               {[0, 1, 2, 3].map(i => (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1.25rem', backgroundColor: '#fff', borderRadius: 'var(--radius-card)', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-                  <Skeleton width="40%" height="1.1rem" />
-                  <Skeleton width="65%" height="0.875rem" />
-                  <Skeleton width="50%" height="0.875rem" />
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <Skeleton width="45%" height="1rem" />
+                  <Skeleton width="70%" height="0.75rem" />
                 </div>
               ))}
             </div>
-          ) : isMobile ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0 1.1rem 1.1rem' }}>
+          ) : filteredParts.length === 0 ? (
+            <EmptyState icon={<PackageSearch size={36} strokeWidth={1.5} />} message={t('noParts') || 'No activity found.'} />
+          ) : (
+            <ol className="up-list">
               {paginatedParts.map((p, index) => {
-                const badge = getStatusBadgeColors(p.status);
+                const zone = ZONE_THEME[p._table];
                 return (
-                <div key={`${p.id}-${index}`} className="up-mobile-card" style={{ ['--row-accent' as any]: getStatusColor(p.status) }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <span style={{ fontWeight: 900, fontSize: '1.1rem', color: 'var(--text-primary)' }}>{p.material || p.part_no || '-'}</span>
-                    <span className="up-status-pill" style={{ backgroundColor: badge.bg, color: badge.text }}>{p.status}</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid #f8fafc', paddingBottom: '0.5rem' }}>
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0 }}>{t('location') || 'Location'} / {t('zone') || 'Zone'}</span>
-                      <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.875rem', textAlign: 'right' }}>{p.location || p.rack_number || p.storage_bin || '-'} ({p._table})</span>
+                  <li key={`${p.id}-${index}`}>
+                    <span className="bar" style={{ background: zone?.accent || 'var(--primary-color)' }} />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', alignItems: 'center' }}>
+                        <div className="mono" style={{ fontSize: '0.9375rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.material || p.part_no || '-'}</div>
+                        <span className={`ds-chip ${getStatusChipClass(p.status)}`}>{statusLabel(p.status)}</span>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem 0.5rem', alignItems: 'center', marginTop: '0.375rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                        <span style={{ fontWeight: 800, color: zone?.accent }}>{zone?.code || p._table}</span>
+                        <span className="mono">{p.location || p.rack_number || p.storage_bin || '-'}</span>
+                        <span>·</span>
+                        <span>{t('verifiedBy')}: <b style={{ color: 'var(--text-primary)' }}>{p.verify_by || '—'}</b></span>
+                        {p.batch_id && <span className="mono">· {new Date(p.batch_id).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid #f8fafc', paddingBottom: '0.5rem' }}>
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0 }}>{t('verifiedBy') || 'Verified By'}</span>
-                      <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.875rem', textAlign: 'right' }}>{p.verify_by || '-'}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, flexShrink: 0 }}>Batch ID</span>
-                      <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.875rem', textAlign: 'right' }}>{p.batch_id ? new Date(p.batch_id).toLocaleString() : '-'}</span>
-                    </div>
-                  </div>
-                </div>
+                  </li>
                 );
               })}
-              {filteredParts.length === 0 && (
-                <EmptyState icon={<PackageSearch size={40} strokeWidth={1.5} />} message={t('noParts') || 'No activity found.'} />
-              )}
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto', paddingBottom: '1rem' }}>
-              <table className="up-table">
-                <thead>
-                  <tr>
-                    <th>{t('material') || 'Material'}</th>
-                    <th>{t('location') || 'Location'} / {t('zone') || 'Zone'}</th>
-                    <th>{t('status') || 'Status'}</th>
-                    <th>{t('verifiedBy') || 'Verified By'}</th>
-                    <th>Batch ID (Date)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedParts.map((p, index) => {
-                    const badge = getStatusBadgeColors(p.status);
-                    return (
-                    <tr key={`${p.id}-${index}`}>
-                      <td className="up-mat" style={{ ['--row-accent' as any]: getStatusColor(p.status) }}>
-                        {p.material || p.part_no || '-'}<span className="up-zone-tag">{p._table}</span>
-                      </td>
-                      <td>{p.location || p.rack_number || p.storage_bin || '-'}</td>
-                      <td><span className="up-status-pill" style={{ backgroundColor: badge.bg, color: badge.text }}>{p.status}</span></td>
-                      <td>{p.verify_by || '-'}</td>
-                      <td style={{ color: 'var(--text-secondary)' }}>{p.batch_id ? new Date(p.batch_id).toLocaleString() : '-'}</td>
-                    </tr>
-                    );
-                  })}
-                  {filteredParts.length === 0 && (
-                    <tr>
-                      <td colSpan={5}>
-                        <EmptyState icon={<PackageSearch size={40} strokeWidth={1.5} />} message={t('noParts') || 'No activity found.'} />
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-            </div>
+            </ol>
           )}
-          <div className="up-foot-note">{t('showingLatestUpdates') || 'Showing latest updates. Generated on'} {new Date().toLocaleString()}.</div>
-        </div>
+        </section>
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        <p style={{ textAlign: 'center', padding: '1.25rem 0 0', fontSize: '0.75rem' }}>
+          {t('showingLatestUpdates') || 'Report generated on'} {new Date().toLocaleString()}.
+        </p>
       </main>
       <BottomNav />
     </div>

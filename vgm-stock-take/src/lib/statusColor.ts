@@ -1,23 +1,15 @@
 export type PartStatus = 'Verified' | 'Counted' | string;
 
-export function getStatusColor(status: PartStatus): string {
+// Class for the shared .ds-chip status badge. Not Counted is an outline,
+// Counted is amber, Verified is solid green — distinguishable by shape and
+// lightness, not hue alone.
+export function getStatusChipClass(status: PartStatus): string {
   switch (status) {
     case 'Verified':
-      return 'var(--success-color)';
+      return 'st-v';
     case 'Counted':
-      return 'var(--warning-color)';
+      return 'st-c';
     default:
-      return 'var(--danger-color)';
-  }
-}
-
-export function getStatusBadgeColors(status: PartStatus): { bg: string; text: string } {
-  switch (status) {
-    case 'Verified':
-      return { bg: 'var(--success-bg)', text: 'var(--success-text)' };
-    case 'Counted':
-      return { bg: 'var(--warning-bg)', text: 'var(--warning-text)' };
-    default:
-      return { bg: 'var(--danger-bg)', text: 'var(--danger-text)' };
+      return 'st-nc';
   }
 }

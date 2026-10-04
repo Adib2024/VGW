@@ -5,14 +5,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Navigation } from '../../components/Navigation';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { BackgroundDecor } from '../../components/ui/BackgroundDecor';
 import { supabase } from '../../lib/supabase';
-import { Save, Edit3, Circle, Loader2, PackageX } from 'lucide-react';
+import { ZONE_THEME, NEUTRAL_ZONE_THEME } from '../../lib/zoneTheme';
+import { Loader2, PackageX, Minus, Plus, Check, ShieldCheck } from 'lucide-react';
 
 import { Part } from '../../types/database';
+
+const STEPS = ['Not Counted', 'Counted', 'Verified'] as const;
 
 export default function StockTakeCounting() {
   const { table, id } = useParams<{ table: string; id: string }>();
@@ -28,13 +28,27 @@ export default function StockTakeCounting() {
   const isMounted = useRef(true);
 
   const [formData, setFormData] = useState<Record<string, string>>({});
-  const [isEditing, setIsEditing] = useState(false);
+  const [initialForm, setInitialForm] = useState<Record<string, string>>({});
 
   useEffect(() => {
     isMounted.current = true;
     if (id) fetchPart();
     return () => { isMounted.current = false; };
   }, [id]);
+
+  const buildInitialForm = (data: Part) => {
+    const form: Record<string, string> = {};
+    Object.keys(data).forEach(key => {
+      if (data[key] !== null && data[key] !== undefined) {
+        if (/remark|luqman/i.test(key)) {
+          form[key] = ''; // Start empty for typing new remark
+        } else {
+          form[key] = String(data[key]);
+        }
+      }
+    });
+    return form;
+  };
 
   const fetchPart = async () => {
     try {
@@ -43,17 +57,9 @@ export default function StockTakeCounting() {
       if (error) throw error;
       if (isMounted.current) {
         setPart(data);
-        const initialForm: Record<string, string> = {};
-        Object.keys(data).forEach(key => {
-          if (data[key] !== null && data[key] !== undefined) {
-            if (/remark|luqman/i.test(key)) {
-              initialForm[key] = ''; // Start empty for typing new remark
-            } else {
-              initialForm[key] = String(data[key]);
-            }
-          }
-        });
-        setFormData(initialForm);
+        const form = buildInitialForm(data);
+        setFormData(form);
+        setInitialForm(form);
       }
     } catch (err) {
       console.error(err);
@@ -65,6 +71,11 @@ export default function StockTakeCounting() {
 
   const handleInputChange = (key: string, value: string) => {
     setFormData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const stepValue = (key: string, delta: number) => {
+    const next = Math.max(0, (parseInt(formData[key]) || 0) + delta);
+    handleInputChange(key, String(next));
   };
 
   const calculateTotal = (keys: string[]) => {
@@ -87,17 +98,14 @@ export default function StockTakeCounting() {
     return false;
   };
 
-  const handleCancel = () => {
-    if (!part) return;
-    setIsEditing(false);
-    const initialForm: Record<string, string> = {};
-    Object.keys(part).forEach(key => {
-      if (part[key] !== null && part[key] !== undefined) {
-        initialForm[key] = String(part[key]);
-      }
-    });
-    setFormData(initialForm);
-  };
+  // A box a non-Admin already saved stays locked - counters can only fill
+  // the next empty one, never overwrite a colleague's count.
+  const isBoxLocked = (key: string) =>
+    !canEditBox() || (user?.role !== 'Admin' && part?.[key] !== null && part?.[key] !== undefined && part?.[key] !== '');
+
+  const isDirty = Object.keys({ ...formData, ...initialForm }).some(k => (formData[k] ?? '') !== (initialForm[k] ?? ''));
+
+  const handleReset = () => setFormData(initialForm);
 
   const handleVerify = async () => {
     if (!part) return;
@@ -106,7 +114,6 @@ export default function StockTakeCounting() {
       const { error } = await supabase.from(table!).update({ status: 'Verified', verify_by: user?.name }).eq('id', id);
       if (error) throw error;
       addToast('Part Verified successfully', 'success');
-      setIsEditing(false);
       await fetchPart();
     } catch (err: any) {
       console.error(err);
@@ -173,7 +180,6 @@ export default function StockTakeCounting() {
       if (error) throw error;
 
       addToast('Data saved successfully', 'success');
-      setIsEditing(false);
       await fetchPart();
     } catch (err: any) {
       console.error(err);
@@ -183,23 +189,28 @@ export default function StockTakeCounting() {
     }
   };
 
+  const zone = (table && ZONE_THEME[table]) || NEUTRAL_ZONE_THEME;
+
   if (loading) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '4rem 2rem', color: 'var(--text-secondary)' }}>
       <Loader2 size={32} className="animate-spin" />
-      <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{t('loadingData')}</span>
+      <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{t('loadingData')}</span>
     </div>
   );
-  if (!part) return <EmptyState icon={<PackageX size={40} strokeWidth={1.5} />} message={t('noParts')} />;
+  if (!part) return <EmptyState icon={<PackageX size={36} strokeWidth={1.5} />} message={t('noParts')} />;
 
-  const counterKeys = part ? Object.keys(part).filter(k => /box|seq/i.test(k)).sort() : [];
-  const verifierKeys = part ? Object.keys(part).filter(k => /recount/i.test(k)).sort() : [];
-  const remarkKeys = part ? Object.keys(part).filter(k => /remark|luqman/i.test(k)).sort() : [];
-  
+  const counterKeys = Object.keys(part).filter(k => /box|seq/i.test(k)).sort();
+  const verifierKeys = Object.keys(part).filter(k => /recount/i.test(k)).sort();
+  const remarkKeys = Object.keys(part).filter(k => /remark|luqman/i.test(k)).sort();
+
   const getDisplayColumns = () => {
-    const exclude = ['id', 'batch_id', 'status', '_table', 'no']; // 'no' is displayed prominently at the top
+    const exclude = ['id', 'batch_id', 'status', '_table', 'no', 'verify_by', 'metadata']; // 'no' is displayed prominently at the top
     return Object.keys(part).filter(k => !exclude.includes(k) && !/box|seq|recount|remark|luqman/i.test(k));
   };
   const displayCols = getDisplayColumns();
+  // The first descriptive column is the part's headline identifier.
+  const headlineCol = displayCols.find(c => /part_?no|material/i.test(c)) || displayCols[0];
+  const detailCols = displayCols.filter(c => c !== headlineCol);
 
   const getVisibleKeys = (keys: string[]) => {
     const visible: string[] = [];
@@ -215,211 +226,230 @@ export default function StockTakeCounting() {
 
   const visibleCounterKeys = getVisibleKeys(counterKeys);
   const visibleVerifierKeys = getVisibleKeys(verifierKeys);
+  const showVerifier = verifierKeys.length > 0 && user?.role !== 'Counter B17' && user?.role !== 'Counter B22';
 
-  const formatKeyName = (key: string) => {
-    if (key.toLowerCase().includes('box_')) return key.replace(/_/g, ' ').replace('box', 'Box').replace(/\b\w/g, c => c.toUpperCase());
-    if (key.toLowerCase().includes('recount_')) return key.replace(/_/g, ' ').replace('recount', 'Recount').replace(/\b\w/g, c => c.toUpperCase());
-    return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const formatKeyName = (key: string) => key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+  const boxTotalNow = calculateTotal(counterKeys);
+  const recountKeysFilled = verifierKeys.filter(k => formData[k] && formData[k].trim() !== '');
+  const lastRecount = recountKeysFilled.length ? parseInt(formData[recountKeysFilled[recountKeysFilled.length - 1]]) : null;
+
+  const stepIndex = Math.max(0, STEPS.indexOf(part.status as typeof STEPS[number]));
+  const statusLabel = (s: string) => s === 'Verified' ? t('verified') : s === 'Counted' ? t('counted') : t('notCounted');
+
+  const canSave = canEditBox() || canEditRecount();
+  const canVerify = canEditRecount() && part.status === 'Counted';
+
+  const renderStepper = (key: string, locked: boolean, tone: 'box' | 'recount') => {
+    const filled = !!formData[key];
+    return (
+      <div key={key} className="ct-stepper">
+        <label htmlFor={`ct-${key}`} style={{ fontSize: '0.875rem', fontWeight: 700, color: filled ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+          {formatKeyName(key)}
+        </label>
+        <button type="button" aria-label={`Decrease ${formatKeyName(key)}`} disabled={locked || !filled} onClick={() => stepValue(key, -1)}>
+          <Minus size={20} strokeWidth={2.5} />
+        </button>
+        <input
+          id={`ct-${key}`}
+          type="number"
+          inputMode="numeric"
+          min={0}
+          className={`ct-qty mono ${filled ? (tone === 'box' ? 'filled' : 'recount') : 'next'}`}
+          value={formData[key] || ''}
+          placeholder="—"
+          onChange={(e) => handleInputChange(key, e.target.value)}
+          disabled={locked}
+        />
+        <button type="button" aria-label={`Increase ${formatKeyName(key)}`} disabled={locked} onClick={() => stepValue(key, 1)}>
+          <Plus size={20} strokeWidth={2.5} />
+        </button>
+      </div>
+    );
   };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <BackgroundDecor />
+      <style>{`
+        .ct-label-card { background: #fff; border: 2px solid var(--primary-color); border-radius: var(--radius-lg); padding: 1.125rem 1.125rem 0.375rem; margin-top: 0.25rem; }
+        .ct-barcode {
+          height: 38px; margin-top: 0.875rem;
+          background: repeating-linear-gradient(90deg, var(--primary-color) 0 2px, transparent 2px 4px, var(--primary-color) 4px 5px, transparent 5px 8px, var(--primary-color) 8px 11px, transparent 11px 12px, var(--primary-color) 12px 13px, transparent 13px 16px);
+        }
+        .ct-kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 1rem; margin-top: 0.5rem; border-top: 1.5px dashed var(--border-strong); }
+        .ct-kv > div { display: flex; flex-direction: column; gap: 2px; padding: 0.75rem 0; border-bottom: 1px solid var(--bg-color); min-width: 0; }
+        .ct-kv .k { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-secondary); }
+        .ct-kv .v { font-size: 0.9375rem; font-weight: 700; overflow-wrap: anywhere; }
+        .ct-steps { list-style: none; margin: 1.125rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .ct-steps li { display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-align: center; }
+        .ct-steps li .dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.875rem; z-index: 1; background: #fff; border: 2px solid #C9C5B9; color: var(--text-secondary); }
+        .ct-steps li.done .dot { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
+        .ct-steps li.current { color: var(--text-primary); font-weight: 800; }
+        .ct-steps li.current .dot { background: var(--signal-color); border-color: var(--signal-color); color: var(--primary-color); box-shadow: 0 0 0 5px rgba(255,184,0,0.25); }
+        .ct-steps li.current.final .dot { background: var(--success-color); border-color: var(--success-color); color: #fff; box-shadow: 0 0 0 5px rgba(15,123,69,0.2); }
+        .ct-steps li:not(:last-child)::after { content: ''; position: absolute; top: 15px; left: 50%; width: 100%; height: 3px; background: var(--border-color); }
+        .ct-steps li.done:not(:last-child)::after { background: var(--primary-color); }
+        .ct-card { padding: 1.125rem; margin-top: 0.75rem; }
+        .ct-card h2 { margin: 0; font-size: 1.0625rem; }
+        .ct-stepper { display: grid; grid-template-columns: 76px 52px minmax(0, 1fr) 52px; align-items: center; gap: 0.5rem; animation: fade-in 0.25s ease-out; }
+        .ct-stepper button {
+          height: 52px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: #fff;
+          color: var(--primary-color); display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+        .ct-stepper button:disabled { opacity: 0.35; cursor: not-allowed; }
+        .ct-qty {
+          height: 52px; width: 100%; border-radius: var(--radius-md); border: 1.5px solid var(--border-strong);
+          background: #fff; text-align: center; font-size: 1.375rem; font-weight: 700; color: var(--primary-color); outline: none;
+          -moz-appearance: textfield;
+        }
+        .ct-qty::-webkit-outer-spin-button, .ct-qty::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .ct-qty.filled { border-color: var(--success-color); background: var(--success-bg); color: var(--success-text); }
+        .ct-qty.recount { border-color: var(--primary-color); }
+        .ct-qty.next { border-style: dashed; border-color: #8A8F99; background: #FAF9F6; }
+        .ct-qty:disabled { cursor: not-allowed; }
+        .ct-qty.next:disabled { background: var(--surface-highlight); }
+        .ct-actions {
+          position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+          background: #fff; border-top: 1px solid var(--border-color);
+          padding: 0.875rem 1rem calc(0.875rem + env(safe-area-inset-bottom));
+        }
+        .ct-actions-inner { max-width: 640px; margin: 0 auto; display: flex; gap: 0.625rem; }
+        .ct-actions-inner .ds-btn { flex: 1; }
+      `}</style>
 
       <Navigation
         title={t('itemDetails')}
         backTo={`/stock-take/list?table=${table}`}
-        titleAccessory={(
-          <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--primary-color)', backgroundColor: 'var(--surface-highlight)', padding: '0.15rem 0.6rem', borderRadius: 'var(--radius-full)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            {table}
-          </span>
-        )}
+        titleAccessory={<span className="ds-chip" style={{ background: zone.accent, color: '#fff' }}>{zone.code}</span>}
       />
 
-      <main className="container" style={{ flex: 1, padding: '0 1rem 3rem 1rem', maxWidth: '600px', margin: '0 auto' }}>
-        
-        <Card style={{ padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: 'none' }}>
-          
-          {/* Item ID & Edit Button */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid var(--primary-color)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--primary-color)', margin: 0, lineHeight: 1 }}>
-              {displayNo || part.no || part.id}
-            </h2>
+      <main className="ds-page narrow" style={{ flex: 1, paddingBottom: canSave ? 'calc(120px + env(safe-area-inset-bottom))' : '2rem' }}>
 
-            {!isEditing ? (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                {(canEditBox() || canEditRecount()) && (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: 'var(--radius-md)', backgroundColor: 'transparent', cursor: 'pointer', color: 'var(--primary-color)', fontWeight: 600 }}
-                  >
-                    <Edit3 size={16} /> {t('edit')}
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button 
-                  onClick={handleCancel}
-                  style={{ padding: '0.5rem 1rem', border: '1px solid #cbd5e1', borderRadius: 'var(--radius-md)', backgroundColor: 'transparent', cursor: 'pointer', color: '#64748b', fontWeight: 600 }}
-                >
-                  {t('cancel')}
-                </button>
-                <button 
-                  onClick={handleSave} disabled={saving}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.5rem', border: 'none', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--primary-color)', cursor: 'pointer', color: 'white', fontWeight: 600 }}
-                >
-                  <Save size={16} /> {saving ? t('saving') : t('save')}
-                </button>
-              </div>
-            )}
+        {/* Part label */}
+        <section className="ct-label-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
+            <span className="eyebrow">{headlineCol ? formatKeyName(headlineCol) : 'Part'}</span>
+            <span className="mono" style={{ fontSize: '0.8125rem', fontWeight: 700 }}>No. {displayNo || part.no || '—'}</span>
           </div>
-
-          {/* Item Information Table */}
-          <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '0.875rem', fontWeight: 800, color: '#475569', marginBottom: '1rem', textTransform: 'uppercase' }}>{t('itemInformation')}</h3>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {displayCols.map((col) => (
-                <div key={col} style={{ display: 'flex', padding: '1rem 0', borderBottom: '1px solid #f1f5f9' }}>
-                  <div style={{ width: '120px', color: '#64748b', fontWeight: 600, fontSize: '0.875rem', textTransform: 'capitalize' }}>
-                    {col.replace(/_/g, ' ')}
-                  </div>
-                  <div style={{ flex: 1, color: '#0f172a', fontWeight: 500, fontSize: '0.875rem' }}>
-                    {part[col] || '-'}
-                  </div>
+          <div className="mono" style={{ fontSize: 'clamp(1.5rem, 8vw, 2rem)', fontWeight: 700, letterSpacing: '-0.02em', marginTop: '0.25rem', overflowWrap: 'anywhere' }}>
+            {(headlineCol && part[headlineCol]) || part.id}
+          </div>
+          <div className="ct-barcode" aria-hidden="true" />
+          {detailCols.length > 0 && (
+            <div className="ct-kv">
+              {detailCols.map(col => (
+                <div key={col}>
+                  <span className="k">{col.replace(/_/g, ' ')}</span>
+                  <span className="v">{part[col] || '—'}</span>
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* Count Data */}
-          {(counterKeys.length > 0 || verifierKeys.length > 0) && (
-            <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--primary-color)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                {t('countData')} <Circle size={18} fill="#334155" color="#334155" />
-              </h3>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {counterKeys.length > 0 && visibleCounterKeys.map(key => (
-                  <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '1rem', animation: 'fade-in 0.3s ease-out' }}>
-                    <div style={{ width: '100px', color: '#64748b', fontWeight: 600, fontSize: '0.875rem' }}>
-                      {formatKeyName(key)}
-                    </div>
-                    <div style={{ flex: 1, position: 'relative' }}>
-                      <input
-                        type="number"
-                        value={formData[key] || ''}
-                        onChange={(e) => handleInputChange(key, e.target.value)}
-                        disabled={!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined && part[key] !== '')}
-                        style={{
-                          width: '100%', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)',
-                          border: formData[key] ? '1px solid var(--success-color)' : '1px solid #cbd5e1',
-                          backgroundColor: (!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined && part[key] !== '')) ? '#f8fafc' : 'white',
-                          color: formData[key] ? 'var(--success-color)' : '#0f172a',
-                          fontWeight: formData[key] ? 800 : 500, outline: 'none',
-                          cursor: (!isEditing || !canEditBox() || (user?.role !== 'Admin' && part[key] !== null && part[key] !== undefined)) ? 'not-allowed' : 'text'
-                        }}
-                        placeholder=""
-                      />
-                      {formData[key] && (
-                         <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--success-color)' }}>
-                           <Circle size={10} fill="var(--success-color)" />
-                         </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                {verifierKeys.length > 0 && user?.role !== 'Counter B17' && user?.role !== 'Counter B22' && visibleVerifierKeys.map(key => (
-                  <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '1rem', animation: 'fade-in 0.3s ease-out', marginTop: '1rem' }}>
-                    <div style={{ width: '100px', color: '#64748b', fontWeight: 600, fontSize: '0.875rem' }}>
-                      {formatKeyName(key)}
-                    </div>
-                    <div style={{ flex: 1, position: 'relative' }}>
-                      <input
-                        type="number"
-                        value={formData[key] || ''}
-                        onChange={(e) => handleInputChange(key, e.target.value)}
-                        disabled={!isEditing || !canEditRecount()}
-                        style={{
-                          width: '100%', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)',
-                          border: formData[key] ? '1px solid var(--primary-color)' : '1px solid #cbd5e1',
-                          backgroundColor: (!isEditing || !canEditRecount()) ? '#f8fafc' : 'white',
-                          color: formData[key] ? 'var(--primary-color)' : '#0f172a',
-                          fontWeight: formData[key] ? 800 : 500, outline: 'none',
-                          cursor: (!isEditing || !canEditRecount()) ? 'not-allowed' : 'text'
-                        }}
-                      />
-                       {formData[key] && (
-                         <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary-color)' }}>
-                           <Circle size={10} fill="var(--primary-color)" />
-                         </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+              <div>
+                <span className="k">{t('verifiedBy')}</span>
+                <span className="v">{part.verify_by || '—'}</span>
               </div>
             </div>
           )}
+        </section>
 
-          {/* Status & Remarks */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', padding: '1rem 0', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ width: '120px', color: '#64748b', fontWeight: 600, fontSize: '0.875rem' }}>{t('status')}</div>
-              <div style={{ flex: 1, color: '#0f172a', fontWeight: 800, fontSize: '0.875rem' }}>
-                {part.status === 'Verified' ? t('verified') : part.status === 'Counted' ? t('counted') : t('notCounted')}
+        {/* Status */}
+        <ol className="ct-steps" aria-label={t('status')}>
+          {STEPS.map((s, i) => {
+            const state = i < stepIndex ? 'done' : i === stepIndex ? 'current' : '';
+            return (
+              <li key={s} className={`${state}${i === STEPS.length - 1 ? ' final' : ''}`} aria-current={i === stepIndex ? 'step' : undefined}>
+                <span className="dot">{i < stepIndex || (i === stepIndex && i === STEPS.length - 1) ? <Check size={16} strokeWidth={3} /> : i + 1}</span>
+                {statusLabel(s)}
+              </li>
+            );
+          })}
+        </ol>
+
+        {/* Box count */}
+        {counterKeys.length > 0 && (
+          <section className="ds-card ct-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '1rem' }}>
+              <div>
+                <h2>{t('countData')}</h2>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 2 }}>Next box appears once this one is filled</div>
               </div>
-              {!isEditing && canEditRecount() && part.status === 'Counted' && (
-                  <Button onClick={handleVerify} disabled={saving} style={{ padding: '0.25rem 1rem', backgroundColor: 'var(--success-color)', fontSize: '0.75rem', marginLeft: 'auto' }}>
-                    {saving ? '...' : t('verifyNow')}
-                  </Button>
-              )}
-            </div>
-            
-            <div style={{ display: 'flex', padding: '1rem 0', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ width: '120px', color: '#64748b', fontWeight: 600, fontSize: '0.875rem' }}>{t('verifiedBy')}</div>
-              <div style={{ flex: 1, color: '#0f172a', fontWeight: 500, fontSize: '0.875rem' }}>{part.verify_by || '-'}</div>
-            </div>
-
-            {remarkKeys.length > 0 && remarkKeys.map(key => (
-              <div key={key} style={{ display: 'flex', padding: '1.5rem 0 0 0', alignItems: 'flex-start' }}>
-                <div style={{ width: '120px', color: '#64748b', fontWeight: 600, fontSize: '0.875rem', marginTop: '0.75rem' }}>{formatKeyName(key)}</div>
-                <div style={{ flex: 1 }}>
-                   {part[key] && (
-                     <div style={{ marginBottom: '0.75rem', fontSize: '0.75rem', color: '#475569' }}>
-                       {part[key].split(' | ').map((r: string, i: number) => <div key={i} style={{ marginBottom: '0.25rem' }}>{r}</div>)}
-                     </div>
-                   )}
-                   <textarea
-                     value={formData[key] || ''}
-                     onChange={(e) => handleInputChange(key, e.target.value)}
-                     disabled={!isEditing || (!canEditBox() && !canEditRecount())}
-                     placeholder={t('addRemarkPlaceholder')}
-                     rows={2}
-                     style={{
-                       width: '100%', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)',
-                       border: (isEditing && !formData[key]) ? '2px dashed var(--warning-color)' : '1px solid var(--border-color)',
-                       backgroundColor: formData[key] ? 'var(--surface-color)' : (isEditing ? '#fffbeb' : 'var(--surface-highlight)'),
-                       color: 'var(--text-primary)', outline: 'none', resize: 'none',
-                       fontFamily: 'inherit', fontSize: '0.875rem',
-                       cursor: (!isEditing || (!canEditBox() && !canEditRecount())) ? 'not-allowed' : 'text'
-                     }}
-                   />
-                </div>
+              <div style={{ textAlign: 'right' }}>
+                <div className="eyebrow" style={{ fontSize: '0.625rem' }}>Total</div>
+                <div className="mono" style={{ fontSize: '1.875rem', fontWeight: 700, lineHeight: 1 }}>{boxTotalNow}</div>
               </div>
-            ))}
-          </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', marginTop: '1rem' }}>
+              {visibleCounterKeys.map(key => renderStepper(key, isBoxLocked(key), 'box'))}
+            </div>
+          </section>
+        )}
 
-        </Card>
+        {/* Recount */}
+        {showVerifier && (
+          <section className="ds-card ct-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+              <h2>Recount</h2>
+              <span className="ds-chip" style={{ background: '#E5ECFF', color: '#1F3A8A' }}>Verifier only</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', marginTop: '0.875rem' }}>
+              {visibleVerifierKeys.map(key => renderStepper(key, !canEditRecount(), 'recount'))}
+            </div>
+            {lastRecount !== null && counterKeys.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', fontSize: '0.8125rem', fontWeight: 700, color: lastRecount === boxTotalNow ? 'var(--success-text)' : 'var(--danger-text)' }}>
+                {lastRecount === boxTotalNow
+                  ? <><Check size={18} strokeWidth={2.5} /> Matches box total ({boxTotalNow})</>
+                  : <>Differs from box total ({boxTotalNow})</>}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Remarks */}
+        {remarkKeys.map(key => (
+          <section key={key} className="ds-card ct-card">
+            <label htmlFor={`ct-${key}`} style={{ display: 'block', fontSize: '1.0625rem', fontWeight: 800 }}>{formatKeyName(key)}</label>
+            {part[key] && (
+              <div style={{ marginTop: '0.75rem', padding: '0.75rem', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)', fontSize: '0.8125rem', lineHeight: 1.5, display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                {String(part[key]).split(' | ').map((r: string, i: number) => <div key={i}>{r}</div>)}
+              </div>
+            )}
+            <textarea
+              id={`ct-${key}`}
+              className="ds-fld"
+              rows={2}
+              value={formData[key] || ''}
+              onChange={(e) => handleInputChange(key, e.target.value)}
+              disabled={!canSave}
+              placeholder={t('addRemarkPlaceholder')}
+              style={{ marginTop: '0.625rem' }}
+            />
+          </section>
+        ))}
       </main>
-      <style>
-        {`
-          @keyframes fade-in {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-        `}
-      </style>
+
+      {canSave && (
+        <div className="ct-actions">
+          <div className="ct-actions-inner">
+            {isDirty ? (
+              <>
+                <button type="button" className="ds-btn quiet lg" onClick={handleReset} disabled={saving} style={{ flex: '0 1 34%' }}>
+                  {t('cancel')}
+                </button>
+                <button type="button" className="ds-btn signal lg" onClick={handleSave} disabled={saving}>
+                  {saving ? t('saving') : t('save')}
+                </button>
+              </>
+            ) : canVerify ? (
+              <button type="button" className="ds-btn go lg" onClick={handleVerify} disabled={saving}>
+                <ShieldCheck size={20} /> {saving ? '...' : t('verifyNow')}
+              </button>
+            ) : (
+              <button type="button" className="ds-btn quiet lg" disabled>
+                {part.status === 'Verified' ? <><Check size={20} /> {t('verified')}</> : 'Enter a count to save'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,18 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Navigation } from '../../components/Navigation';
-import { Button } from '../../components/ui/Button';
+import { AdminTabs } from '../../components/AdminTabs';
 import { Input } from '../../components/ui/Input';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
-import { BackgroundDecor } from '../../components/ui/BackgroundDecor';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { BottomNav } from '../../components/ui/BottomNav';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
-import { UserPlus, KeyRound, Ban, CheckCircle2, Copy, Users as UsersIcon, Search } from 'lucide-react';
+import { UserPlus, KeyRound, Copy, Users as UsersIcon, Search } from 'lucide-react';
 
 const ROLES = ['Counter B17', 'Counter B22', 'Verifier', 'Operator Batt', 'QA Inspector', 'Admin'];
+
+// Avatar / role-chip colors per role [background, text]
+const ROLE_COLORS: Record<string, [string, string]> = {
+  'Counter B17': ['#E5ECFF', '#1F3A8A'],
+  'Counter B22': ['#FDE4E8', '#8C1328'],
+  'Verifier': ['#DDF3EA', '#075E42'],
+  'Operator Batt': ['#E3F1EC', '#0B5A41'],
+  'QA Inspector': ['#FFF0D1', '#7A4500'],
+  'Admin': ['#0B1B3A', '#FFFFFF'],
+};
+
+const initials = (name: string, id: string) => {
+  const parts = (name || id).split(/[\s\-_]+/).filter(Boolean);
+  return ((parts[0]?.[0] || '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+};
 
 interface UserRow {
   id: string;
@@ -37,6 +51,7 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [addId, setAddId] = useState('');
@@ -136,180 +151,136 @@ export default function AdminUsers() {
   };
 
   const filteredUsers = users.filter(u => {
+    if (roleFilter !== 'all' && u.role !== roleFilter) return false;
     const q = search.trim().toLowerCase();
     if (!q) return true;
     return u.id.toLowerCase().includes(q) || u.name.toLowerCase().includes(q) || u.role.toLowerCase().includes(q);
   });
 
+  const activeCount = users.filter(u => u.is_active).length;
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <style>{`
-        .au-panel {
-          position: relative;
-          background: var(--surface-color);
-          border-radius: var(--radius-panel);
-          box-shadow: 0 10px 30px -8px rgba(var(--primary-color-rgb), 0.12), 0 2px 8px -2px rgba(var(--primary-color-rgb), 0.05);
-          overflow: hidden;
-        }
-        .au-panel::before, .au-panel::after { content: ''; position: absolute; width: 14px; height: 14px; opacity: 0.5; }
-        .au-panel::before { top: 10px; left: 10px; border-top: 2px solid var(--primary-color); border-left: 2px solid var(--primary-color); border-radius: 3px 0 0 0; }
-        .au-panel::after { bottom: 10px; right: 10px; border-bottom: 2px solid var(--primary-color); border-right: 2px solid var(--primary-color); border-radius: 0 0 3px 0; }
-
-        .au-top { padding: 1.5rem 1.6rem 1.25rem; display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: center; justify-content: space-between; }
-        .au-id { display: flex; align-items: center; gap: 0.9rem; }
-        .au-id-icon {
-          width: 46px; height: 46px; border-radius: var(--radius-card); flex-shrink: 0;
-          background: rgba(var(--primary-color-rgb), 0.08); box-shadow: inset 0 0 0 1.5px var(--primary-color);
-          display: flex; align-items: center; justify-content: center; color: var(--primary-color);
-        }
-        .au-id h1 { font-size: 1.1rem; font-weight: 700; color: var(--primary-color); margin: 0; }
-        .au-id .au-sub { font-size: 0.78rem; color: var(--text-secondary); font-weight: 500; margin-top: 0.15rem; }
-
-        .au-search { padding: 0 1.6rem 1.4rem; }
-
-        .au-roster { border-top: 1px solid var(--surface-highlight); }
-        .au-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.6rem; border-bottom: 1px solid #f8fafc; flex-wrap: wrap; }
-        .au-row:last-child { border-bottom: none; }
-        .au-row.inactive { background: rgba(254, 242, 242, 0.4); }
-        .au-row-id { display: flex; align-items: center; gap: 1rem; min-width: 0; flex: 1 1 260px; }
-        .au-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; flex-shrink: 0; }
-        .au-row.inactive .au-avatar { background: #94a3b8; }
-        .au-row-name { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-        .au-row-name .n { font-weight: 700; color: var(--text-primary); }
-        .au-row-name .id { font-size: 0.75rem; color: #94a3b8; }
-        .au-row-role { font-size: 0.78rem; color: var(--primary-color); font-weight: 700; margin-top: 0.15rem; }
-        .au-tag { font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.18rem 0.55rem; border-radius: var(--radius-full); }
-        .au-tag.bad { background: var(--danger-bg); color: var(--danger-text); }
-        .au-tag.warn { background: var(--warning-bg); color: var(--warning-text); }
-
-        .au-row-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
-        .au-act-btn { display: flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.85rem; border-radius: var(--radius-md); font-size: 0.8rem; font-weight: 700; cursor: pointer; border: 1px solid transparent; min-height: 44px; font-family: inherit; }
-        .au-act-btn.ghost { background: var(--surface-color); border-color: var(--border-color); border-color: #e2e8f0; color: var(--text-primary); }
-        .au-act-btn.danger { background: var(--danger-bg); color: var(--danger-text); }
-        .au-act-btn.ok { background: var(--success-color); color: #fff; }
-        .au-act-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        .au-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-        .au-modal { background: var(--surface-color); padding: 2rem; border-radius: var(--radius-panel); max-width: 420px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
+        .au-list { list-style: none; margin: 0; padding: 0.25rem 1rem; }
+        .au-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--bg-color); }
+        .au-row:last-child { border-bottom: 0; }
+        .au-row.inactive .au-who { opacity: 0.55; }
+        .au-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8125rem; font-weight: 800; flex-shrink: 0; }
+        .au-name { font-size: 0.9375rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .au-switch { display: flex; align-items: center; justify-content: center; min-width: 52px; min-height: 44px; cursor: pointer; }
       `}</style>
-      <BackgroundDecor />
       <Navigation title="User Management" backTo={-1} />
 
-      <main style={{ flex: 1, padding: '1.5rem 1rem 6rem', display: 'flex', justifyContent: 'center' }}>
-        <div style={{ width: '100%', maxWidth: '800px' }}>
-          <div className="au-panel">
-            <div className="au-top">
-              <div className="au-id">
-                <div className="au-id-icon"><UsersIcon size={22} /></div>
-                <div>
-                  <h1>Operator Roster</h1>
-                  <div className="au-sub">Create accounts, reset passwords, deactivate resigned staff</div>
-                </div>
-              </div>
-              <Button onClick={() => setShowAddModal(true)}>
-                <UserPlus size={16} /> Add Operator
-              </Button>
-            </div>
+      <main className="ds-page narrow with-nav" style={{ flex: 1 }}>
+        <AdminTabs />
 
-            <div className="au-search">
-              <Input
-                placeholder="Search by ID, name, or role..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                icon={<Search size={16} />}
-              />
-            </div>
-
-            <div className="au-roster">
-              {loading ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0 1.6rem 1.6rem' }}>
-                  {[1, 2, 3, 4].map(i => <Skeleton key={i} height="3.5rem" />)}
-                </div>
-              ) : filteredUsers.length === 0 ? (
-                <div style={{ padding: '0 1.6rem 1.6rem' }}>
-                  <EmptyState icon={<UsersIcon size={40} strokeWidth={1.5} />} message={search ? 'No users match your search.' : 'No users found.'} />
-                </div>
-              ) : (
-                filteredUsers.map((u) => (
-                  <div key={u.id} className={`au-row ${u.is_active ? '' : 'inactive'}`}>
-                    <div className="au-row-id">
-                      <div className="au-avatar">{u.name?.charAt(0).toUpperCase() || u.id.charAt(0).toUpperCase()}</div>
-                      <div>
-                        <div className="au-row-name">
-                          <span className="n">{u.name}</span>
-                          <span className="id">({u.id})</span>
-                          {!u.is_active && <span className="au-tag bad">Deactivated</span>}
-                          {u.is_active && u.must_change_password && <span className="au-tag warn">Pending first login</span>}
-                        </div>
-                        <div className="au-row-role">{u.role}</div>
-                      </div>
-                    </div>
-
-                    <div className="au-row-actions">
-                      <button
-                        className="au-act-btn ghost"
-                        disabled={processingId === u.id}
-                        onClick={() => setConfirmTarget({ id: u.id, name: u.name, action: 'reset' })}
-                      >
-                        <KeyRound size={14} /> Reset
-                      </button>
-                      {u.is_active ? (
-                        <button
-                          className="au-act-btn danger"
-                          disabled={processingId === u.id || u.id === currentUser?.id}
-                          onClick={() => setConfirmTarget({ id: u.id, name: u.name, action: 'deactivate' })}
-                          title={u.id === currentUser?.id ? "You can't deactivate your own account" : undefined}
-                        >
-                          <Ban size={14} /> Deactivate
-                        </button>
-                      ) : (
-                        <button
-                          className="au-act-btn ok"
-                          disabled={processingId === u.id}
-                          onClick={() => handleSetActive(u.id, true)}
-                        >
-                          <CheckCircle2 size={14} /> Reactivate
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '0.75rem', margin: '1.25rem 0.25rem 0' }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Operator roster</h2>
+            <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: 4 }}>
+              <span className="mono" style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{users.length}</span> users · <span className="mono">{activeCount}</span> active
             </div>
           </div>
+          <button type="button" className="ds-btn signal sm" onClick={() => setShowAddModal(true)}>
+            <UserPlus size={18} /> Add
+          </button>
         </div>
+
+        <div className="ds-search" style={{ marginTop: '1rem' }}>
+          <label htmlFor="au-search" className="sr-only">Search users</label>
+          <Search size={20} />
+          <input id="au-search" className="ds-fld" type="search" placeholder="Search by ID, name or role" value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+
+        <div className="ds-filters" role="group" aria-label="Filter by role" style={{ marginTop: '0.75rem' }}>
+          {['all', ...ROLES].map(r => (
+            <button key={r} type="button" className={`ds-filt ${roleFilter === r ? 'on' : ''}`} aria-pressed={roleFilter === r} onClick={() => setRoleFilter(r)}>
+              {r === 'all' ? 'All' : r}
+            </button>
+          ))}
+        </div>
+
+        <section className="ds-card" style={{ marginTop: '1rem' }}>
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
+              {[1, 2, 3, 4].map(i => <Skeleton key={i} height="3rem" />)}
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <EmptyState icon={<UsersIcon size={36} strokeWidth={1.5} />} message={search || roleFilter !== 'all' ? 'No users match your search.' : 'No users found.'} />
+          ) : (
+            <ul className="au-list">
+              {filteredUsers.map((u) => {
+                const [bg, fg] = ROLE_COLORS[u.role] || ['#F1EFE9', '#4A5468'];
+                const isSelf = u.id === currentUser?.id;
+                const busy = processingId === u.id;
+                return (
+                  <li key={u.id} className={`au-row ${u.is_active ? '' : 'inactive'}`}>
+                    <div className="au-who" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}>
+                      <div className="au-avatar" style={{ background: bg, color: fg }}>{initials(u.name, u.id)}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <div className="au-name">{u.name}</div>
+                        <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{u.id}</div>
+                        <div style={{ display: 'flex', gap: 4, marginTop: 5, flexWrap: 'wrap' }}>
+                          <span className="ds-chip" style={{ background: bg, color: fg, height: 22, fontSize: '0.625rem' }}>{u.role}</span>
+                          {!u.is_active && <span className="ds-chip danger" style={{ height: 22, fontSize: '0.625rem' }}>Deactivated</span>}
+                          {u.is_active && u.must_change_password && <span className="ds-chip warn" style={{ height: 22, fontSize: '0.625rem' }}>Pending first login</span>}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="ds-iconbtn ghost"
+                      aria-label={`Reset password for ${u.name}`}
+                      title="Reset password"
+                      disabled={busy}
+                      onClick={() => setConfirmTarget({ id: u.id, name: u.name, action: 'reset' })}
+                    >
+                      <KeyRound size={18} />
+                    </button>
+                    <label className="au-switch" title={isSelf ? "You can't deactivate your own account" : u.is_active ? 'Active' : 'Deactivated'}>
+                      <input
+                        type="checkbox"
+                        className="ds-switch"
+                        aria-label={`${u.name} active`}
+                        checked={u.is_active}
+                        disabled={busy || (isSelf && u.is_active)}
+                        onChange={() => {
+                          if (u.is_active) setConfirmTarget({ id: u.id, name: u.name, action: 'deactivate' });
+                          else handleSetActive(u.id, true);
+                        }}
+                      />
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
       </main>
 
       {/* Add Operator modal */}
       {showAddModal && (
-        <div className="au-modal-overlay">
-          <div className="au-modal">
-            <h3 style={{ margin: '0 0 1.25rem 0', color: 'var(--primary-color)', fontSize: '1.25rem', fontWeight: 800 }}>Add Operator</h3>
-            <form onSubmit={handleAddUser} className="flex-col gap-4">
-              {addError && (
-                <div style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', backgroundColor: '#fef2f2', color: 'var(--danger-text)', border: '1px solid #fecaca', fontSize: '0.85rem', fontWeight: 500 }}>
-                  {addError}
-                </div>
-              )}
-              <Input label="User ID" value={addId} onChange={(e) => setAddId(e.target.value)} required placeholder="e.g. OperB17_16" />
+        <div className="ds-overlay" role="dialog" aria-modal="true" aria-labelledby="au-add-title">
+          <div className="ds-modal">
+            <h3 id="au-add-title">Add operator</h3>
+            <form onSubmit={handleAddUser} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+              {addError && <div className="ds-banner bad">{addError}</div>}
+              <Input label="User ID" className="mono" value={addId} onChange={(e) => setAddId(e.target.value)} required placeholder="e.g. OperB17_16" />
               <Input label="Name" value={addName} onChange={(e) => setAddName(e.target.value)} required placeholder="e.g. Operator B17-16" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 500 }}>Role</label>
-                <select
-                  value={addRole}
-                  onChange={(e) => setAddRole(e.target.value)}
-                  style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#334155', outline: 'none', fontSize: '1rem', cursor: 'pointer' }}
-                >
+              <div>
+                <label htmlFor="au-role" className="ds-label">Role</label>
+                <select id="au-role" className="ds-fld" value={addRole} onChange={(e) => setAddRole(e.target.value)}>
                   {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                <Button type="button" variant="secondary" onClick={() => { setShowAddModal(false); setAddError(''); }} style={{ flex: 1, backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.625rem', marginTop: '0.25rem' }}>
+                <button type="button" className="ds-btn quiet" onClick={() => { setShowAddModal(false); setAddError(''); }}>
                   Cancel
-                </Button>
-                <Button type="submit" disabled={addSubmitting} style={{ flex: 1 }}>
+                </button>
+                <button type="submit" className="ds-btn signal" disabled={addSubmitting}>
                   {addSubmitting ? 'Creating...' : 'Create'}
-                </Button>
+                </button>
               </div>
             </form>
           </div>
@@ -318,24 +289,24 @@ export default function AdminUsers() {
 
       {/* One-time temp password display */}
       {tempPasswordResult && (
-        <div className="au-modal-overlay">
-          <div className="au-modal" style={{ textAlign: 'center' }}>
-            <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--primary-color)', fontSize: '1.25rem', fontWeight: 800 }}>
-              {tempPasswordResult.name}'s Temporary Password
-            </h3>
-            <p style={{ margin: '0 0 1.25rem 0', color: '#b45309', fontSize: '0.8rem', fontWeight: 600 }}>
+        <div className="ds-overlay" role="dialog" aria-modal="true" aria-labelledby="au-temp-title">
+          <div className="ds-modal" style={{ textAlign: 'center' }}>
+            <h3 id="au-temp-title">{tempPasswordResult.name}'s temporary password</h3>
+            <p style={{ margin: '0 0 1.25rem', color: 'var(--warning-text)', fontSize: '0.8125rem', fontWeight: 600 }}>
               Note this down now — it will not be shown again. Hand it to {tempPasswordResult.name} ({tempPasswordResult.id}); they'll be required to set their own password on first login.
             </p>
-            <div
+            <button
+              type="button"
               onClick={() => copyToClipboard(tempPasswordResult.tempPassword)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '1rem', backgroundColor: '#f1f5f9', borderRadius: 'var(--radius-md)', fontFamily: 'monospace', fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', cursor: 'pointer', marginBottom: '1.5rem', userSelect: 'all' }}
+              className="mono"
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '1rem', background: 'var(--surface-sunken)', border: '1.5px dashed var(--border-strong)', borderRadius: 'var(--radius-md)', fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)', cursor: 'pointer', marginBottom: '1.25rem', userSelect: 'all' }}
               title="Click to copy"
             >
-              {tempPasswordResult.tempPassword} <Copy size={16} color="#64748b" />
-            </div>
-            <Button fullWidth onClick={() => setTempPasswordResult(null)}>
+              {tempPasswordResult.tempPassword} <Copy size={16} color="var(--text-secondary)" />
+            </button>
+            <button type="button" className="ds-btn ink block" onClick={() => setTempPasswordResult(null)}>
               Done, I've saved it
-            </Button>
+            </button>
           </div>
         </div>
       )}
