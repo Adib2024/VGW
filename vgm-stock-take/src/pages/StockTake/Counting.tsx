@@ -20,7 +20,7 @@ export default function StockTakeCounting() {
   const displayNo = searchParams.get('no');
   const { user } = useAuth();
   const { addToast } = useToast();
-  const { t } = useLanguage();
+  const { t, tf } = useLanguage();
 
   const [part, setPart] = useState<Part | null>(null);
   const [loading, setLoading] = useState(true);
@@ -370,10 +370,10 @@ export default function StockTakeCounting() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '1rem' }}>
               <div>
                 <h2>{t('countData')}</h2>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 2 }}>Next box appears once this one is filled</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 2 }}>{t('nextBoxHint')}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div className="eyebrow" style={{ fontSize: '0.625rem' }}>Total</div>
+                <div className="eyebrow" style={{ fontSize: '0.625rem' }}>{t('total')}</div>
                 <div className="mono" style={{ fontSize: '1.875rem', fontWeight: 700, lineHeight: 1 }}>{boxTotalNow}</div>
               </div>
             </div>
@@ -387,8 +387,8 @@ export default function StockTakeCounting() {
         {showVerifier && (
           <section className="ds-card ct-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
-              <h2>Recount</h2>
-              <span className="ds-chip" style={{ background: '#E5ECFF', color: '#1F3A8A' }}>Verifier only</span>
+              <h2>{t('recount')}</h2>
+              <span className="ds-chip" style={{ background: '#E5ECFF', color: '#1F3A8A' }}>{t('verifierOnly')}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', marginTop: '0.875rem' }}>
               {visibleVerifierKeys.map(key => renderStepper(key, !canEditRecount(), 'recount'))}
@@ -396,8 +396,8 @@ export default function StockTakeCounting() {
             {lastRecount !== null && counterKeys.length > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', fontSize: '0.8125rem', fontWeight: 700, color: lastRecount === boxTotalNow ? 'var(--success-text)' : 'var(--danger-text)' }}>
                 {lastRecount === boxTotalNow
-                  ? <><Check size={18} strokeWidth={2.5} /> Matches box total ({boxTotalNow})</>
-                  : <>Differs from box total ({boxTotalNow})</>}
+                  ? <><Check size={18} strokeWidth={2.5} /> {tf('matchesBoxTotal', { n: boxTotalNow })}</>
+                  : <>{tf('differsBoxTotal', { n: boxTotalNow })}</>}
               </div>
             )}
           </section>
@@ -444,7 +444,7 @@ export default function StockTakeCounting() {
               </button>
             ) : (
               <button type="button" className="ds-btn quiet lg" disabled>
-                {part.status === 'Verified' ? <><Check size={20} /> {t('verified')}</> : 'Enter a count to save'}
+                {part.status === 'Verified' ? <><Check size={20} /> {t('verified')}</> : t('enterCountToSave')}
               </button>
             )}
           </div>

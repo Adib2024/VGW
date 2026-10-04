@@ -110,9 +110,9 @@ export default function Hub() {
   const stockPct = stock ? (stock.total === 0 ? 0 : Math.round((stock.completed / stock.total) * 100)) : null;
 
   const readouts = [
-    canSee('stockTake') && { k: 'Parts verified', v: stockPct === null ? '—' : String(stockPct), unit: '%' },
+    canSee('stockTake') && { k: t('partsVerified'), v: stockPct === null ? '—' : String(stockPct), unit: '%' },
     canSee('battery') && { k: t('trackedToday'), v: batteryToday === null ? '—' : String(batteryToday), unit: '' },
-    canSee('stockTake') && { k: 'Parts to check', v: checkOpen === null ? '—' : String(checkOpen), unit: '' },
+    canSee('stockTake') && { k: t('partsToCheck'), v: checkOpen === null ? '—' : String(checkOpen), unit: '' },
   ].filter(Boolean) as { k: string; v: string; unit: string }[];
 
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'Asia/Kuala_Lumpur' });
@@ -179,7 +179,7 @@ export default function Hub() {
                   <p>{t(m.descKey)}</p>
                 </div>
                 {m.key === 'qa'
-                  ? <span className="ds-chip">Soon</span>
+                  ? <span className="ds-chip">{t('soon')}</span>
                   : <ChevronRight size={22} color="var(--text-secondary)" />}
               </div>
 
@@ -203,13 +203,13 @@ export default function Hub() {
 
         {user?.role === 'Admin' && (
           <>
-            <div className="ds-section-label"><span className="eyebrow">Admin tools</span></div>
+            <div className="ds-section-label"><span className="eyebrow">{t('adminTools')}</span></div>
             <div className="hub-tools">
               <button type="button" className="ds-card hub-tool" onClick={() => navigate('/admin/users')}>
-                <Users size={22} /> Users
+                <Users size={22} /> {t('users')}
               </button>
               <button type="button" className="ds-card hub-tool" onClick={() => navigate('/admin/settings')}>
-                <Upload size={22} /> Upload parts
+                <Upload size={22} /> {t('uploadParts')}
               </button>
               <button type="button" className="ds-card hub-tool" onClick={() => navigate('/reports/progress')}>
                 <LineChart size={22} /> {t('progress')}

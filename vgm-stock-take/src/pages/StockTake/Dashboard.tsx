@@ -125,7 +125,7 @@ export default function StockTakeDashboard() {
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
         <Navigation
           title={t('stockTake')}
-          titleAccessory={<span className="ds-chip live" title={t('liveData')}>Live</span>}
+          titleAccessory={<span className="ds-chip live" title={t('liveData')}>{t('live')}</span>}
           showBack={user?.role === 'Admin' || user?.role === 'Verifier'}
           backTo="/hub"
           extraMenuItems={(closeMenu) => (
@@ -168,7 +168,7 @@ export default function StockTakeDashboard() {
 
           <div className="ds-section-label">
             <span className="eyebrow">{t('zones')}</span>
-            <span className="hint">Tap a zone to start counting</span>
+            <span className="hint">{t('tapZoneHint')}</span>
           </div>
 
           <div className="dash-grid">
@@ -196,7 +196,7 @@ export default function StockTakeDashboard() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.375rem' }}>
                     <div className="zone-pct mono">{s.percentage}<span style={{ fontSize: '0.6em', color: 'var(--text-secondary)' }}>%</span></div>
                     {s.missing
-                      ? <span className="ds-chip st-nc">No data</span>
+                      ? <span className="ds-chip st-nc">{t('noData')}</span>
                       : <span className={`ds-chip ${done ? 'done' : ''}`}>{done ? t('ready') : t('pending')}</span>}
                   </div>
                   <CarTrack percentage={s.percentage} color={zone.accent} carDelay={zone.carDelay} carDuration={zone.carDuration} carWidth={64} height={8} />
@@ -213,9 +213,9 @@ export default function StockTakeDashboard() {
               <AlertTriangle size={22} strokeWidth={2.2} />
             </span>
             <span style={{ flex: 1 }}>
-              <span style={{ display: 'block', fontSize: '1rem', fontWeight: 800 }}>Check Part</span>
+              <span style={{ display: 'block', fontSize: '1rem', fontWeight: 800 }}>{t('checkPart')}</span>
               <span style={{ display: 'block', fontSize: '0.8125rem', color: 'var(--warning-text)', marginTop: 2 }}>
-                <span className="mono" style={{ fontWeight: 700 }}>{checkOpen ?? '—'}</span> parts flagged for a second look
+                <span className="mono" style={{ fontWeight: 700 }}>{checkOpen ?? '—'}</span> {t('partsFlagged')}
               </span>
             </span>
             <ChevronRight size={22} />

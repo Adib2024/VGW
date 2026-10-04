@@ -21,7 +21,7 @@ const ALL_ZONE_TABLES = ['b17', 'b22', 'loma', 'b22_seq', 'check_part'];
 const prettyCol = (col: string) => col.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
 export default function StockTakeListView() {
-  const { t } = useLanguage();
+  const { t, tf } = useLanguage();
   const { user } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
@@ -170,7 +170,7 @@ export default function StockTakeListView() {
   };
 
   const filters = [
-    { value: 'all', label: 'All', count: parts.length, dot: '' },
+    { value: 'all', label: t('all'), count: parts.length, dot: '' },
     { value: 'Not Counted', label: t('notCounted'), count: statusCounts.notCounted, dot: 'nc' },
     { value: 'Counted', label: t('counted'), count: statusCounts.counted, dot: 'c' },
     { value: 'Verified', label: t('verified'), count: statusCounts.verified, dot: 'v' },
@@ -240,7 +240,7 @@ export default function StockTakeListView() {
             <>
               <label htmlFor="lv-location" className="sr-only">{prettyCol(locationColName)}</label>
               <select id="lv-location" className="ds-fld" value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}>
-                <option value="all">All {prettyCol(locationColName)}</option>
+                <option value="all">{t('all')} · {prettyCol(locationColName)}</option>
                 {uniqueLocations.map(loc => (
                   <option key={loc} value={loc}>{loc}</option>
                 ))}
@@ -263,7 +263,7 @@ export default function StockTakeListView() {
               >
                 {batches.map((batch, index) => (
                   <option key={batch} value={batch}>
-                    {index === 0 ? `Latest upload (${new Date(batch).toLocaleDateString()})` : `Old upload (${new Date(batch).toLocaleDateString()})`}
+                    {index === 0 ? `${t('latestUpload')} (${new Date(batch).toLocaleDateString()})` : `${t('oldUpload')} (${new Date(batch).toLocaleDateString()})`}
                   </option>
                 ))}
               </select>
@@ -288,7 +288,7 @@ export default function StockTakeListView() {
         </div>
 
         <div style={{ margin: '1.125rem 0.25rem 0.625rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-          Showing <span className="mono" style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{rangeStart}–{rangeEnd}</span> of <span className="mono">{filteredParts.length.toLocaleString()}</span>
+          <span className="mono">{tf('showingRange', { range: `${rangeStart}–${rangeEnd}`, total: filteredParts.length.toLocaleString() })}</span>
         </div>
 
         {loading ? (
@@ -305,7 +305,7 @@ export default function StockTakeListView() {
           <div className="ds-card">
             <EmptyState
               icon={<PackageSearch size={36} strokeWidth={1.5} />}
-              message={zoneMissing ? `No parts uploaded for ${zoneTheme.title} yet. An admin can upload them in Admin → Parts upload.` : t('noParts')}
+              message={zoneMissing ? tf('zoneNotUploaded', { zone: zoneTheme.title }) : t('noParts')}
             />
           </div>
         ) : (
@@ -335,7 +335,7 @@ export default function StockTakeListView() {
                       {extra && <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{extra}</div>}
                     </div>
                     <div style={{ textAlign: 'right', alignSelf: 'end' }}>
-                      <div className="eyebrow" style={{ fontSize: '0.625rem', letterSpacing: '0.1em' }}>Qty</div>
+                      <div className="eyebrow" style={{ fontSize: '0.625rem', letterSpacing: '0.1em' }}>{t('qty')}</div>
                       <div className="mono" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{qty ?? '—'}</div>
                     </div>
                   </button>

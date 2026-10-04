@@ -191,7 +191,12 @@ export default function Login() {
         .login-check input { width: 20px; height: 20px; margin: 0; accent-color: var(--primary-color); }
       `}</style>
 
-      <div className="login-ghost" aria-hidden="true">CKD</div>
+      {/* Own clipping layer: the lettering bleeds off the right edge, and
+          inside the scrollable root that overflow could be scrolled into
+          view (e.g. when a language button takes focus). */}
+      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+        <div className="login-ghost">CKD</div>
+      </div>
 
       <div className="login-col">
         <div className="login-top">
@@ -212,8 +217,8 @@ export default function Login() {
 
         <div className="login-hero">
           <div className="eyebrow" style={{ color: 'var(--signal-color)' }}>Stock Take 2026</div>
-          <h1>Count.<br />Check.<br />Verify.</h1>
-          <p>CKD Logistic Department — plant inventory for B17, B22, LOMA and B22&nbsp;SEQ.</p>
+          <h1>{t('headline1')}<br />{t('headline2')}<br />{t('headline3')}</h1>
+          <p>{t('loginTagline')}</p>
         </div>
 
         <form onSubmit={handleLogin} className="login-sheet">
@@ -269,7 +274,7 @@ export default function Login() {
                 onClick={handleInstallClick}
                 style={{ minHeight: 44, display: 'flex', alignItems: 'center', gap: 6, border: 0, background: 'none', color: 'var(--primary-color)', fontFamily: 'inherit', fontSize: '0.8125rem', fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}
               >
-                <Download size={16} /> Install app
+                <Download size={16} /> {t('installApp')}
               </button>
             )}
           </div>
@@ -279,7 +284,7 @@ export default function Login() {
           </button>
 
           <div style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-            Forgot password? Ask your admin.
+            {t('forgotPassword')}
           </div>
         </form>
       </div>

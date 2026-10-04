@@ -35,11 +35,11 @@ export const BottomNav: React.FC = () => {
   };
 
   const items = [
-    { key: 'dash', label: 'Dashboard', path: '/stock-take', icon: LayoutDashboard, active: isActive('/stock-take') || isActive('/hub') || isActive('/stock-take/list') },
+    { key: 'dash', label: t('dashboard'), path: '/stock-take', icon: LayoutDashboard, active: isActive('/stock-take') || isActive('/hub') || isActive('/stock-take/list') },
     { key: 'progress', label: t('progress') || 'Progress', path: '/reports/progress', icon: LineChart, active: isActive('/reports/progress') },
-    { key: 'check', label: 'Check Part', path: '/stock-take/list?table=check_part', icon: AlertTriangle, active: isActive('/stock-take/list', 'table=check_part') },
+    { key: 'check', label: t('checkPart'), path: '/stock-take/list?table=check_part', icon: AlertTriangle, active: isActive('/stock-take/list', 'table=check_part') },
     ...(user?.role === 'Admin'
-      ? [{ key: 'admin', label: 'Admin', path: '/admin/settings', icon: SlidersHorizontal, active: isActive('/admin/settings') || isActive('/admin/users') }]
+      ? [{ key: 'admin', label: t('admin'), path: '/admin/settings', icon: SlidersHorizontal, active: isActive('/admin/settings') || isActive('/admin/users') }]
       : []),
   ];
 
