@@ -182,7 +182,12 @@ export default function StockTakeDashboard() {
                   aria-label={`${zone.title}: ${s.percentage}% verified`}
                 >
                   <div>
-                    <div className="eyebrow" style={{ fontSize: '0.625rem' }}>{zone.kind}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div className="vw-badge" aria-hidden="true" style={{ width: 20, height: 20, background: zone.accentSoft }}>
+                        <img src="/vw-logo.svg" alt="" />
+                      </div>
+                      <span className="eyebrow" style={{ fontSize: '0.625rem' }}>{zone.kind}</span>
+                    </div>
                     <div className="zone-code">{zone.code}</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.375rem' }}>

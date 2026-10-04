@@ -147,10 +147,6 @@ export default function Login() {
         }
         .login-top { padding: 24px 24px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
         .login-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 800; font-size: 1.0625rem; letter-spacing: 0.02em; }
-        .login-mark {
-          width: 40px; height: 40px; border-radius: 10px; background: var(--signal-color); color: var(--primary-color);
-          display: flex; align-items: center; justify-content: center; font-weight: 900; font-stretch: 70%; font-size: 0.9375rem;
-        }
         .login-lang { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,0.08); }
         .login-lang button {
           height: 34px; min-width: 42px; border: 0; border-radius: 999px; background: transparent;
@@ -185,7 +181,9 @@ export default function Login() {
       <div className="login-col">
         <div className="login-top">
           <div className="login-brand">
-            <div className="login-mark" aria-hidden="true">VGM</div>
+            <div className="vw-badge" style={{ width: 52, height: 52 }}>
+              <img src="/vw-logo.svg" alt="VW" className="animate-logo-intro" />
+            </div>
             VGM CKD
           </div>
           <div className="login-lang" role="group" aria-label="Language">

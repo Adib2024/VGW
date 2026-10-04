@@ -98,12 +98,6 @@ export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, s
           text-overflow: ellipsis;
         }
         .gnav.dark .gnav-title h1 { color: #fff; }
-        .gnav-mark {
-          width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
-          background: var(--signal-color); color: var(--primary-color);
-          display: flex; align-items: center; justify-content: center;
-          font-weight: 900; font-stretch: 70%; font-size: 0.8125rem; letter-spacing: 0.02em;
-        }
         .gnav-avatar {
           width: 44px; height: 44px; border-radius: 50%; border: 0; flex-shrink: 0;
           background: var(--primary-color); color: #fff;
@@ -158,7 +152,9 @@ export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, s
       <header className={`gnav${dark ? ' dark' : ''}`}>
         <div className="gnav-inner">
           {brand ? (
-            <div className="gnav-mark" aria-hidden="true">VGM</div>
+            <div className="vw-badge" style={{ width: 40, height: 40 }}>
+              <img src="/vw-logo.svg" alt="VW" />
+            </div>
           ) : showBack && (
             <button onClick={handleBack} aria-label={t('back')} className={`ds-iconbtn${dark ? ' on-dark' : ''}`}>
               <ChevronLeft size={22} strokeWidth={2.2} />
