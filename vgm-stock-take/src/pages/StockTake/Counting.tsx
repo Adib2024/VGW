@@ -269,7 +269,7 @@ export default function StockTakeCounting() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <style>{`
         .ct-label-card { background: #fff; border: 2px solid var(--primary-color); border-radius: var(--radius-lg); padding: 1.125rem 1.125rem 0.375rem; margin-top: 0.25rem; }
         .ct-barcode {

@@ -8,7 +8,7 @@ import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
 import { ForcedPasswordChange } from './components/ForcedPasswordChange';
 
 const authLoadingFallback = (
-  <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#0f172a' }}>
+  <div style={{ height: '100dvh', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#0f172a' }}>
     <div style={{ color: '#3b82f6', fontSize: '1.25rem', fontWeight: 'bold' }}>Loading VGM CKD...</div>
   </div>
 );

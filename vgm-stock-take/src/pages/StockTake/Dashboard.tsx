@@ -119,7 +119,7 @@ export default function StockTakeDashboard() {
         .dash-check { display: flex !important; align-items: center; gap: 0.875rem; padding: 1rem; margin-top: 0.875rem; background: var(--signal-soft); box-shadow: inset 0 0 0 1.5px var(--signal-line); }
       `}</style>
 
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
         <Navigation
           title={t('stockTake')}
           titleAccessory={<span className="ds-chip live" title={t('liveData')}>Live</span>}

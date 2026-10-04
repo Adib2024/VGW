@@ -118,7 +118,7 @@ export default function Hub() {
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'Asia/Kuala_Lumpur' });
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', userSelect: 'none', WebkitUserSelect: 'none' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', userSelect: 'none', WebkitUserSelect: 'none' }}>
       <style>{`
         .hub-hero { background: var(--primary-color); color: #fff; padding: 0 0 64px; }
         .hub-hero-inner { max-width: 1080px; margin: 0 auto; padding: 0.5rem 1.25rem 0; }

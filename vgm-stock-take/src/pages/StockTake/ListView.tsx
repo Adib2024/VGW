@@ -178,7 +178,7 @@ export default function StockTakeListView() {
   const rangeEnd = Math.min(page * PAGE_SIZE, filteredParts.length);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <style>{`
         .lv-head { display: flex; gap: 1rem; align-items: center; padding: 1rem; margin-top: 0.25rem; }
         .lv-badge {

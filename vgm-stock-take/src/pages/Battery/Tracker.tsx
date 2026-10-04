@@ -185,7 +185,7 @@ export default function Tracker() {
   };
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div style={{ minHeight: '100dvh' }}>
       <style>{`
         .bt-scan {
           position: relative; overflow: hidden; height: 280px; margin-top: 0.25rem;

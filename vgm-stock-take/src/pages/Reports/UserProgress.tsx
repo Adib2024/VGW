@@ -129,7 +129,7 @@ export default function UserProgress() {
   const statusLabel = (s: string) => s === 'Verified' ? t('verified') : s === 'Counted' ? t('counted') : t('notCounted');
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <style>{`
         .up-stack { display: flex; height: 18px; border-radius: 6px; overflow: hidden; gap: 3px; background: var(--surface-highlight); }
         .up-stack > div { transition: width 0.5s ease; }

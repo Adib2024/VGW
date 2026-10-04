@@ -51,7 +51,7 @@ export const ForcedPasswordChange: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--primary-color)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>
+    <div style={{ minHeight: '100dvh', background: 'var(--primary-color)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>
       <div style={{ width: '100%', maxWidth: '420px' }}>
         <div style={{ color: '#fff', padding: '0 0.5rem 1.5rem' }}>
           <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--signal-color)', color: 'var(--primary-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

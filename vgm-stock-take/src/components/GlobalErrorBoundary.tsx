@@ -5,7 +5,7 @@ import { RefreshCw, AlertTriangle } from 'lucide-react';
 function ErrorFallback({ error, resetErrorBoundary }: { error: any, resetErrorBoundary: () => void }) {
   return (
     <div style={{
-      height: '100vh',
+      height: '100dvh',
       width: '100vw',
       display: 'flex',
       flexDirection: 'column',

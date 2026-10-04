@@ -123,11 +123,10 @@ export default function Login() {
     <div className="login-root">
       <style>{`
         .login-root {
-          min-height: 100vh;
           min-height: 100dvh;
           background: var(--primary-color);
           position: relative;
-          overflow: hidden;
+          overflow-x: hidden;
           display: flex;
           justify-content: center;
         }
@@ -137,15 +136,20 @@ export default function Login() {
           color: transparent; -webkit-text-stroke: 1.5px rgba(255,255,255,0.08);
           pointer-events: none; user-select: none;
         }
+        /* Exactly one screen tall: the hero flexes to whatever height is left
+           after the form, so phones never get a stray few-pixel scroll. Only
+           genuinely tiny screens (under 560px) fall back to scrolling. */
         .login-col {
           position: relative;
           width: 100%;
           max-width: 460px;
+          height: 100dvh;
+          min-height: 560px;
           display: flex;
           flex-direction: column;
           padding-top: env(safe-area-inset-top);
         }
-        .login-top { padding: 24px 24px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .login-top { flex-shrink: 0; padding: 16px 20px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
         .login-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 800; font-size: 1.0625rem; letter-spacing: 0.02em; }
         .login-lang { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,0.08); }
         .login-lang button {
@@ -153,23 +157,29 @@ export default function Login() {
           color: var(--text-on-dark); font-family: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer;
         }
         .login-lang button.on { background: #fff; color: var(--primary-color); font-weight: 800; }
-        .login-hero { padding: clamp(28px, 7vh, 56px) 24px 32px; }
+        .login-hero {
+          flex: 1 1 auto; min-height: 0; overflow: hidden;
+          display: flex; flex-direction: column; justify-content: center;
+          padding: 12px 24px 20px;
+        }
         .login-hero h1 {
-          margin: 12px 0 0; color: #fff; font-size: clamp(3.25rem, 15vw, 4.25rem); line-height: 0.88;
+          margin: 8px 0 0; color: #fff; font-size: min(15vw, 8vh, 4.25rem); line-height: 0.88;
           font-weight: 900; font-stretch: 72%; text-transform: uppercase;
         }
-        .login-hero p { margin: 18px 0 0; color: var(--text-on-dark); font-size: 0.9375rem; max-width: 300px; }
+        .login-hero p { margin: 14px 0 0; color: var(--text-on-dark); font-size: 0.9375rem; max-width: 300px; }
+        @media (max-height: 740px) { .login-hero p { display: none; } }
         .login-sheet {
-          margin-top: auto;
+          flex-shrink: 0;
           background: #fff;
           border-radius: 28px 28px 0 0;
-          padding: 28px 24px calc(24px + env(safe-area-inset-bottom));
+          padding: 22px 20px calc(18px + env(safe-area-inset-bottom));
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 12px;
         }
+        .login-sheet .ds-fld { height: 48px; }
+        .login-sheet .ds-label { margin-bottom: 4px; }
         @media (min-width: 600px) {
-          .login-col { justify-content: center; }
           .login-sheet { margin: 0 16px 32px; border-radius: 28px; }
         }
         .login-check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
@@ -181,7 +191,7 @@ export default function Login() {
       <div className="login-col">
         <div className="login-top">
           <div className="login-brand">
-            <div className="vw-badge" style={{ width: 52, height: 52 }}>
+            <div className="vw-badge" style={{ width: 46, height: 46 }}>
               <img src="/vw-logo.svg" alt="VW" className="animate-logo-intro" />
             </div>
             VGM CKD
@@ -202,7 +212,7 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleLogin} className="login-sheet">
-          <h2 style={{ margin: 0, fontSize: '1.625rem' }}>{t('login')}</h2>
+          <h2 style={{ margin: 0, fontSize: '1.375rem' }}>{t('login')}</h2>
 
           <div>
             <label htmlFor="login-user" className="ds-label">{t('userId')}</label>
@@ -243,17 +253,11 @@ export default function Login() {
             </div>
           </div>
 
-          <label className="login-check">
-            <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
-            {t('rememberMe')}
-          </label>
-
-          <button type="submit" className="ds-btn signal lg block" disabled={loading}>
-            {loading ? '...' : <>{t('login')} <ArrowRight size={20} strokeWidth={2.5} /></>}
-          </button>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-            <span>Forgot password? Ask your admin.</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+            <label className="login-check">
+              <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
+              {t('rememberMe')}
+            </label>
             {!isStandalone && (
               <button
                 type="button"
@@ -263,6 +267,14 @@ export default function Login() {
                 <Download size={16} /> Install app
               </button>
             )}
+          </div>
+
+          <button type="submit" className="ds-btn signal block" disabled={loading} style={{ height: 52, fontSize: '1.0625rem' }}>
+            {loading ? '...' : <>{t('login')} <ArrowRight size={20} strokeWidth={2.5} /></>}
+          </button>
+
+          <div style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+            Forgot password? Ask your admin.
           </div>
         </form>
       </div>

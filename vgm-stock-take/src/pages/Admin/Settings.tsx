@@ -250,7 +250,7 @@ export default function AdminSettings() {
   const busy = uploading || checkingLock;
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <style>{`
         .as-step { display: flex; align-items: center; gap: 0.625rem; margin-top: 1.5rem; }
         .as-step b { width: 26px; height: 26px; border-radius: 50%; background: var(--primary-color); color: #fff; font-size: 0.8125rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }

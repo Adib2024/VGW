@@ -160,7 +160,7 @@ export default function AdminUsers() {
   const activeCount = users.filter(u => u.is_active).length;
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <style>{`
         .au-list { list-style: none; margin: 0; padding: 0.25rem 1rem; }
         .au-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--bg-color); }
