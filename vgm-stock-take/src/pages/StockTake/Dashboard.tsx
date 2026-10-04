@@ -102,29 +102,41 @@ export default function StockTakeDashboard() {
   return (
     <>
       <style>{`
+        .dash-main {
+          flex: 1; display: flex; flex-direction: column;
+          padding-bottom: calc(var(--bottom-nav-h) + 0.75rem + env(safe-area-inset-bottom));
+        }
         .dash-hero {
           background: var(--primary-color);
           color: #fff;
           border-radius: var(--radius-panel);
-          padding: 1.375rem 1.25rem 1.25rem;
+          padding: 0.875rem 1rem 1rem;
           margin-top: 0.25rem;
         }
-        .dash-hero-fig { font-size: clamp(4rem, 18vw, 5rem); font-weight: 700; line-height: 0.95; letter-spacing: -0.04em; }
-        .dash-split { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-top: 1.125rem; }
-        .dash-split > div { background: rgba(255,255,255,0.06); border-radius: var(--radius-md); padding: 0.625rem 0.75rem; }
-        .dash-split .k { display: flex; align-items: center; gap: 0.375rem; font-size: 0.6875rem; font-weight: 600; color: var(--text-on-dark); }
-        .dash-split .k i { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-        .dash-split .v { font-size: 1.125rem; font-weight: 700; margin-top: 0.25rem; }
-        .dash-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .dash-hero-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-top: 0.25rem; }
+        .dash-hero-fig { font-size: 3rem; font-weight: 700; line-height: 0.9; letter-spacing: -0.04em; }
+        .dash-split { display: flex; flex-direction: column; gap: 0.1875rem; }
+        .dash-split > div { display: flex; align-items: center; gap: 0.4375rem; font-size: 0.6875rem; color: var(--text-on-dark); }
+        .dash-split i { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .dash-split b { margin-left: auto; padding-left: 0.75rem; font-family: var(--font-mono); font-size: 0.8125rem; color: #fff; }
+        .dash-main .ds-section-label { margin: 0.875rem 0.25rem 0.5rem; }
+        .dash-grid { flex: 1; display: grid; gap: 0.5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; }
         @media (min-width: 900px) { .dash-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-        .zone-tile { position: relative; overflow: hidden; padding: 1rem 1rem 0.75rem; display: flex !important; flex-direction: column; gap: 0.5rem; }
-        .zone-tile::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: var(--zc); }
-        .zone-code { font-size: 2.5rem; font-weight: 900; font-stretch: 70%; line-height: 1; color: var(--zc); white-space: nowrap; margin-top: 0.125rem; }
-        .zone-pct { font-size: 1.625rem; font-weight: 700; line-height: 1; }
-        .dash-check { display: flex !important; align-items: center; gap: 0.875rem; padding: 1rem; margin-top: 0.875rem; background: var(--signal-soft); box-shadow: inset 0 0 0 1.5px var(--signal-line); }
+        .zone-tile { position: relative; overflow: hidden; padding: 0.75rem 0.75rem 0.5rem; display: flex !important; flex-direction: column; justify-content: space-between; gap: 0.25rem; }
+        .zone-tile::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: var(--zc); }
+        .zone-code { font-size: 1.75rem; font-weight: 900; font-stretch: 70%; line-height: 1; color: var(--zc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .zone-pct { font-size: 1.25rem; font-weight: 700; line-height: 1; }
+        .zone-tile .ds-chip { height: 20px; padding: 0 0.5rem; font-size: 0.5625rem; }
+        @media (max-height: 680px) {
+          .dash-hero-fig { font-size: 2.5rem; }
+          .dash-main .ds-section-label { margin: 0.5rem 0.25rem 0.375rem; }
+          .zone-count { display: none; }
+        }
+        .dash-check { display: flex !important; align-items: center; gap: 0.75rem; padding: 0.625rem 0.875rem; margin-top: 0.5rem; background: var(--signal-soft); box-shadow: inset 0 0 0 1.5px var(--signal-line); }
       `}</style>
 
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
+      <div className="screen-fit">
+      <div className="screen-col">
         <Navigation
           title={t('stockTake')}
           titleAccessory={<span className="ds-chip live" title={t('liveData')}>{t('live')}</span>}
@@ -137,34 +149,26 @@ export default function StockTakeDashboard() {
           )}
         />
 
-        <main className="ds-page with-nav" style={{ flex: 1 }}>
+        <main className="ds-page dash-main">
           <section className="dash-hero">
             <div className="eyebrow" style={{ color: 'var(--text-on-dark)' }}>{t('overallProgress')} · {t('verified')}</div>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '1rem', marginTop: '0.375rem' }}>
-              <div className="dash-hero-fig mono">
-                {aggregate.percentage}<span style={{ fontSize: '0.45em', color: 'var(--signal-color)' }}>%</span>
+            <div className="dash-hero-top">
+              <div>
+                <div className="dash-hero-fig mono">
+                  {aggregate.percentage}<span style={{ fontSize: '0.5em', color: 'var(--signal-color)' }}>%</span>
+                </div>
+                <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-on-dark)', marginTop: '0.375rem' }}>
+                  {aggregate.completed.toLocaleString()} / {aggregate.total.toLocaleString()}
+                </div>
               </div>
-              <div style={{ textAlign: 'right', paddingBottom: '0.5rem' }}>
-                <div className="mono" style={{ fontSize: '1.0625rem', fontWeight: 700 }}>{aggregate.completed.toLocaleString()}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-on-dark)' }}>/ {aggregate.total.toLocaleString()} {t('items').toLowerCase()}</div>
+              <div className="dash-split">
+                <div><i style={{ border: '1.5px solid var(--text-on-dark)' }} />{t('notCounted')}<b>{aggregate.notCounted.toLocaleString()}</b></div>
+                <div><i style={{ background: '#FFD15C' }} />{t('counted')}<b>{aggregate.counted.toLocaleString()}</b></div>
+                <div><i style={{ background: '#3DDC97' }} />{t('verified')}<b>{aggregate.completed.toLocaleString()}</b></div>
               </div>
             </div>
-            <div className="ds-seg dark" style={{ height: 14, marginTop: '1rem' }}>
+            <div className="ds-seg dark" style={{ height: 10, marginTop: '0.75rem' }}>
               <span style={{ '--c': 'var(--signal-color)', width: `${aggregate.percentage}%` } as CSSProperties} />
-            </div>
-            <div className="dash-split">
-              <div>
-                <div className="k"><i style={{ border: '1.5px solid var(--text-on-dark)' }} />{t('notCounted')}</div>
-                <div className="v mono">{aggregate.notCounted.toLocaleString()}</div>
-              </div>
-              <div>
-                <div className="k"><i style={{ background: '#FFD15C' }} />{t('counted')}</div>
-                <div className="v mono">{aggregate.counted.toLocaleString()}</div>
-              </div>
-              <div>
-                <div className="k"><i style={{ background: '#3DDC97' }} />{t('verified')}</div>
-                <div className="v mono">{aggregate.completed.toLocaleString()}</div>
-              </div>
             </div>
           </section>
 
@@ -186,12 +190,9 @@ export default function StockTakeDashboard() {
                   onClick={() => navigate(`/stock-take/list?table=${zone.key}`)}
                   aria-label={`${zone.title}: ${s.percentage}% verified`}
                 >
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div className="vw-badge" aria-hidden="true" style={{ width: 20, height: 20, background: zone.accentSoft }}>
-                        <img src="/vw-logo.svg" alt="" />
-                      </div>
-                      <span className="eyebrow" style={{ fontSize: '0.625rem' }}>{zone.kind}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, minWidth: 0 }}>
+                    <div className="vw-badge" aria-hidden="true" style={{ width: 20, height: 20, background: zone.accentSoft }}>
+                      <img src="/vw-logo.svg" alt="" />
                     </div>
                     <div className="zone-code">{zone.code}</div>
                   </div>
@@ -201,9 +202,11 @@ export default function StockTakeDashboard() {
                       ? <span className="ds-chip st-nc">{t('noData')}</span>
                       : <span className={`ds-chip ${done ? 'done' : ''}`}>{done ? t('ready') : t('pending')}</span>}
                   </div>
-                  <CarTrack percentage={s.percentage} color={zone.accent} carDelay={zone.carDelay} carDuration={zone.carDuration} carWidth={64} height={8} />
-                  <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                    {s.completed.toLocaleString()} / {s.total.toLocaleString()}
+                  <div>
+                    <CarTrack percentage={s.percentage} color={zone.accent} carDelay={zone.carDelay} carDuration={zone.carDuration} carWidth={48} height={6} />
+                    <div className="mono zone-count" style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)', marginTop: 2 }}>
+                      {s.completed.toLocaleString()} / {s.total.toLocaleString()}
+                    </div>
                   </div>
                 </button>
               );
@@ -211,20 +214,21 @@ export default function StockTakeDashboard() {
           </div>
 
           <button type="button" className="ds-card dash-check" onClick={() => navigate('/stock-take/list?table=check_part')}>
-            <span style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--signal-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <AlertTriangle size={22} strokeWidth={2.2} />
+            <span style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--signal-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <AlertTriangle size={18} strokeWidth={2.2} />
             </span>
-            <span style={{ flex: 1 }}>
-              <span style={{ display: 'block', fontSize: '1rem', fontWeight: 800 }}>{t('checkPart')}</span>
-              <span style={{ display: 'block', fontSize: '0.8125rem', color: 'var(--warning-text)', marginTop: 2 }}>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: 'block', fontSize: '0.9375rem', fontWeight: 800 }}>{t('checkPart')}</span>
+              <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--warning-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 <span className="mono" style={{ fontWeight: 700 }}>{checkOpen ?? '—'}</span> {t('partsFlagged')}
               </span>
             </span>
-            <ChevronRight size={22} />
+            <ChevronRight size={20} />
           </button>
         </main>
 
         <BottomNav />
+      </div>
       </div>
     </>
   );

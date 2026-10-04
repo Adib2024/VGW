@@ -146,6 +146,24 @@ p {
 .ds-page.narrow { max-width: 640px; }
 .ds-page.with-nav { padding-bottom: calc(var(--bottom-nav-h) + 2rem + env(safe-area-inset-bottom)); }
 
+/* One-screen pages (login, hub, dashboard, battery). Pinned to the visible
+   screen with inset:0 rather than sized with vh/dvh, which some mobile
+   browsers resolve taller than what's on screen (a stray few-pixel scroll).
+   .screen-col is at least one screen tall, so a flex:1 child soaks up spare
+   height; on a screen genuinely too small, it scrolls instead of clipping. */
+.screen-fit {
+  position: fixed;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: none;
+}
+.screen-col {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .ds-card {
   background: var(--surface-color);
   border-radius: var(--radius-lg);

@@ -105,26 +105,28 @@ export default function Hub() {
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'Asia/Kuala_Lumpur' });
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', userSelect: 'none', WebkitUserSelect: 'none' }}>
+    <div className="screen-fit" style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>
+    <div className="screen-col">
       <style>{`
-        .hub-hero { background: var(--primary-color); color: #fff; padding: 0 0 64px; }
-        .hub-hero-inner { max-width: 1080px; margin: 0 auto; padding: 0.5rem 1.25rem 0; }
-        .hub-hero h2 { margin: 0.5rem 0 0; color: #fff; font-size: clamp(1.75rem, 6vw, 2.25rem); }
-        .hub-readouts { display: grid; margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.14); padding-top: 1rem; max-width: 560px; }
+        .hub-hero { background: var(--primary-color); color: #fff; padding: 0 0 32px; }
+        .hub-hero-inner { max-width: 1080px; margin: 0 auto; padding: 0 1.25rem; }
+        .hub-hero h2 { margin: 0.25rem 0 0; color: #fff; font-size: 1.5rem; }
+        .hub-readouts { display: grid; margin-top: 0.875rem; border-top: 1px solid rgba(255,255,255,0.14); padding-top: 0.75rem; max-width: 560px; }
         .hub-readouts > div + div { border-left: 1px solid rgba(255,255,255,0.14); padding-left: 0.875rem; }
-        .hub-readouts .v { font-size: 1.625rem; font-weight: 700; }
-        .hub-readouts .k { font-size: 0.75rem; color: var(--text-on-dark); margin-top: 0.125rem; }
-        .hub-modules { display: grid; gap: 0.75rem; grid-template-columns: 1fr; margin-top: -40px; }
-        @media (min-width: 760px) { .hub-modules { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } }
-        .hub-mod { padding: 1.125rem; animation: ds-rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .hub-readouts .v { font-size: 1.375rem; font-weight: 700; line-height: 1.1; }
+        .hub-readouts .k { font-size: 0.6875rem; color: var(--text-on-dark); margin-top: 0.125rem; }
+        .hub-modules { display: grid; gap: 0.625rem; grid-template-columns: minmax(0, 1fr); margin-top: -20px; }
+        @media (min-width: 760px) { .hub-modules { grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); } }
+        .hub-mod { min-width: 0; padding: 0.875rem 1rem; animation: ds-rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
         .hub-mod:nth-child(2) { animation-delay: 0.06s; }
         .hub-mod:nth-child(3) { animation-delay: 0.12s; }
-        .hub-mod-head { display: flex; align-items: center; gap: 0.875rem; }
-        .hub-mod-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .hub-mod h3 { margin: 0; font-size: 1.125rem; }
-        .hub-mod p { margin: 0.125rem 0 0; font-size: 0.8125rem; }
-        .hub-tools { display: grid; gap: 0.625rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        .hub-tool { display: flex !important; flex-direction: column; align-items: flex-start; gap: 0.625rem; padding: 0.875rem; min-height: 92px; font-size: 0.8125rem; font-weight: 700; }
+        .hub-mod-head { display: flex; align-items: center; gap: 0.75rem; }
+        .hub-mod-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .hub-mod h3 { margin: 0; font-size: 1rem; }
+        .hub-mod p { margin: 0.0625rem 0 0; font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hub-tools { display: grid; gap: 0.5rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .hub-tool { display: flex !important; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 0.375rem; padding: 0.75rem; min-height: 68px; font-size: 0.75rem; font-weight: 700; }
+        .hub-main .ds-section-label { margin: 1rem 0.25rem 0.5rem; }
         @media (prefers-reduced-motion: reduce) { .hub-mod { animation: none; } }
       `}</style>
 
@@ -132,11 +134,8 @@ export default function Hub() {
 
       <div className="hub-hero">
         <div className="hub-hero-inner">
-          <div className="eyebrow" style={{ color: 'var(--text-on-dark)' }}>{today}</div>
+          <div className="eyebrow" style={{ color: 'var(--text-on-dark)' }}>{today} · {user?.role}</div>
           <h2>{t('welcome')}, {user?.name}</h2>
-          <div style={{ marginTop: '0.625rem' }}>
-            <span className="ds-chip" style={{ background: 'rgba(255,255,255,0.12)', color: '#fff' }}>{user?.role}</span>
-          </div>
           {readouts.length > 0 && (
             <div className="hub-readouts" style={{ gridTemplateColumns: `repeat(${readouts.length}, minmax(0, 1fr))` }}>
               {readouts.map(r => (
@@ -150,7 +149,7 @@ export default function Hub() {
         </div>
       </div>
 
-      <main className="ds-page" style={{ flex: 1 }}>
+      <main className="ds-page hub-main" style={{ flex: 1, paddingBottom: '0.625rem' }}>
         <div className="hub-modules">
           {visibleModules.map((m) => (
             <button
@@ -171,7 +170,7 @@ export default function Hub() {
               </div>
 
               {m.key === 'stockTake' && (
-                <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ marginTop: '0.625rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <div className="ds-seg" style={{ flex: 1 }}><span style={{ '--c': m.accent, width: `${stockPct ?? 0}%` } as CSSProperties} /></div>
                   <div className="mono" style={{ fontSize: '0.8125rem', fontWeight: 700 }}>
                     {stock ? `${stock.completed.toLocaleString()} / ${stock.total.toLocaleString()}` : '—'}
@@ -180,7 +179,7 @@ export default function Hub() {
               )}
 
               {m.key === 'battery' && (
-                <div style={{ marginTop: '0.875rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <span className="ds-chip live">{batteryToday === null ? '—' : batteryToday} {t('trackedToday').toLowerCase()}</span>
                 </div>
               )}
@@ -205,6 +204,7 @@ export default function Hub() {
           </>
         )}
       </main>
+    </div>
     </div>
   );
 }
