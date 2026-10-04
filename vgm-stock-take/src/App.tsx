@@ -6,6 +6,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { ToastContainer } from './components/ui/ToastContainer';
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
 import { ForcedPasswordChange } from './components/ForcedPasswordChange';
+import { OfflineSync } from './components/OfflineSync';
 
 const authLoadingFallback = (
   <div style={{ height: '100dvh', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#0f172a' }}>
@@ -130,6 +131,7 @@ export default function App() {
           <AuthProvider>
             <Router>
               <ToastContainer />
+              <OfflineSync />
               <AppRoutes />
             </Router>
           </AuthProvider>

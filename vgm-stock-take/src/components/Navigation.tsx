@@ -2,7 +2,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { ChevronLeft, LogOut, Lock, UserCog } from 'lucide-react';
+import { ChevronLeft, LogOut, Lock, UserCog, WifiOff } from 'lucide-react';
+import { useOfflineQueue } from '../hooks/useOfflineQueue';
+import { flushQueue } from '../lib/offlineQueue';
 import { ConfirmDialog } from './ui/ConfirmDialog';
 import { ChangePasswordModal } from './ChangePasswordModal';
 
@@ -24,8 +26,9 @@ interface NavigationProps {
 
 export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, showBack = true, backTo = '/stock-take', extraMenuItems, variant = 'light', brand = false }) => {
   const navigate = useNavigate();
-  const { t, language, setLanguage } = useLanguage();
+  const { t, tf, language, setLanguage } = useLanguage();
   const { user, logout } = useAuth();
+  const { online, pending, failed } = useOfflineQueue();
 
   const [showMenu, setShowMenu] = React.useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
@@ -165,6 +168,19 @@ export const Navigation: React.FC<NavigationProps> = ({ title, titleAccessory, s
             <h1>{title}</h1>
             {titleAccessory}
           </div>
+
+          {(!online || pending > 0) && (
+            <button
+              type="button"
+              className={`ds-chip ${failed > 0 ? 'danger' : 'warn'}`}
+              onClick={() => { if (online) flushQueue({ retryFailed: true }); }}
+              title={failed > 0 ? tf('syncFailed', { n: failed }) : undefined}
+              style={{ border: 0, cursor: online ? 'pointer' : 'default', height: 32, flexShrink: 0, fontFamily: 'inherit' }}
+            >
+              {!online && <WifiOff size={14} />}
+              {pending > 0 ? tf('toSync', { n: pending }) : t('offline')}
+            </button>
+          )}
 
           <div ref={menuRef} style={{ position: 'relative' }}>
             <button

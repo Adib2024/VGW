@@ -42,8 +42,8 @@ export async function requireAdmin(req: VercelRequest): Promise<AdminAuthResult>
   let serviceClient: SupabaseClient;
   try {
     serviceClient = getServiceClient();
-  } catch (err: any) {
-    return { ok: false, status: 500, error: err.message, serviceClient: null, callerAuthId: null, callerId: null };
+  } catch (err) {
+    return { ok: false, status: 500, error: err instanceof Error ? err.message : String(err), serviceClient: null, callerAuthId: null, callerId: null };
   }
 
   const { data: userData, error: userError } = await serviceClient.auth.getUser(token);

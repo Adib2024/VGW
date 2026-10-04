@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -55,20 +56,6 @@ export default function Hub() {
   const [batteryToday, setBatteryToday] = useState<number | null>(null);
 
   useEffect(() => {
-    // Push an initial state so the first back click gets intercepted
-    window.history.pushState(null, '', window.location.href);
-
-    const handlePopState = () => {
-      // Force history to stay here and refresh the page instead of going back
-      window.history.pushState(null, '', window.location.href);
-      window.location.reload();
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  useEffect(() => {
     let cancelled = false;
 
     // Only fetch data for modules actually visible to this role - no point
@@ -80,13 +67,13 @@ export default function Hub() {
         .then(results => {
           if (cancelled) return;
           const rows = results.flatMap(r => r || []);
-          setStock({ total: rows.length, completed: rows.filter((r: any) => r.status === 'Verified').length });
+          setStock({ total: rows.length, completed: rows.filter((r) => r.status === 'Verified').length });
         })
         .catch(err => console.error('Hub: failed to load Stock Take progress:', err));
 
       // check_part may not exist yet (no upload) - that's simply "nothing flagged".
       fetchRowsIfTableExists('check_part')
-        .then(rows => { if (!cancelled) setCheckOpen((rows || []).filter((r: any) => r.status !== 'Verified').length); })
+        .then(rows => { if (!cancelled) setCheckOpen((rows || []).filter((r) => r.status !== 'Verified').length); })
         .catch(() => { if (!cancelled) setCheckOpen(0); });
     }
 
@@ -185,7 +172,7 @@ export default function Hub() {
 
               {m.key === 'stockTake' && (
                 <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div className="ds-seg" style={{ flex: 1 }}><span style={{ ['--c' as any]: m.accent, width: `${stockPct ?? 0}%` }} /></div>
+                  <div className="ds-seg" style={{ flex: 1 }}><span style={{ '--c': m.accent, width: `${stockPct ?? 0}%` } as CSSProperties} /></div>
                   <div className="mono" style={{ fontSize: '0.8125rem', fontWeight: 700 }}>
                     {stock ? `${stock.completed.toLocaleString()} / ${stock.total.toLocaleString()}` : '—'}
                   </div>

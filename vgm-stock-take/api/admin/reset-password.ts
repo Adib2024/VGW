@@ -6,8 +6,8 @@ import { ID_PATTERN } from '../_lib/constants.js';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     await handleResetPassword(req, res);
-  } catch (err: any) {
-    res.status(500).json({ error: err?.message || 'Unexpected server error.' });
+  } catch (err) {
+    res.status(500).json({ error: (err instanceof Error && err.message) || 'Unexpected server error.' });
   }
 }
 

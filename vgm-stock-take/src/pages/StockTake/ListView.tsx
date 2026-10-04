@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { errorMessage } from '../../lib/errors';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Navigation } from '../../components/Navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -8,6 +9,8 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { Pagination } from '../../components/ui/Pagination';
 import { CarTrack } from '../../components/ui/CarTrack';
 import { fetchRowsIfTableExists } from '../../lib/supabase';
+import { cacheRows, getCachedRows } from '../../lib/partCache';
+import { isNetworkError } from '../../lib/offlineQueue';
 import { useRealtimeTables } from '../../hooks/useRealtimeTables';
 import { ZONE_THEME, NEUTRAL_ZONE_THEME } from '../../lib/zoneTheme';
 import { Search, PackageSearch } from 'lucide-react';
@@ -45,7 +48,10 @@ export default function StockTakeListView() {
   const zoneTheme = (tableParam && ZONE_THEME[tableParam]) || NEUTRAL_ZONE_THEME;
   const pageTitle = tableParam ? zoneTheme.title : 'All Zones';
 
-  const goToPart = (part: any, displayNo: number) => navigate(`/stock-take/count/${part._table}/${part.id}?no=${displayNo}`);
+  // The part travels along in navigation state so Counting can still show it
+  // if its own fetch fails for lack of signal.
+  const goToPart = (part: Part, displayNo: number) =>
+    navigate(`/stock-take/count/${part._table}/${part.id}?no=${displayNo}`, { state: { part } });
 
   useEffect(() => {
     isMounted.current = true;
@@ -59,14 +65,30 @@ export default function StockTakeListView() {
   const fetchParts = async () => {
     try {
       const tablesToFetch = tableParam ? [tableParam] : ['b17', 'b22', 'loma', 'b22_seq', 'check_part'];
-      const promises = tablesToFetch.map(table => fetchRowsIfTableExists(table));
+      // No signal: fall back to the rows loaded earlier this session.
+      let usedCache = false;
+      const promises = tablesToFetch.map(async table => {
+        try {
+          const rows = await fetchRowsIfTableExists(table);
+          if (rows) cacheRows(table, rows);
+          return rows;
+        } catch (err) {
+          const cached = getCachedRows(table);
+          if (cached && isNetworkError(err as { message?: string })) {
+            usedCache = true;
+            return cached;
+          }
+          throw err;
+        }
+      });
       const results = await Promise.all(promises);
+      if (usedCache) addToast(t('showingCached'), 'info');
       if (isMounted.current) setZoneMissing(!!tableParam && results[0] === null);
 
-      let combinedParts: any[] = [];
+      let combinedParts: Part[] = [];
       results.forEach((res, index) => {
         if (res && res.length > 0) {
-          const tableData = res.map((p: any) => ({ ...p, _table: tablesToFetch[index] }));
+          const tableData = res.map((p) => ({ ...p, _table: tablesToFetch[index] }));
           combinedParts = [...combinedParts, ...tableData];
         }
       });
@@ -92,11 +114,11 @@ export default function StockTakeListView() {
         setStats({ total, completed, percentage });
       }
 
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching parts:', err);
       // Otherwise a real fetch failure renders identically to "no parts
       // uploaded yet" - the empty state, with nothing telling the user why.
-      addToast(err?.message || 'Failed to load parts.', 'error');
+      addToast(errorMessage(err) || 'Failed to load parts.', 'error');
     } finally {
       if (isMounted.current) setLoading(false);
     }
@@ -115,11 +137,12 @@ export default function StockTakeListView() {
         return ['material', 'location'];
       case 'loma':
         return ['material', 'storage_bin'];
-      default:
+      default: {
         // Fallback for global view or check_part:
         const sample = parts[0];
-        const exclude = ['id', 'batch_id', 'status', '_table', 'metadata', 'no', 'csv_status', 'verify_by', 'remark'];
+        const exclude = ['id', 'batch_id', 'status', '_table', 'metadata', 'no', 'csv_status', 'verify_by', 'remark', 'updated_at', 'updated_by'];
         return Object.keys(sample).filter(k => !exclude.includes(k) && !/box|seq|recount|unknown|luqman|nisha/i.test(k)).slice(0, 3);
+      }
     }
   };
 
@@ -158,11 +181,11 @@ export default function StockTakeListView() {
     setPage(1);
   }, [search, statusFilter, locationFilter, tableParam]);
 
-  const cellValue = (part: any, col?: string) => (col ? part[col] || (part.metadata && part.metadata[col]) : '') || '';
+  const cellValue = (part: Part, col?: string) => (col ? part[col] || (part.metadata && part.metadata[col]) : '') || '';
 
   // Sum of whatever box columns this zone's table has, so a counted part
   // shows its quantity right in the list.
-  const boxTotal = (part: any) => {
+  const boxTotal = (part: Part) => {
     const keys = Object.keys(part).filter(k => /^box/i.test(k));
     const filled = keys.filter(k => part[k] !== null && part[k] !== undefined && part[k] !== '');
     if (filled.length === 0) return null;
@@ -311,7 +334,7 @@ export default function StockTakeListView() {
         ) : (
           <>
             <div className="lv-list">
-              {paginatedParts.map((part: any, index) => {
+              {paginatedParts.map((part, index) => {
                 const displayNo = (page - 1) * PAGE_SIZE + index + 1;
                 const qty = boxTotal(part);
                 const main = cellValue(part, displayColumns[0]) || '-';
@@ -327,7 +350,7 @@ export default function StockTakeListView() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
                       <span className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>#{displayNo}</span>
                       {loc && <span className="lv-tag mono">{loc}</span>}
-                      {!tableParam && <span className="lv-tag" style={{ color: ZONE_THEME[part._table]?.accent }}>{ZONE_THEME[part._table]?.code}</span>}
+                      {!tableParam && <span className="lv-tag" style={{ color: ZONE_THEME[part._table ?? ""]?.accent }}>{ZONE_THEME[part._table ?? ""]?.code}</span>}
                     </div>
                     <span className={`ds-chip ${getStatusChipClass(part.status)}`} style={{ justifySelf: 'end' }}>{part.status === 'Verified' ? t('verified') : part.status === 'Counted' ? t('counted') : t('notCounted')}</span>
                     <div style={{ minWidth: 0 }}>

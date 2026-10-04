@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { errorMessage } from '../../lib/errors';
 import { Navigation } from '../../components/Navigation';
 import { AdminTabs } from '../../components/AdminTabs';
 import { supabase, fetchRowsIfTableExists } from '../../lib/supabase';
@@ -35,7 +36,7 @@ interface PendingUpload {
   detectedZone: string | null;
   target: string;
   headers: string[]; // sanitized
-  rows: any[][];
+  rows: unknown[][];
 }
 
 export default function AdminSettings() {
@@ -72,7 +73,7 @@ export default function AdminSettings() {
       // We lock it so the Admin must explicitly 'Unlock & Clear' (which Drops the table)
       // ensuring we never upload into a corrupted or outdated schema.
       locked = !error;
-    } catch (err) {
+    } catch {
       locked = false;
     } finally {
       if (isMounted.current) {
@@ -112,11 +113,11 @@ export default function AdminSettings() {
         backupName = `VGM backup - ${zoneLabel(zone)} - ${new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')}.xlsx`;
         XLSX.writeFile(wb, backupName);
       }
-    } catch (err: any) {
+    } catch (err) {
       if (isMounted.current) {
         setUnlocking(false);
         setShowUnlockModal(false);
-        setMessage({ type: 'error', text: tf('backupFailed', { err: err?.message || String(err) }) });
+        setMessage({ type: 'error', text: tf('backupFailed', { err: errorMessage(err) || String(err) }) });
       }
       return;
     }
@@ -136,8 +137,8 @@ export default function AdminSettings() {
             : `Zone ${zoneLabel(zone)} has been unlocked and cleared. You can now upload.`,
         });
       }
-    } catch (err: any) {
-      if (isMounted.current) setMessage({ type: 'error', text: `Failed to unlock zone: ${err.message}` });
+    } catch (err) {
+      if (isMounted.current) setMessage({ type: 'error', text: `Failed to unlock zone: ${errorMessage(err)}` });
     } finally {
       if (isMounted.current) {
         setCheckingLock(false);
@@ -189,7 +190,7 @@ export default function AdminSettings() {
         const ws = wb.Sheets[wb.SheetNames[0]];
 
         // Read raw data with headers as array of arrays to extract exact headers
-        const rawData = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
+        const rawData = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][];
         if (rawData.length < 2) throw new Error('File is empty or missing data rows');
 
         const rawHeaders = rawData[0] as string[];
@@ -207,9 +208,9 @@ export default function AdminSettings() {
         if (isMounted.current) {
           setPending({ fileName: file.name, detectedZone, target: selectedZone, headers, rows });
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error(err);
-        if (isMounted.current) setMessage({ type: 'error', text: err.message || 'Could not read this file.' });
+        if (isMounted.current) setMessage({ type: 'error', text: errorMessage(err) || 'Could not read this file.' });
       } finally {
         if (isMounted.current) setParsing(false);
       }
@@ -252,8 +253,8 @@ export default function AdminSettings() {
 
       // 3. Transform Data rows
       const batchId = new Date().toISOString();
-      const transformedData = p.rows.map((row: any) => {
-        const rowObj: any = {
+      const transformedData = p.rows.map((row) => {
+        const rowObj: Record<string, string> = {
           batch_id: batchId,
           status: 'Not Counted'
         };
@@ -272,7 +273,7 @@ export default function AdminSettings() {
       addLog(`Streaming ${transformedData.length} records into Supabase...`);
 
       let insertSuccess = false;
-      let lastInsertError: any = null;
+      let lastInsertError: unknown = null;
 
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
@@ -280,9 +281,9 @@ export default function AdminSettings() {
           if (insertError) throw insertError;
           insertSuccess = true;
           break; // Success, exit retry loop
-        } catch (err: any) {
+        } catch (err) {
           lastInsertError = err;
-          if (err.message?.includes('schema cache')) {
+          if (errorMessage(err).includes('schema cache')) {
             addLog(`Schema cache not ready (attempt ${attempt}/3). Retrying in 2 seconds...`);
             await new Promise(resolve => setTimeout(resolve, 2000));
           } else {
@@ -298,13 +299,13 @@ export default function AdminSettings() {
       setMessage({ type: 'success', text: `Upload complete! ${transformedData.length} parts added to ${zoneLabel(targetTable)}.` });
       setZoneLocks(prev => ({ ...prev, [targetTable]: true })); // Lock it immediately after successful upload
       setPending(null);
-    } catch (err: any) {
+    } catch (err) {
       if (!isMounted.current) return;
       console.error(err);
-      if (err.message?.includes('schema cache')) {
+      if (errorMessage(err).includes('schema cache')) {
          setMessage({ type: 'error', text: `Supabase Cache Error: Still waiting for Supabase to refresh. Try clicking upload again in 5 seconds.` });
       } else {
-         setMessage({ type: 'error', text: err.message || 'Error processing file. Ensure it has Material, PartNo, Location, Zone columns.' });
+         setMessage({ type: 'error', text: errorMessage(err) || 'Error processing file. Ensure it has Material, PartNo, Location, Zone columns.' });
       }
     } finally {
       if (isMounted.current) setUploading(false);

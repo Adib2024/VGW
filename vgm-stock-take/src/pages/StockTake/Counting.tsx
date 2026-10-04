@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { errorMessage } from '../../lib/errors';
+import { useParams, useSearchParams, useLocation } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -7,6 +8,8 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { Navigation } from '../../components/Navigation';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { supabase } from '../../lib/supabase';
+import { updateOrQueue, isNetworkError } from '../../lib/offlineQueue';
+import { getCachedRow, patchCachedRow } from '../../lib/partCache';
 import { ZONE_THEME, NEUTRAL_ZONE_THEME } from '../../lib/zoneTheme';
 import { Loader2, PackageX, Minus, Plus, Check, ShieldCheck } from 'lucide-react';
 
@@ -18,6 +21,7 @@ export default function StockTakeCounting() {
   const { table, id } = useParams<{ table: string; id: string }>();
   const [searchParams] = useSearchParams();
   const displayNo = searchParams.get('no');
+  const location = useLocation();
   const { user } = useAuth();
   const { addToast } = useToast();
   const { t, tf } = useLanguage();
@@ -50,22 +54,51 @@ export default function StockTakeCounting() {
     return form;
   };
 
+  const showPart = (data: Part) => {
+    setPart(data);
+    const form = buildInitialForm(data);
+    setFormData(form);
+    setInitialForm(form);
+  };
+
   const fetchPart = async () => {
     try {
       if (!table || !id) throw new Error('Missing parameters');
       const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
       if (error) throw error;
-      if (isMounted.current) {
-        setPart(data);
-        const form = buildInitialForm(data);
-        setFormData(form);
-        setInitialForm(form);
-      }
+      if (isMounted.current) showPart(data);
     } catch (err) {
       console.error(err);
-      addToast('Failed to load part details', 'error');
+      // No signal: fall back to the copy of this part from the list the
+      // counter already loaded, so they can still count it.
+      const fallback = (location.state as { part?: Part } | null)?.part || (table && id ? getCachedRow(table, id) : undefined);
+      if (fallback && isNetworkError(err as { message?: string })) {
+        if (isMounted.current) showPart(fallback);
+        addToast(t('showingCached'), 'info');
+      } else {
+        addToast('Failed to load part details', 'error');
+      }
     } finally {
       if (isMounted.current) setLoading(false);
+    }
+  };
+
+  // Persist a change now, or queue it if there's no signal. When queued,
+  // the screen and the list cache show the change straight away.
+  const commit = async (updates: Record<string, unknown>, savedMsg: string) => {
+    if (!part || !table || !id) return;
+    // Record when it actually happened (matters for offline saves synced later);
+    // only if sql/008_activity_tracking.sql has added the column.
+    if ('updated_at' in part) updates.updated_at = new Date().toISOString();
+
+    const result = await updateOrQueue(table, id, updates);
+    patchCachedRow(table, id, updates);
+    if (result === 'saved') {
+      addToast(savedMsg, 'success');
+      await fetchPart();
+    } else {
+      addToast(t('savedOffline'), 'info');
+      if (isMounted.current) showPart({ ...part, ...updates } as Part);
     }
   };
 
@@ -111,13 +144,10 @@ export default function StockTakeCounting() {
     if (!part) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from(table!).update({ status: 'Verified', verify_by: user?.name }).eq('id', id);
-      if (error) throw error;
-      addToast('Part Verified successfully', 'success');
-      await fetchPart();
-    } catch (err: any) {
+      await commit({ status: 'Verified', verify_by: user?.name }, 'Part Verified successfully');
+    } catch (err) {
       console.error(err);
-      addToast(err.message || 'Failed to verify', 'error');
+      addToast(errorMessage(err) || 'Failed to verify', 'error');
     } finally {
       if (isMounted.current) setSaving(false);
     }
@@ -127,7 +157,7 @@ export default function StockTakeCounting() {
     if (!part) return;
     setSaving(true);
     try {
-      const updates: any = {};
+      const updates: Record<string, unknown> = {};
       let newStatus = part.status;
       const counterKeys = Object.keys(part).filter(k => /box|seq/i.test(k));
       const verifierKeys = Object.keys(part).filter(k => /recount/i.test(k));
@@ -176,14 +206,10 @@ export default function StockTakeCounting() {
       });
 
       updates.status = newStatus;
-      const { error } = await supabase.from(table!).update(updates).eq('id', id);
-      if (error) throw error;
-
-      addToast('Data saved successfully', 'success');
-      await fetchPart();
-    } catch (err: any) {
+      await commit(updates, 'Data saved successfully');
+    } catch (err) {
       console.error(err);
-      addToast(err.message || 'Failed to save data', 'error');
+      addToast(errorMessage(err) || 'Failed to save data', 'error');
     } finally {
       if (isMounted.current) setSaving(false);
     }
@@ -204,7 +230,7 @@ export default function StockTakeCounting() {
   const remarkKeys = Object.keys(part).filter(k => /remark|luqman/i.test(k)).sort();
 
   const getDisplayColumns = () => {
-    const exclude = ['id', 'batch_id', 'status', '_table', 'no', 'verify_by', 'metadata']; // 'no' is displayed prominently at the top
+    const exclude = ['id', 'batch_id', 'status', '_table', 'no', 'verify_by', 'metadata', 'updated_at', 'updated_by']; // 'no' is displayed prominently at the top
     return Object.keys(part).filter(k => !exclude.includes(k) && !/box|seq|recount|remark|luqman/i.test(k));
   };
   const displayCols = getDisplayColumns();
@@ -347,6 +373,15 @@ export default function StockTakeCounting() {
                 <span className="k">{t('verifiedBy')}</span>
                 <span className="v">{part.verify_by || '—'}</span>
               </div>
+              {part.updated_at && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <span className="k">{t('lastUpdate')}</span>
+                  <span className="v">
+                    <span className="mono">{new Date(part.updated_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kuala_Lumpur' })}</span>
+                    {part.updated_by && <> · {part.updated_by}</>}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </section>

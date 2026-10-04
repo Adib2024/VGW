@@ -42,3 +42,6 @@ src/data/*.csv
 *.sw?
 .vercel
 .env.local
+
+# PWA dev-mode service worker output, regenerated every time the dev server runs
+dev-dist

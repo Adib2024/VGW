@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { Part } from '../types/database';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -9,8 +10,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export async function fetchAllRows(table: string, orderColumn = ''): Promise<any[]> {
-  let allData: any[] = [];
+export async function fetchAllRows(table: string, orderColumn = ''): Promise<Part[]> {
+  let allData: Part[] = [];
   let from = 0;
   const step = 1000;
   let hasMore = true;
@@ -50,11 +51,11 @@ export async function fetchAllRows(table: string, orderColumn = ''): Promise<any
 // Like fetchAllRows, but resolves to null when the table doesn't exist yet,
 // so one un-uploaded zone doesn't blank out every other zone on screen.
 // Any other error still throws.
-export async function fetchRowsIfTableExists(table: string): Promise<any[] | null> {
+export async function fetchRowsIfTableExists(table: string): Promise<Part[] | null> {
   try {
     return await fetchAllRows(table);
-  } catch (err: any) {
-    if (err?.missingTable) return null;
+  } catch (err) {
+    if ((err as { missingTable?: boolean })?.missingTable) return null;
     throw err;
   }
 }

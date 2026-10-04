@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { errorMessage } from '../../lib/errors';
 import { Navigation } from '../../components/Navigation';
 import { AdminTabs } from '../../components/AdminTabs';
 import { Input } from '../../components/ui/Input';
@@ -108,8 +109,8 @@ export default function AdminUsers() {
       setAddRole(ROLES[0]);
       setTempPasswordResult(result);
       fetchUsers();
-    } catch (err: any) {
-      setAddError(err.message || 'Failed to create operator.');
+    } catch (err) {
+      setAddError(errorMessage(err) || 'Failed to create operator.');
     } finally {
       setAddSubmitting(false);
     }
@@ -123,8 +124,8 @@ export default function AdminUsers() {
       const result = await callAdminApi('/api/admin/reset-password', { id });
       const target = users.find(u => u.id === id);
       setTempPasswordResult({ id, name: target?.name || id, role: target?.role || '', tempPassword: result.tempPassword });
-    } catch (err: any) {
-      addToast(err.message || 'Failed to reset password.', 'error');
+    } catch (err) {
+      addToast(errorMessage(err) || 'Failed to reset password.', 'error');
     } finally {
       setProcessingId(null);
     }
@@ -138,8 +139,8 @@ export default function AdminUsers() {
       await callAdminApi('/api/admin/set-active', { id, active });
       addToast(active ? 'Account reactivated.' : 'Account deactivated.', 'success');
       fetchUsers();
-    } catch (err: any) {
-      addToast(err.message || 'Failed to update account status.', 'error');
+    } catch (err) {
+      addToast(errorMessage(err) || 'Failed to update account status.', 'error');
     } finally {
       setProcessingId(null);
     }

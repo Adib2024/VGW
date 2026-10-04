@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import type { Part } from '../../types/database';
 import { Navigation } from '../../components/Navigation';
 import { supabase, fetchRowsIfTableExists } from '../../lib/supabase';
 import { Download, PackageSearch } from 'lucide-react';
@@ -13,7 +14,7 @@ import { ZONE_THEME } from '../../lib/zoneTheme';
 
 
 export default function UserProgress() {
-  const [parts, setParts] = useState<any[]>([]);
+  const [parts, setParts] = useState<Part[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
@@ -66,7 +67,7 @@ export default function UserProgress() {
   const fetchData = async () => {
     try {
       const tables = ['b17', 'b22', 'b22_seq', 'loma', 'check_part'];
-      let allParts: any[] = [];
+      let allParts: Part[] = [];
 
       for (const t of tables) {
         const tableData = await fetchRowsIfTableExists(t); // null = zone not uploaded yet
@@ -75,10 +76,15 @@ export default function UserProgress() {
         }
       }
 
-      // Sort by status instead since last_updated does not exist
+      // Most recently changed first (updated_at, added by
+      // sql/008_activity_tracking.sql). Untouched rows - and every row, if
+      // that migration hasn't been run - fall back to status order.
+      const order = { 'Verified': 1, 'Counted': 2, 'Not Counted': 3 };
       if (isMounted.current) {
         setParts(allParts.sort((a, b) => {
-          const order = { 'Verified': 1, 'Counted': 2, 'Not Counted': 3 };
+          const ta = a.updated_at ? Date.parse(a.updated_at) : 0;
+          const tb = b.updated_at ? Date.parse(b.updated_at) : 0;
+          if (ta !== tb) return tb - ta;
           return (order[a.status as keyof typeof order] || 4) - (order[b.status as keyof typeof order] || 4);
         }));
       }
@@ -90,10 +96,10 @@ export default function UserProgress() {
   };
 
   const handleDownloadCSV = () => {
-    const headers = ['Material,Location/Zone,Status,Verified By,Batch ID'];
+    const headers = ['Material,Location/Zone,Status,Verified By,Batch ID,Last Updated,Updated By'];
     const rows = filteredParts.map(p => {
       const loc = `${p.location || p.rack_number || p.storage_bin || ''} (${p._table})`;
-      return `${p.material || p.part_no || ''},${loc},${p.status || ''},${p.verify_by || ''},${p.batch_id || ''}`;
+      return `${p.material || p.part_no || ''},${loc},${p.status || ''},${p.verify_by || ''},${p.batch_id || ''},${p.updated_at || ''},${p.updated_by || ''}`;
     });
     const csvContent = "data:text/csv;charset=utf-8," + headers.concat(rows).join("\n");
     const encodedUri = encodeURI(csvContent);
@@ -235,7 +241,7 @@ export default function UserProgress() {
           ) : (
             <ol className="up-list">
               {paginatedParts.map((p, index) => {
-                const zone = ZONE_THEME[p._table];
+                const zone = ZONE_THEME[p._table ?? ""];
                 return (
                   <li key={`${p.id}-${index}`}>
                     <span className="bar" style={{ background: zone?.accent || 'var(--primary-color)' }} />
@@ -249,8 +255,16 @@ export default function UserProgress() {
                         <span className="mono">{p.location || p.rack_number || p.storage_bin || '-'}</span>
                         <span>·</span>
                         <span>{t('verifiedBy')}: <b style={{ color: 'var(--text-primary)' }}>{p.verify_by || '—'}</b></span>
-                        {p.batch_id && <span className="mono">· {new Date(p.batch_id).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>}
+                        {!p.updated_at && p.batch_id && <span className="mono">· {new Date(p.batch_id).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>}
                       </div>
+                      {p.updated_at && (
+                        <div style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                          <span className="mono" style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                            {new Date(p.updated_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kuala_Lumpur' })}
+                          </span>
+                          {p.updated_by && <> · {p.updated_by}</>}
+                        </div>
+                      )}
                     </div>
                   </li>
                 );

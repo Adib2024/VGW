@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { errorMessage } from '../lib/errors';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -41,10 +42,10 @@ export const ForcedPasswordChange: React.FC = () => {
 
       addToast('Password updated', 'success');
       await refreshUser();
-    } catch (err: any) {
+    } catch (err) {
       // Shown inline (not just a toast) - this screen has no other content,
       // so a failure here otherwise looks like the app silently hung.
-      setErrorMsg(err.message || 'Failed to update password. Please try again.');
+      setErrorMsg(errorMessage(err) || 'Failed to update password. Please try again.');
     } finally {
       setLoading(false);
     }

@@ -2,7 +2,7 @@ import React from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { RefreshCw, AlertTriangle } from 'lucide-react';
 
-function ErrorFallback({ error, resetErrorBoundary }: { error: any, resetErrorBoundary: () => void }) {
+function ErrorFallback({ error, resetErrorBoundary }: { error: unknown, resetErrorBoundary: () => void }) {
   return (
     <div style={{
       height: '100dvh',
@@ -34,7 +34,7 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: any, resetErrorBo
         color: '#f87171',
         textAlign: 'left'
       }}>
-        <code>{error.message}</code>
+        <code>{error instanceof Error ? error.message : String(error)}</code>
       </div>
 
       <button 

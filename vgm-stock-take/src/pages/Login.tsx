@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { errorMessage } from '../lib/errors';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import { Eye, EyeOff, Download, Share, ArrowRight } from 'lucide-react';
+
+// Chromium's install prompt event (not in the standard DOM typings).
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 export default function Login() {
   const [userId, setUserId] = useState('');
@@ -19,24 +26,24 @@ export default function Login() {
   const { user } = useAuth(); // We need to check if user is already logged in
 
   // PWA Install State
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
 
   useEffect(() => {
     // Check if already installed
-    const standalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
     setIsStandalone(standalone);
 
     // Check if iOS
     const ua = window.navigator.userAgent;
-    const isIOSDevice = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+    const isIOSDevice = /iPad|iPhone|iPod/.test(ua) && !('MSStream' in window);
     setIsIOS(isIOSDevice);
 
-    const handleBeforeInstallPrompt = (e: any) => {
+    const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -62,7 +69,7 @@ export default function Login() {
       } else {
         addToast('Installation was cancelled.', 'error');
       }
-    } catch (err) {
+    } catch {
       addToast('Something went wrong during installation.', 'error');
     }
   };
@@ -112,8 +119,8 @@ export default function Login() {
       }
 
       // Navigation happens via the effect above once `user` updates.
-    } catch (err: any) {
-      addToast(err.message || 'Login failed. Please try again.', 'error');
+    } catch (err) {
+      addToast(errorMessage(err) || 'Login failed. Please try again.', 'error');
     } finally {
       setLoading(false);
     }

@@ -177,7 +177,14 @@ const translations: Translations = {
     backupAndClear: 'Download backup & clear',
     backingUp: 'Saving backup...',
     backupFailed: 'Backup failed, so nothing was deleted: {err}',
-    zoneCleared: '{zone} was cleared. Backup saved as {file}.'
+    zoneCleared: '{zone} was cleared. Backup saved as {file}.',
+    offline: 'Offline',
+    toSync: '{n} to sync',
+    syncedCounts: 'Synced {n} saved counts',
+    syncFailed: '{n} could not be saved — tap to retry',
+    savedOffline: 'No signal — saved on this phone. It will sync when you are back online.',
+    showingCached: 'No signal — showing the data loaded earlier.',
+    lastUpdate: 'Last update'
   },
   BM: {
     login: 'Log Masuk',
@@ -347,7 +354,14 @@ const translations: Translations = {
     backupAndClear: 'Muat turun sandaran & kosongkan',
     backingUp: 'Menyimpan sandaran...',
     backupFailed: 'Sandaran gagal, jadi tiada apa yang dipadam: {err}',
-    zoneCleared: '{zone} telah dikosongkan. Sandaran disimpan sebagai {file}.'
+    zoneCleared: '{zone} telah dikosongkan. Sandaran disimpan sebagai {file}.',
+    offline: 'Luar talian',
+    toSync: '{n} untuk disegerak',
+    syncedCounts: '{n} kiraan tersimpan telah disegerak',
+    syncFailed: '{n} tidak dapat disimpan — ketik untuk cuba lagi',
+    savedOffline: 'Tiada isyarat — disimpan dalam telefon ini. Ia akan disegerak apabila anda kembali dalam talian.',
+    showingCached: 'Tiada isyarat — memaparkan data yang dimuat sebelum ini.',
+    lastUpdate: 'Kemas kini terakhir'
   },
   DE: {
     login: 'Anmelden',
@@ -517,7 +531,14 @@ const translations: Translations = {
     backupAndClear: 'Sicherung laden & leeren',
     backingUp: 'Sicherung wird gespeichert...',
     backupFailed: 'Sicherung fehlgeschlagen, daher wurde nichts gelöscht: {err}',
-    zoneCleared: '{zone} wurde geleert. Sicherung gespeichert als {file}.'
+    zoneCleared: '{zone} wurde geleert. Sicherung gespeichert als {file}.',
+    offline: 'Offline',
+    toSync: '{n} zu synchronisieren',
+    syncedCounts: '{n} gespeicherte Zählungen synchronisiert',
+    syncFailed: '{n} konnten nicht gespeichert werden — zum Wiederholen tippen',
+    savedOffline: 'Kein Signal — auf diesem Telefon gespeichert. Wird synchronisiert, sobald Sie wieder online sind.',
+    showingCached: 'Kein Signal — zuvor geladene Daten werden angezeigt.',
+    lastUpdate: 'Letzte Änderung'
   }
 };
 

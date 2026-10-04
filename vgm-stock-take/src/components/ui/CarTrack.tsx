@@ -1,4 +1,5 @@
 import React from 'react';
+import type { CSSProperties } from 'react';
 
 interface CarTrackProps {
   percentage: number;
@@ -24,7 +25,7 @@ export const CarTrack: React.FC<CarTrackProps> = ({ percentage, color, carDelay 
         aria-valuemin={0}
         aria-valuemax={100}
       >
-        <span style={{ ['--c' as any]: color, width: `${pct}%` }} />
+        <span style={{ '--c': color, width: `${pct}%` } as CSSProperties} />
       </div>
       <div className="car-icon-anim" style={{ bottom: `${height + 4}px`, animationDelay: carDelay, animationDuration: carDuration }}>
         <img src="/car-golf.webp" alt="" decoding="async" style={{ width: carWidth, height: 'auto' }} />

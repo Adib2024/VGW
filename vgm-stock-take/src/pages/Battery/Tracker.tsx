@@ -27,11 +27,17 @@ function startOfTodayMalaysiaISO(): string {
   return new Date(startMY - 8 * 60 * 60 * 1000).toISOString();
 }
 
-interface RecentScan {
+interface ScanRow {
   battery_serial_number: string;
-  status: string;
-  created_at: string;
+  status: string | null;
+  at: string;
+  scanned_by?: string | null;
+  location_id?: string | null;
 }
+
+const LOG_COLUMNS = 'battery_serial_number, status, scanned_at, scanned_by, location_id';
+type LogRow = Omit<ScanRow, 'at'> & { scanned_at: string };
+const fromLog = (r: LogRow): ScanRow => ({ ...r, at: r.scanned_at });
 
 export default function Tracker() {
   const { user } = useAuth();
@@ -44,20 +50,69 @@ export default function Tracker() {
   const [isManual, setIsManual] = useState(false);
   const [saving, setSaving] = useState(false);
   const [todayCount, setTodayCount] = useState<number | null>(null);
-  const [recent, setRecent] = useState<RecentScan[]>([]);
+  const [recent, setRecent] = useState<ScanRow[]>([]);
+  const [history, setHistory] = useState<ScanRow[]>([]);
+  // Whether battery_scan_log exists (sql/009_battery_scan_log.sql). null = not known yet.
+  const logAvailable = useRef<boolean | null>(null);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
   const fetchToday = async () => {
     const since = startOfTodayMalaysiaISO();
-    const [{ count }, { data }] = await Promise.all([
-      supabase.from('battery_tracking').select('id', { count: 'exact', head: true }).gte('created_at', since),
-      supabase.from('battery_tracking').select('battery_serial_number, status, created_at').gte('created_at', since).order('created_at', { ascending: false }).limit(5),
-    ]);
+    const { count } = await supabase.from('battery_tracking').select('id', { count: 'exact', head: true }).gte('created_at', since);
     setTodayCount(count ?? 0);
-    setRecent((data as RecentScan[]) || []);
+
+    // Every scan from the history log; before that migration is run, fall
+    // back to each battery's latest state.
+    if (logAvailable.current !== false) {
+      const { data, error } = await supabase.from('battery_scan_log').select(LOG_COLUMNS)
+        .gte('scanned_at', since).order('scanned_at', { ascending: false }).limit(5);
+      if (!error) {
+        logAvailable.current = true;
+        setRecent(((data as LogRow[]) || []).map(fromLog));
+        return;
+      }
+      if (error.code === 'PGRST205') logAvailable.current = false;
+    }
+    const { data } = await supabase.from('battery_tracking').select('battery_serial_number, status, created_at')
+      .gte('created_at', since).order('created_at', { ascending: false }).limit(5);
+    setRecent(((data as { battery_serial_number: string; status: string; created_at: string }[]) || [])
+      .map(r => ({ battery_serial_number: r.battery_serial_number, status: r.status, at: r.created_at })));
   };
 
   useEffect(() => { fetchToday(); }, []);
+
+  // Earlier scans of the battery currently in the form.
+  useEffect(() => {
+    const serial = serialNumber.trim();
+    if (serial.length < 3 || logAvailable.current === false) {
+      setHistory([]);
+      return;
+    }
+    const timer = window.setTimeout(async () => {
+      const { data, error } = await supabase.from('battery_scan_log').select(LOG_COLUMNS)
+        .eq('battery_serial_number', serial).order('scanned_at', { ascending: false }).limit(5);
+      if (error?.code === 'PGRST205') logAvailable.current = false;
+      setHistory(error ? [] : ((data as LogRow[]) || []).map(fromLog));
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [serialNumber]);
+
+  // Append-only history row. Best-effort: a failure here (or the table not
+  // existing yet) must never block the main save, which already succeeded.
+  const logScan = async (serial: string) => {
+    if (logAvailable.current === false) return;
+    const { error } = await supabase.from('battery_scan_log').insert({
+      battery_serial_number: serial,
+      status,
+      location_id: locationId || null,
+      part_number: partNumber || null,
+      scanned_by: user?.id,
+    });
+    if (error) {
+      if (error.code === 'PGRST205') logAvailable.current = false;
+      console.warn('battery_scan_log insert failed:', error.message);
+    }
+  };
 
   const startScanner = async () => {
     setScanning(true);
@@ -84,7 +139,7 @@ export default function Tracker() {
             scannerRef.current.clear();
           }
         },
-        (_error) => {
+        () => {
           // ignore continuous scan errors to prevent console spam
         }
       );
@@ -148,6 +203,7 @@ export default function Tracker() {
           addToast('Error updating battery record', 'error');
         } else {
           addToast('Battery record updated successfully!', 'success');
+          await logScan(trimmedSerial);
           resetForm();
           fetchToday();
         }
@@ -167,6 +223,7 @@ export default function Tracker() {
           addToast('Error saving battery', 'error');
         } else {
           addToast('Battery saved successfully!', 'success');
+          await logScan(trimmedSerial);
           resetForm();
           fetchToday();
         }
@@ -294,6 +351,25 @@ export default function Tracker() {
                 {serialNumber || 'Awaiting scan...'}
               </div>
             )}
+            {history.length > 0 && (
+              <div style={{ marginTop: '0.5rem', padding: '0.625rem 0.75rem', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
+                <div className="eyebrow" style={{ fontSize: '0.625rem', marginBottom: '0.375rem' }}>Previous scans</div>
+                {history.map(h => {
+                  const [bg, fg] = STATUS_CHIP[h.status ?? ''] || STATUS_CHIP.Scanned;
+                  return (
+                    <div key={h.at} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0', fontSize: '0.75rem' }}>
+                      <span className="mono" style={{ color: 'var(--text-secondary)', minWidth: 92 }}>
+                        {new Date(h.at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kuala_Lumpur' })}
+                      </span>
+                      <span className="ds-chip" style={{ background: bg, color: fg, height: 20, fontSize: '0.5625rem' }}>{h.status}</span>
+                      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {[h.location_id, h.scanned_by].filter(Boolean).join(' · ')}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.625rem' }}>
@@ -332,13 +408,13 @@ export default function Tracker() {
             </div>
             <ul className="ds-card bt-recent">
               {recent.map(r => {
-                const [bg, fg] = STATUS_CHIP[r.status] || STATUS_CHIP.Scanned;
+                const [bg, fg] = STATUS_CHIP[r.status ?? ''] || STATUS_CHIP.Scanned;
                 return (
-                  <li key={`${r.battery_serial_number}-${r.created_at}`}>
+                  <li key={`${r.battery_serial_number}-${r.at}`}>
                     <span className="mono" style={{ flex: 1, minWidth: 0, fontSize: '0.875rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.battery_serial_number}</span>
                     <span className="ds-chip" style={{ background: bg, color: fg }}>{r.status}</span>
                     <span className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                      {new Date(r.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kuala_Lumpur' })}
+                      {new Date(r.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kuala_Lumpur' })}
                     </span>
                   </li>
                 );

@@ -6,8 +6,8 @@ import { toEmail, VALID_ROLES, ID_PATTERN, NAME_DISALLOWED_CHARS } from '../_lib
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     await handleCreateUser(req, res);
-  } catch (err: any) {
-    res.status(500).json({ error: err?.message || 'Unexpected server error.' });
+  } catch (err) {
+    res.status(500).json({ error: (err instanceof Error && err.message) || 'Unexpected server error.' });
   }
 }
 
@@ -40,7 +40,7 @@ async function handleCreateUser(req: VercelRequest, res: VercelResponse) {
     res.status(400).json({ error: 'Name cannot contain a "|" character.' });
     return;
   }
-  if (!role || !VALID_ROLES.includes(role as any)) {
+  if (!role || !(VALID_ROLES as readonly string[]).includes(role)) {
     res.status(400).json({ error: 'Invalid role.' });
     return;
   }

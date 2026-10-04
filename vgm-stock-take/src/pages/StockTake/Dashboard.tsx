@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import type { CSSProperties } from 'react';
+import { errorMessage } from '../../lib/errors';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -58,8 +60,8 @@ export default function StockTakeDashboard() {
         const table = ZONE_TABLES[index];
         const data = res || [];
         const total = data.length;
-        const completed = data.filter((r: any) => r.status === 'Verified').length;
-        const counted = data.filter((r: any) => r.status === 'Counted').length;
+        const completed = data.filter((r) => r.status === 'Verified').length;
+        const counted = data.filter((r) => r.status === 'Counted').length;
         const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
         newStats[table] = { total, completed, counted, percentage, missing: res === null };
       });
@@ -68,17 +70,17 @@ export default function StockTakeDashboard() {
 
       // check_part may not exist until an admin uploads it - treat as none flagged.
       fetchRowsIfTableExists('check_part')
-        .then(rows => { if (isMounted.current) setCheckOpen((rows || []).filter((r: any) => r.status !== 'Verified').length); })
+        .then(rows => { if (isMounted.current) setCheckOpen((rows || []).filter((r) => r.status !== 'Verified').length); })
         .catch(() => { if (isMounted.current) setCheckOpen(0); });
 
       if (isManualRefresh) {
         addToast(t('dataRefreshed'), 'success');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching stats:', err);
       // Otherwise a real fetch failure looks identical to "genuinely 0
       // progress" - the numbers on screen would just silently be wrong.
-      addToast(err?.message || 'Failed to load progress data.', 'error');
+      addToast(errorMessage(err) || 'Failed to load progress data.', 'error');
     } finally {
       if (isManualRefresh && isMounted.current) {
         // Add a small delay so the user can see the spin animation even if fetch is very fast
@@ -148,7 +150,7 @@ export default function StockTakeDashboard() {
               </div>
             </div>
             <div className="ds-seg dark" style={{ height: 14, marginTop: '1rem' }}>
-              <span style={{ ['--c' as any]: 'var(--signal-color)', width: `${aggregate.percentage}%` }} />
+              <span style={{ '--c': 'var(--signal-color)', width: `${aggregate.percentage}%` } as CSSProperties} />
             </div>
             <div className="dash-split">
               <div>
@@ -180,7 +182,7 @@ export default function StockTakeDashboard() {
                   key={zone.key}
                   type="button"
                   className="ds-card zone-tile"
-                  style={{ ['--zc' as any]: zone.accent }}
+                  style={{ '--zc': zone.accent } as CSSProperties}
                   onClick={() => navigate(`/stock-take/list?table=${zone.key}`)}
                   aria-label={`${zone.title}: ${s.percentage}% verified`}
                 >
